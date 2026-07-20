@@ -1,8 +1,10 @@
 import base64
+import os
+import secrets
 from datetime import datetime
 from typing import Annotated, Literal
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 Classe = Literal["baixa", "média", "alta"]
@@ -28,6 +30,22 @@ class InferResponse(BaseModel):
     overlay_png_base64: str
 
 
+def require_inference_api_key(
+    authorization: Annotated[str | None, Header()] = None,
+) -> None:
+    """When INFERENCE_API_KEY is set, require `Authorization: Bearer <key>`."""
+    expected = os.environ.get("INFERENCE_API_KEY", "").strip()
+    if not expected:
+        return
+
+    if authorization is None or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    token = authorization.removeprefix("Bearer ").strip()
+    if len(token) != len(expected) or not secrets.compare_digest(token, expected):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -39,6 +57,7 @@ async def infer(
     lat: Annotated[float, Form()],
     lon: Annotated[float, Form()],
     captured_at: Annotated[str, Form()],
+    _: Annotated[None, Depends(require_inference_api_key)],
 ) -> InferResponse:
     if image.content_type is None or not image.content_type.startswith("image/"):
         raise HTTPException(status_code=422, detail="image must be an image/* upload")

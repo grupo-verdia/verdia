@@ -73,7 +73,7 @@ extraction + GPS sync, drift detection, real route optimization, Supabase Auth.
 - **Simulador de ingestão**.
 - **Data:** **Supabase** (Postgres for metadata/predictions; Storage for images).
 - **Deploy (fully live):** web on **Vercel**, data on **Supabase**, ML service on a
-  hobby CPU container (Render/Fly.io/Railway). See ADR-0003 and ADR-0004.
+  hobby CPU container on **Render**. See ADR-0003 and ADR-0004.
 
 ## Decisions
 

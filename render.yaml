@@ -1,0 +1,14 @@
+# Git-connected Blueprint for the verdia Inference API on Render Free.
+# Connect this repo in the Render dashboard; set INFERENCE_API_KEY in the UI.
+services:
+  - type: web
+    name: verdia-ml
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./services/ml/Dockerfile
+    dockerContext: ./services/ml
+    healthCheckPath: /health
+    envVars:
+      - key: INFERENCE_API_KEY
+        sync: false

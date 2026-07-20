@@ -73,6 +73,13 @@ npm test
 npm run typecheck
 ```
 
+## Fully live deploy
+
+Shareable Motiva demo stack (Vercel + hosted Supabase + Render Free): see
+[`docs/DEPLOY.md`](./docs/DEPLOY.md). Agent prepares configs in-repo; you create
+the cloud projects and set secrets. Live E2E uses this same simulador pointed at
+the deployed URLs.
+
 ## Spec / tickets
 
 Parent spec: GitHub issue #1. Tracer tickets `#2`–`#12` implement fronts from
