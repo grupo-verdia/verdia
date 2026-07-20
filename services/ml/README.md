@@ -26,6 +26,14 @@ curl -s -X POST http://127.0.0.1:8000/infer \
   -F "captured_at=2026-07-20T12:00:00.000Z"
 ```
 
+## Datasets & labels (ADR-0002)
+
+Public-dataset roles, licenses, cobertura → classe thresholds, and fixtures:
+
+- Docs: [`data/README.md`](./data/README.md)
+- Thresholds: `data/thresholds.json` (calibrated on DNIT validation fixtures)
+- Prepare layout: `uv run python scripts/prepare_datasets.py`
+
 ## Tests
 
 ```bash

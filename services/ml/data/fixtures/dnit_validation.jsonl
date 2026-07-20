@@ -1,0 +1,9 @@
+{"id": "dnit-val-001", "dataset": "dnit", "role": "validation", "cobertura": 0.05, "classe": "baixa", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}
+{"id": "dnit-val-002", "dataset": "dnit", "role": "validation", "cobertura": 0.12, "classe": "baixa", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}
+{"id": "dnit-val-003", "dataset": "dnit", "role": "validation", "cobertura": 0.18, "classe": "baixa", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}
+{"id": "dnit-val-004", "dataset": "dnit", "role": "validation", "cobertura": 0.32, "classe": "média", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}
+{"id": "dnit-val-005", "dataset": "dnit", "role": "validation", "cobertura": 0.41, "classe": "média", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}
+{"id": "dnit-val-006", "dataset": "dnit", "role": "validation", "cobertura": 0.48, "classe": "média", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}
+{"id": "dnit-val-007", "dataset": "dnit", "role": "validation", "cobertura": 0.62, "classe": "alta", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}
+{"id": "dnit-val-008", "dataset": "dnit", "role": "validation", "cobertura": 0.75, "classe": "alta", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}
+{"id": "dnit-val-009", "dataset": "dnit", "role": "validation", "cobertura": 0.88, "classe": "alta", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}

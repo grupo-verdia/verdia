@@ -1,0 +1,11 @@
+{"id": "tas500-train-001", "dataset": "tas500", "role": "segmentation_height_train", "cobertura": 0.08, "classe": "baixa", "license": "CC-BY-NC-SA", "source_label": "low_grass"}
+{"id": "tas500-train-002", "dataset": "tas500", "role": "segmentation_height_train", "cobertura": 0.22, "classe": "baixa", "license": "CC-BY-NC-SA", "source_label": "low_grass"}
+{"id": "tas500-train-003", "dataset": "tas500", "role": "segmentation_height_train", "cobertura": 0.38, "classe": "média", "license": "CC-BY-NC-SA", "source_label": "high_grass"}
+{"id": "tas500-train-004", "dataset": "tas500", "role": "segmentation_height_train", "cobertura": 0.70, "classe": "alta", "license": "CC-BY-NC-SA", "source_label": "high_grass"}
+{"id": "forefield-train-001", "dataset": "forefield_grassland", "role": "classifier_reinforce", "cobertura": 0.06, "classe": "baixa", "license": "Zenodo-open", "source_label": "mowed"}
+{"id": "forefield-train-002", "dataset": "forefield_grassland", "role": "classifier_reinforce", "cobertura": 0.15, "classe": "baixa", "license": "Zenodo-open", "source_label": "mowed"}
+{"id": "forefield-train-003", "dataset": "forefield_grassland", "role": "classifier_reinforce", "cobertura": 0.45, "classe": "média", "license": "Zenodo-open", "source_label": "grass"}
+{"id": "forefield-train-004", "dataset": "forefield_grassland", "role": "classifier_reinforce", "cobertura": 0.82, "classe": "alta", "license": "Zenodo-open", "source_label": "grass"}
+{"id": "dnit-val-001", "dataset": "dnit", "role": "validation", "cobertura": 0.05, "classe": "baixa", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}
+{"id": "dnit-val-004", "dataset": "dnit", "role": "validation", "cobertura": 0.32, "classe": "média", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}
+{"id": "dnit-val-007", "dataset": "dnit", "role": "validation", "cobertura": 0.62, "classe": "alta", "license": "CC-BY-4.0", "source_label": "fixture-synthetic"}
