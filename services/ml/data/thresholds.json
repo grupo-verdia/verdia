@@ -1,0 +1,14 @@
+{
+  "baixa_max": 0.25,
+  "media_max": 0.55,
+  "definition": "Bins on cobertura (fraction of tall-grass pixels in the roadside region).",
+  "mapping": {
+    "baixa": "cobertura < baixa_max",
+    "média": "baixa_max <= cobertura < media_max",
+    "alta": "cobertura >= media_max"
+  },
+  "calibrated_on": "services/ml/data/fixtures/dnit_validation.jsonl",
+  "calibration_method": "Midpoint between linearly separable class clusters (see verdia_ml.labels.calibrate_cobertura_thresholds).",
+  "provisional": true,
+  "notes": "Fixtures are synthetic DNIT stand-ins for the offline-eval seam. Recalibrate on a hand-relabeled DNIT vegetation split when available. Values are fractions in [0, 1]."
+}

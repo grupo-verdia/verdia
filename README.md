@@ -9,6 +9,7 @@ Monorepo layout:
 |------|------|
 | `apps/web` | Next.js (TypeScript) product + BFF, shared-password gate |
 | `services/ml` | Python Inference API (segmentação + classificador ordinal) |
+| `services/ml/data` | Public-dataset roles, cobertura thresholds, eval fixtures |
 
 Domain glossary and ADRs: [`CONTEXT.md`](./CONTEXT.md), [`docs/adr/`](./docs/adr/).
 

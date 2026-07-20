@@ -22,6 +22,9 @@ apps/web/.env*.local
 services/ml/*.egg-info/
 services/ml/dist/
 
+# Large public dataset downloads (see services/ml/data/README.md)
+services/ml/data/raw/
+
 # Editors / OS
 *.swp
 .idea/
