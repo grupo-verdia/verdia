@@ -25,7 +25,7 @@ services/ml/dist/
 # Large public dataset downloads (see services/ml/data/README.md)
 services/ml/data/raw/
 
-# Supabase CLI local cache (linked project, versions)
+# Supabase CLI cache
 supabase/.temp/
 
 # Editors / OS
