@@ -14,6 +14,8 @@ export type Captura = {
   classe: Classe | null;
   confidence: number | null;
   modelVersion: string | null;
+  /** Set when inference failed; captura is still persisted for visibility. */
+  inferenceError: string | null;
 };
 
 export type Trecho = {

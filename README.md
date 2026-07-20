@@ -51,6 +51,20 @@ redirected to `/login`; the shared `DEMO_PASSWORD` unlocks the app. The home
 dashboard lists persisted **capturas** (in-memory by default; set Supabase env
 vars after applying `supabase/migrations/`).
 
+### 3. Simulador de ingestão
+
+With both services running, replay the sample capturas (geotagged PNGs under
+`apps/web/fixtures/capturas/`):
+
+```bash
+cd apps/web
+set -a && source .env.local && set +a
+npm run simulate-ingest
+```
+
+Successful predictions persist through the BFF and show on the dashboard. Failed
+inferences are kept with an `inferenceError` signal (not silently dropped).
+
 Tests / typecheck:
 
 ```bash

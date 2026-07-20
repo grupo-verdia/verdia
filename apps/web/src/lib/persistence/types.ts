@@ -8,6 +8,7 @@ export type CreateCapturaInput = {
   classe: Classe | null;
   confidence: number | null;
   modelVersion: string | null;
+  inferenceError?: string | null;
   imageBytes: Uint8Array;
   contentType: string;
 };

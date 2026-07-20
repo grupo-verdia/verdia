@@ -10,6 +10,7 @@ type CreateBody = {
   classe?: unknown;
   confidence?: unknown;
   modelVersion?: unknown;
+  inferenceError?: unknown;
   imageBase64?: unknown;
   contentType?: unknown;
   trechoId?: unknown;
@@ -96,6 +97,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const inferenceError =
+    body.inferenceError === null || body.inferenceError === undefined
+      ? null
+      : typeof body.inferenceError === "string"
+        ? body.inferenceError
+        : undefined;
+  if (inferenceError === undefined) {
+    return NextResponse.json(
+      { error: "inferenceError must be a string or null" },
+      { status: 400 },
+    );
+  }
+
   const trechoId =
     body.trechoId === undefined
       ? undefined
@@ -122,6 +136,7 @@ export async function POST(request: NextRequest) {
       classe,
       confidence,
       modelVersion,
+      inferenceError,
       imageBytes,
       contentType: body.contentType,
     });
