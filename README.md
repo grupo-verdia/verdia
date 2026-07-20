@@ -46,7 +46,9 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Unauthenticated requests are
-redirected to `/login`; the shared `DEMO_PASSWORD` unlocks the app.
+redirected to `/login`; the shared `DEMO_PASSWORD` unlocks the app. The home
+dashboard lists persisted **capturas** (in-memory by default; set Supabase env
+vars after applying `supabase/migrations/`).
 
 Tests / typecheck:
 
