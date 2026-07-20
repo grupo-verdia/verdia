@@ -60,6 +60,13 @@ The password-gated home dashboard lists capturas with their `classe`. Open a
 captura to see the photo alongside the segmentação overlay (classe still comes
 from the ordinal prediction, not the overlay).
 
+### Mapa de trechos
+
+Password-gated [`/mapa`](http://localhost:3000/mapa) plots each trecho from the
+average lat/lon of its capturas (no PostGIS). Markers are colored/sized by
+**severidade** (alta is larger and red). Use `?severidade=alta` (or the on-page
+filters) to focus the demo on the worst stretches.
+
 ### Supabase
 
 1. Apply [`supabase/migrations/20260720120000_capturas_trechos.sql`](../../supabase/migrations/20260720120000_capturas_trechos.sql).

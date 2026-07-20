@@ -18,8 +18,13 @@ export default async function Home() {
       }}
     >
       <h1 style={{ margin: "0 0 0.35rem", fontSize: "2rem" }}>verdia</h1>
-      <p style={{ margin: "0 0 1.5rem", color: "#444" }}>
+      <p style={{ margin: "0 0 0.75rem", color: "#444" }}>
         Dashboard de capturas — classe ordinal por foto geotagueada.
+      </p>
+      <p style={{ margin: "0 0 1.5rem" }}>
+        <Link href="/mapa" style={{ color: "#246", textDecoration: "underline" }}>
+          Mapa de trechos
+        </Link>
       </p>
 
       {capturas.length === 0 ? (
