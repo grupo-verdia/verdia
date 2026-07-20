@@ -1,5 +1,6 @@
 """Inference API infer — external behavior seam (classe contract)."""
 
+import base64
 from io import BytesIO
 
 from fastapi.testclient import TestClient
@@ -38,6 +39,30 @@ def test_infer_returns_ordinal_classe_for_captura():
     assert isinstance(body["model_version"], str)
     assert body["model_version"]
 
+
+def test_infer_returns_segmentacao_overlay_without_replacing_classe():
+    """Segmentação overlay is visualization only; classe stays the ordinal field."""
+    client = TestClient(app)
+    response = client.post(
+        "/infer",
+        data={
+            "lat": "-23.55",
+            "lon": "-46.63",
+            "captured_at": "2026-07-20T12:00:00.000Z",
+        },
+        files={"image": ("captura.png", BytesIO(_png_bytes()), "image/png")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["classe"] in CLASSES
+    assert isinstance(body["overlay_png_base64"], str)
+    assert body["overlay_png_base64"]
+    overlay = base64.b64decode(body["overlay_png_base64"])
+    assert overlay.startswith(b"\x89PNG")
+    # Overlay must not be treated as the classe source of truth.
+    assert "classe" in body
+    assert body["classe"] == "média"
 
 def test_infer_rejects_missing_image():
     client = TestClient(app)

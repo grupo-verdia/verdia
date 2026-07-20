@@ -12,6 +12,7 @@ type InferResponseBody = {
   classe?: unknown;
   confidence?: unknown;
   model_version?: unknown;
+  overlay_png_base64?: unknown;
   detail?: unknown;
 };
 
@@ -64,9 +65,23 @@ export function createHttpInferClient(baseUrl: string): InferClient {
       if (
         !isClasse(body.classe) ||
         typeof body.confidence !== "number" ||
-        typeof body.model_version !== "string"
+        typeof body.model_version !== "string" ||
+        typeof body.overlay_png_base64 !== "string" ||
+        body.overlay_png_base64.length === 0
       ) {
         return { ok: false, error: "Inference API response missing fields" };
+      }
+
+      let overlayPngBytes: Uint8Array;
+      try {
+        overlayPngBytes = Uint8Array.from(
+          Buffer.from(body.overlay_png_base64, "base64"),
+        );
+      } catch {
+        return { ok: false, error: "Inference API overlay_png_base64 is invalid" };
+      }
+      if (overlayPngBytes.byteLength === 0) {
+        return { ok: false, error: "Inference API overlay_png_base64 is empty" };
       }
 
       return {
@@ -74,6 +89,7 @@ export function createHttpInferClient(baseUrl: string): InferClient {
         classe: body.classe,
         confidence: body.confidence,
         modelVersion: body.model_version,
+        overlayPngBytes,
       };
     },
   };
@@ -115,6 +131,10 @@ export function createHttpPersistClient(
             inferenceError: input.inferenceError,
             imageBase64,
             contentType: input.sample.contentType,
+            overlayBase64: input.overlayPngBytes
+              ? Buffer.from(input.overlayPngBytes).toString("base64")
+              : null,
+            overlayContentType: input.overlayPngBytes ? "image/png" : null,
           }),
         });
       } catch (error) {

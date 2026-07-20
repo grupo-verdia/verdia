@@ -12,7 +12,8 @@ uv run python -m verdia_ml
 
 - Health: `GET /health` → `{"status":"ok"}`
 - Infer: `POST /infer` (multipart) — fields `image`, `lat`, `lon`, `captured_at`
-  → `{"classe":"baixa"|"média"|"alta","confidence":0.0–1.0,"model_version":"..."}`
+  → `{"classe":"baixa"|"média"|"alta","confidence":0.0–1.0,"model_version":"...","overlay_png_base64":"..."}`
+- `overlay_png_base64` is the segmentação visualization (stub PNG today); classe remains the ordinal field
 - Current baseline is a deterministic stub (`stub-0.1`); real CV lands in #12
 - Default bind: `0.0.0.0:8000`
 

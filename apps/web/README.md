@@ -56,13 +56,16 @@ curl -X POST http://localhost:3000/api/capturas \
   }'
 ```
 
-The password-gated home dashboard lists capturas with their `classe`.
+The password-gated home dashboard lists capturas with their `classe`. Open a
+captura to see the photo alongside the segmentação overlay (classe still comes
+from the ordinal prediction, not the overlay).
 
 ### Supabase
 
 1. Apply [`supabase/migrations/20260720120000_capturas_trechos.sql`](../../supabase/migrations/20260720120000_capturas_trechos.sql).
 2. Apply [`supabase/migrations/20260720140000_capturas_inference_error.sql`](../../supabase/migrations/20260720140000_capturas_inference_error.sql).
-3. Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.
+3. Apply [`supabase/migrations/20260720160000_capturas_overlay.sql`](../../supabase/migrations/20260720160000_capturas_overlay.sql).
+4. Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.
 
 ```bash
 npm test

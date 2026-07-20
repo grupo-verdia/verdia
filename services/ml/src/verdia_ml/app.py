@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime
 from typing import Annotated, Literal
 
@@ -8,6 +9,14 @@ Classe = Literal["baixa", "média", "alta"]
 
 MODEL_VERSION = "stub-0.1"
 
+# Deterministic 1x1 PNG stub for segmentação overlay (real CV in #12).
+_STUB_OVERLAY_PNG = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f"
+    b"\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+STUB_OVERLAY_PNG_BASE64 = base64.b64encode(_STUB_OVERLAY_PNG).decode("ascii")
+
 app = FastAPI(title="verdia Inference API")
 
 
@@ -15,6 +24,8 @@ class InferResponse(BaseModel):
     classe: Classe
     confidence: Annotated[float, Field(ge=0.0, le=1.0)]
     model_version: str
+    # Segmentação visualization only — never used as the classe source of truth.
+    overlay_png_base64: str
 
 
 @app.get("/health")
@@ -49,5 +60,10 @@ async def infer(
     if not (-180.0 <= lon <= 180.0):
         raise HTTPException(status_code=422, detail="lon must be between -180 and 180")
 
-    # Stub baseline: deterministic ordinal prediction (real CV arrives in #12).
-    return InferResponse(classe="média", confidence=0.5, model_version=MODEL_VERSION)
+    # Stub baseline: deterministic ordinal prediction + overlay (real CV in #12).
+    return InferResponse(
+        classe="média",
+        confidence=0.5,
+        model_version=MODEL_VERSION,
+        overlay_png_base64=STUB_OVERLAY_PNG_BASE64,
+    )

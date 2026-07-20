@@ -19,6 +19,7 @@ type CapturaRow = {
   id: string;
   trecho_id: string;
   storage_key: string;
+  overlay_storage_key: string | null;
   lat: number;
   lon: number;
   captured_at: string;
@@ -30,11 +31,15 @@ type CapturaRow = {
 
 const BUCKET = "capturas";
 
+const CAPTURA_SELECT =
+  "id, trecho_id, storage_key, overlay_storage_key, lat, lon, captured_at, classe, confidence, model_version, inference_error";
+
 function rowToCaptura(row: CapturaRow): Captura {
   return {
     id: row.id,
     trechoId: row.trecho_id,
     storageKey: row.storage_key,
+    overlayStorageKey: row.overlay_storage_key,
     lat: row.lat,
     lon: row.lon,
     capturedAt: row.captured_at,
@@ -115,12 +120,30 @@ export function createSupabaseStore(options: {
         throw new Error(`failed to upload image: ${uploadError.message}`);
       }
 
+      let overlayStorageKey: string | null = null;
+      if (input.overlayBytes && input.overlayBytes.byteLength > 0) {
+        overlayStorageKey = `${id}-overlay.png`;
+        const overlayType = input.overlayContentType ?? "image/png";
+        const { error: overlayUploadError } = await client.storage
+          .from(BUCKET)
+          .upload(overlayStorageKey, input.overlayBytes, {
+            contentType: overlayType,
+            upsert: false,
+          });
+        if (overlayUploadError) {
+          throw new Error(
+            `failed to upload overlay: ${overlayUploadError.message}`,
+          );
+        }
+      }
+
       const { data: row, error: insertError } = await client
         .from("capturas")
         .insert({
           id,
           trecho_id: trechoId,
           storage_key: storageKey,
+          overlay_storage_key: overlayStorageKey,
           lat: input.lat,
           lon: input.lon,
           captured_at: input.capturedAt,
@@ -129,9 +152,7 @@ export function createSupabaseStore(options: {
           model_version: input.modelVersion,
           inference_error: input.inferenceError ?? null,
         })
-        .select(
-          "id, trecho_id, storage_key, lat, lon, captured_at, classe, confidence, model_version, inference_error",
-        )
+        .select(CAPTURA_SELECT)
         .single();
       if (insertError || !row) {
         throw new Error(
@@ -146,14 +167,38 @@ export function createSupabaseStore(options: {
     async listCapturas(): Promise<Captura[]> {
       const { data, error } = await client
         .from("capturas")
-        .select(
-          "id, trecho_id, storage_key, lat, lon, captured_at, classe, confidence, model_version, inference_error",
-        )
+        .select(CAPTURA_SELECT)
         .order("captured_at", { ascending: false });
       if (error) {
         throw new Error(`failed to list capturas: ${error.message}`);
       }
       return (data as CapturaRow[] | null)?.map(rowToCaptura) ?? [];
+    },
+
+    async getCaptura(id: string): Promise<Captura | null> {
+      const { data, error } = await client
+        .from("capturas")
+        .select(CAPTURA_SELECT)
+        .eq("id", id)
+        .maybeSingle();
+      if (error) {
+        throw new Error(`failed to load captura: ${error.message}`);
+      }
+      if (!data) {
+        return null;
+      }
+      return rowToCaptura(data as CapturaRow);
+    },
+
+    async getStoredBytes(storageKey: string): Promise<Uint8Array | null> {
+      const { data, error } = await client.storage
+        .from(BUCKET)
+        .download(storageKey);
+      if (error || !data) {
+        return null;
+      }
+      const buffer = await data.arrayBuffer();
+      return new Uint8Array(buffer);
     },
 
     async getTrecho(id: string): Promise<Trecho | null> {
