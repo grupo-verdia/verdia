@@ -11,3 +11,7 @@ Default triage vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `rea
 ### Domain docs
 
 Single-context layout (`CONTEXT.md` + `docs/adr/` at repo root). See `docs/agents/domain.md`.
+
+## Learned User Preferences
+
+- Use Conventional Commits for all git commits.
