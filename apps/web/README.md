@@ -32,7 +32,9 @@ Sample pack: [`fixtures/capturas/`](./fixtures/capturas/) (manifest + tiny PNGs)
 Failed inferences are persisted with `inferenceError` and shown on the dashboard
 instead of being dropped.
 
-Env overrides: `INFERENCE_URL`, `WEB_URL`, `SAMPLE_MANIFEST`.
+Env overrides: `INFERENCE_URL`, `INFERENCE_API_KEY`, `WEB_URL`, `SAMPLE_MANIFEST`.
+
+Live stack: point those at Vercel + Render (see [`docs/DEPLOY.md`](../../docs/DEPLOY.md)).
 
 ### Persist capturas (seed via BFF)
 

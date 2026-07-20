@@ -8,6 +8,7 @@
  * Env:
  *   DEMO_PASSWORD (required) — shared password for BFF login
  *   INFERENCE_URL (default http://127.0.0.1:8000)
+ *   INFERENCE_API_KEY (optional locally; required when the Inference API key is set)
  *   WEB_URL (default http://127.0.0.1:3000)
  *   SAMPLE_MANIFEST (default fixtures/capturas/manifest.json)
  */
@@ -32,6 +33,7 @@ async function main(): Promise<void> {
   }
 
   const inferenceUrl = process.env.INFERENCE_URL ?? "http://127.0.0.1:8000";
+  const inferenceApiKey = process.env.INFERENCE_API_KEY;
   const webUrl = process.env.WEB_URL ?? "http://127.0.0.1:3000";
   const manifestPath = path.resolve(
     webRoot,
@@ -43,7 +45,7 @@ async function main(): Promise<void> {
 
   const cookie = await loginSessionCookie(webUrl, password);
   const report = await runSimulador(samples, {
-    infer: createHttpInferClient(inferenceUrl),
+    infer: createHttpInferClient(inferenceUrl, inferenceApiKey),
     persist: createHttpPersistClient(webUrl, cookie),
   });
 

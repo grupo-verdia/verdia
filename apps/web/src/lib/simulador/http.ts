@@ -17,8 +17,12 @@ type InferResponseBody = {
 };
 
 /** HTTP client for the Inference API `POST /infer` boundary. */
-export function createHttpInferClient(baseUrl: string): InferClient {
+export function createHttpInferClient(
+  baseUrl: string,
+  apiKey?: string,
+): InferClient {
   const root = baseUrl.replace(/\/$/, "");
+  const trimmedKey = apiKey?.trim();
 
   return {
     async infer(sample: SampleCaptura): Promise<InferResult> {
@@ -32,10 +36,16 @@ export function createHttpInferClient(baseUrl: string): InferClient {
       form.append("lon", String(sample.lon));
       form.append("captured_at", sample.capturedAt);
 
+      const headers: HeadersInit = {};
+      if (trimmedKey) {
+        headers.Authorization = `Bearer ${trimmedKey}`;
+      }
+
       let response: Response;
       try {
         response = await fetch(`${root}/infer`, {
           method: "POST",
+          headers,
           body: form,
         });
       } catch (error) {
