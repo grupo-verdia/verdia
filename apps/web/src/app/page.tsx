@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { loadDashboardCapturas } from "@/lib/dashboard";
 
 export const dynamic = "force-dynamic";
@@ -46,8 +48,13 @@ export default async function Home() {
               }}
             >
               <div style={{ fontWeight: 600 }}>
-                Classe: {captura.classe ?? "—"}
-                {captura.inferenceError ? " · falha" : ""}
+                <Link
+                  href={`/capturas/${captura.id}`}
+                  style={{ color: "inherit", textDecoration: "underline" }}
+                >
+                  Classe: {captura.classe ?? "—"}
+                  {captura.inferenceError ? " · falha" : ""}
+                </Link>
               </div>
               <div style={{ color: "#444", fontSize: "0.95rem" }}>
                 GPS {captura.lat.toFixed(5)}, {captura.lon.toFixed(5)} ·{" "}

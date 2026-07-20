@@ -14,6 +14,8 @@ export type InferSuccess = {
   classe: Classe;
   confidence: number;
   modelVersion: string;
+  /** Segmentação overlay PNG bytes; visualization only. */
+  overlayPngBytes: Uint8Array;
 };
 
 export type InferFailure = {
@@ -29,6 +31,7 @@ export type PersistInput = {
   confidence: number | null;
   modelVersion: string | null;
   inferenceError: string | null;
+  overlayPngBytes: Uint8Array | null;
 };
 
 export type PersistResult =
@@ -88,6 +91,7 @@ export async function runSimulador(
           confidence: prediction.confidence,
           modelVersion: prediction.modelVersion,
           inferenceError: null,
+          overlayPngBytes: prediction.overlayPngBytes,
         }
       : {
           sample,
@@ -95,6 +99,7 @@ export async function runSimulador(
           confidence: null,
           modelVersion: null,
           inferenceError: prediction.error,
+          overlayPngBytes: null,
         };
 
     const persisted = await deps.persist.persist(persistInput);

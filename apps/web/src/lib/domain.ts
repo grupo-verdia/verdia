@@ -8,6 +8,8 @@ export type Captura = {
   id: string;
   trechoId: string;
   storageKey: string;
+  /** Segmentação overlay in Storage; null when inference failed or overlay absent. */
+  overlayStorageKey: string | null;
   lat: number;
   lon: number;
   capturedAt: string;

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { GET as listCapturas, POST as createCaptura } from "@/app/api/capturas/route";
 import { GET as fetchTrecho } from "@/app/api/trechos/[id]/route";
-import { loadDashboardCapturas } from "@/lib/dashboard";
+import { loadCapturaDetail, loadDashboardCapturas } from "@/lib/dashboard";
 import {
   createMemoryStore,
   getCapturaStore,
@@ -130,6 +130,49 @@ describe("capturas product read surface", () => {
     expect(capturas[0]?.classe).toBe("média");
   });
 
+  it("shows segmentação overlay alongside photo on captura detail without replacing classe", async () => {
+    const photoBytes = new Uint8Array([10, 20, 30]);
+    const overlayBytes = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    ]);
+
+    const writeResponse = await createCaptura(
+      new NextRequest("http://localhost:3000/api/capturas", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          lat: -23.55,
+          lon: -46.63,
+          capturedAt: "2026-07-20T18:00:00.000Z",
+          classe: "alta",
+          confidence: 0.88,
+          modelVersion: "stub-0.1",
+          imageBase64: Buffer.from(photoBytes).toString("base64"),
+          contentType: "image/jpeg",
+          overlayBase64: Buffer.from(overlayBytes).toString("base64"),
+          overlayContentType: "image/png",
+        }),
+      }),
+    );
+    expect(writeResponse.status).toBe(201);
+    const written = (await writeResponse.json()) as {
+      id: string;
+      classe: string;
+      overlayStorageKey: string | null;
+    };
+    expect(written.classe).toBe("alta");
+    expect(written.overlayStorageKey).toBeTruthy();
+
+    const detail = await loadCapturaDetail(written.id);
+    expect(detail).not.toBeNull();
+    expect(detail?.captura.classe).toBe("alta");
+    expect(detail?.captura.overlayStorageKey).toBeTruthy();
+    expect(detail?.photoBytes).toEqual(photoBytes);
+    expect(detail?.overlayBytes).toEqual(overlayBytes);
+    // Overlay is visualization only — classe remains the ordinal prediction field.
+    expect(detail?.captura.classe).not.toBeNull();
+  });
+
   it("lists captura from simulador ingest path with classe on the dashboard", async () => {
     const store = getCapturaStore();
 
@@ -152,6 +195,7 @@ describe("capturas product read surface", () => {
               classe: "baixa",
               confidence: 0.6,
               modelVersion: "stub-0.1",
+              overlayPngBytes: new Uint8Array([0x89, 0x50]),
             };
           },
         },
@@ -167,6 +211,8 @@ describe("capturas product read surface", () => {
               inferenceError: input.inferenceError,
               imageBytes: input.sample.imageBytes,
               contentType: input.sample.contentType,
+              overlayBytes: input.overlayPngBytes,
+              overlayContentType: input.overlayPngBytes ? "image/png" : null,
             });
             return { ok: true, capturaId: captura.id };
           },
@@ -214,6 +260,8 @@ describe("capturas product read surface", () => {
               inferenceError: input.inferenceError,
               imageBytes: input.sample.imageBytes,
               contentType: input.sample.contentType,
+              overlayBytes: input.overlayPngBytes,
+              overlayContentType: input.overlayPngBytes ? "image/png" : null,
             });
             return { ok: true, capturaId: captura.id };
           },
