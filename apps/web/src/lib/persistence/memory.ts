@@ -56,6 +56,7 @@ export function createMemoryStore(): CapturaStore {
         classe: input.classe,
         confidence: input.confidence,
         modelVersion: input.modelVersion,
+        inferenceError: input.inferenceError ?? null,
       };
       capturas.set(id, captura);
       await refreshTrechoSeveridade(trechoId);

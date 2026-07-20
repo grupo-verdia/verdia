@@ -22,8 +22,9 @@ export default async function Home() {
 
       {capturas.length === 0 ? (
         <p style={{ margin: 0, color: "#666" }}>
-          Nenhuma captura persistida ainda. Use o BFF{" "}
-          <code>/api/capturas</code> para gravar dados de seed.
+          Nenhuma captura persistida ainda. Rode o simulador de ingestão (
+          <code>npm run simulate-ingest</code> em <code>apps/web</code>) com a
+          Inference API no ar.
         </p>
       ) : (
         <ul
@@ -46,16 +47,23 @@ export default async function Home() {
             >
               <div style={{ fontWeight: 600 }}>
                 Classe: {captura.classe ?? "—"}
+                {captura.inferenceError ? " · falha" : ""}
               </div>
               <div style={{ color: "#444", fontSize: "0.95rem" }}>
                 GPS {captura.lat.toFixed(5)}, {captura.lon.toFixed(5)} ·{" "}
                 {new Date(captura.capturedAt).toLocaleString("pt-BR")}
               </div>
-              <div style={{ color: "#666", fontSize: "0.85rem" }}>
-                trecho {captura.trechoId.slice(0, 8)}… · confiança{" "}
-                {captura.confidence ?? "—"} · modelo{" "}
-                {captura.modelVersion ?? "—"}
-              </div>
+              {captura.inferenceError ? (
+                <div style={{ color: "#a33", fontSize: "0.85rem" }}>
+                  Erro de inferência: {captura.inferenceError}
+                </div>
+              ) : (
+                <div style={{ color: "#666", fontSize: "0.85rem" }}>
+                  trecho {captura.trechoId.slice(0, 8)}… · confiança{" "}
+                  {captura.confidence ?? "—"} · modelo{" "}
+                  {captura.modelVersion ?? "—"}
+                </div>
+              )}
             </li>
           ))}
         </ul>

@@ -25,6 +25,7 @@ type CapturaRow = {
   classe: Classe | null;
   confidence: number | null;
   model_version: string | null;
+  inference_error: string | null;
 };
 
 const BUCKET = "capturas";
@@ -40,6 +41,7 @@ function rowToCaptura(row: CapturaRow): Captura {
     classe: row.classe,
     confidence: row.confidence,
     modelVersion: row.model_version,
+    inferenceError: row.inference_error,
   };
 }
 
@@ -125,9 +127,10 @@ export function createSupabaseStore(options: {
           classe: input.classe,
           confidence: input.confidence,
           model_version: input.modelVersion,
+          inference_error: input.inferenceError ?? null,
         })
         .select(
-          "id, trecho_id, storage_key, lat, lon, captured_at, classe, confidence, model_version",
+          "id, trecho_id, storage_key, lat, lon, captured_at, classe, confidence, model_version, inference_error",
         )
         .single();
       if (insertError || !row) {
@@ -144,7 +147,7 @@ export function createSupabaseStore(options: {
       const { data, error } = await client
         .from("capturas")
         .select(
-          "id, trecho_id, storage_key, lat, lon, captured_at, classe, confidence, model_version",
+          "id, trecho_id, storage_key, lat, lon, captured_at, classe, confidence, model_version, inference_error",
         )
         .order("captured_at", { ascending: false });
       if (error) {
