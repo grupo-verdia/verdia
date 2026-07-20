@@ -21,9 +21,15 @@ export default async function Home() {
       <p style={{ margin: "0 0 0.75rem", color: "#444" }}>
         Dashboard de capturas — classe ordinal por foto geotagueada.
       </p>
-      <p style={{ margin: "0 0 1.5rem" }}>
+      <p style={{ margin: "0 0 1.5rem", display: "flex", gap: "1rem", flexWrap: "wrap" }}>
         <Link href="/mapa" style={{ color: "#246", textDecoration: "underline" }}>
           Mapa de trechos
+        </Link>
+        <Link
+          href="/observabilidade"
+          style={{ color: "#246", textDecoration: "underline" }}
+        >
+          Observabilidade
         </Link>
       </p>
 
