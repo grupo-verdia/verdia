@@ -1,2 +1,28 @@
 # Cursor
 .cursor/
+
+# Dependencies / envs
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+.DS_Store
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+apps/web/.env
+apps/web/.env.local
+apps/web/.env*.local
+
+# Python tooling
+services/ml/*.egg-info/
+services/ml/dist/
+
+# Editors / OS
+*.swp
+.idea/
+.vscode/
