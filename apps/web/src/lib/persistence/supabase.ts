@@ -3,7 +3,6 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   DEFAULT_TRECHO_LENGTH_METERS,
   severidadeFromClasse,
-  severidadeFromClasses,
   type Captura,
   type Classe,
   type Severidade,
@@ -62,26 +61,6 @@ export function createSupabaseStore(options: {
     createClient(options.url, options.serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-
-  async function refreshTrechoSeveridade(trechoId: string): Promise<void> {
-    const { data, error } = await client
-      .from("capturas")
-      .select("classe")
-      .eq("trecho_id", trechoId);
-    if (error) {
-      throw new Error(`failed to load capturas for trecho: ${error.message}`);
-    }
-    const severidade = severidadeFromClasses(
-      (data ?? []).map((row) => row.classe as Classe | null),
-    );
-    const { error: updateError } = await client
-      .from("trechos")
-      .update({ severidade })
-      .eq("id", trechoId);
-    if (updateError) {
-      throw new Error(`failed to update trecho severidade: ${updateError.message}`);
-    }
-  }
 
   return {
     async createCaptura(input: CreateCapturaInput): Promise<Captura> {
@@ -150,7 +129,6 @@ export function createSupabaseStore(options: {
         );
       }
 
-      await refreshTrechoSeveridade(trechoId);
       return rowToCaptura(row as CapturaRow);
     },
 

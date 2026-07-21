@@ -3,7 +3,6 @@ import { randomUUID } from "node:crypto";
 import {
   DEFAULT_TRECHO_LENGTH_METERS,
   severidadeFromClasse,
-  severidadeFromClasses,
   type Captura,
   type Trecho,
 } from "@/lib/domain";
@@ -13,20 +12,6 @@ export function createMemoryStore(): CapturaStore {
   const trechos = new Map<string, Trecho>();
   const capturas = new Map<string, Captura>();
   const objects = new Map<string, Uint8Array>();
-
-  async function refreshTrechoSeveridade(trechoId: string): Promise<void> {
-    const trecho = trechos.get(trechoId);
-    if (!trecho) {
-      return;
-    }
-    const classes = [...capturas.values()]
-      .filter((captura) => captura.trechoId === trechoId)
-      .map((captura) => captura.classe);
-    trechos.set(trechoId, {
-      ...trecho,
-      severidade: severidadeFromClasses(classes),
-    });
-  }
 
   return {
     async createCaptura(input: CreateCapturaInput): Promise<Captura> {
@@ -61,7 +46,6 @@ export function createMemoryStore(): CapturaStore {
         inferenceError: input.inferenceError ?? null,
       };
       capturas.set(id, captura);
-      await refreshTrechoSeveridade(trechoId);
       return captura;
     },
 
