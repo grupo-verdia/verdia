@@ -1,0 +1,8 @@
+{
+  "ordinalMae": 0.1111111111111111,
+  "accuracy": 0.8888888888888888,
+  "sampleCount": 9,
+  "evaluatedAt": "2026-07-21T00:36:11.034932Z",
+  "modelVersion": "hybrid-ordinal-0.1",
+  "notes": "Provisional DNIT stand-in images synthesized from fixture cobertura; revisit when a hand-relabeled DNIT vegetation image split is available."
+}

@@ -1,4 +1,3 @@
-import base64
 import os
 import secrets
 from datetime import datetime
@@ -7,17 +6,9 @@ from typing import Annotated, Literal
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
+from verdia_ml.pipeline import InferResult, infer_captura
+
 Classe = Literal["baixa", "média", "alta"]
-
-MODEL_VERSION = "stub-0.1"
-
-# Deterministic 1x1 PNG stub for segmentação overlay (real CV in #12).
-_STUB_OVERLAY_PNG = (
-    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
-    b"\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f"
-    b"\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82"
-)
-STUB_OVERLAY_PNG_BASE64 = base64.b64encode(_STUB_OVERLAY_PNG).decode("ascii")
 
 app = FastAPI(title="verdia Inference API")
 
@@ -79,10 +70,14 @@ async def infer(
     if not (-180.0 <= lon <= 180.0):
         raise HTTPException(status_code=422, detail="lon must be between -180 and 180")
 
-    # Stub baseline: deterministic ordinal prediction + overlay (real CV in #12).
+    try:
+        result: InferResult = infer_captura(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
     return InferResponse(
-        classe="média",
-        confidence=0.5,
-        model_version=MODEL_VERSION,
-        overlay_png_base64=STUB_OVERLAY_PNG_BASE64,
+        classe=result.classe,
+        confidence=result.confidence,
+        model_version=result.model_version,
+        overlay_png_base64=result.overlay_png_base64,
     )
