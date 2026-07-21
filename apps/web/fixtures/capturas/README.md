@@ -1,8 +1,9 @@
 # Sample capturas for the simulador de ingestão
 
-Minimal geotagged PNGs (1×1 smoke images) that replay a short São Paulo-shaped
-route into the Inference API. Enough to demo the ingest loop locally; swap in
-real roadside frames by editing `manifest.json` and adding image files.
+Minimal geotagged PNGs (64×64 smoke images) that replay a short São Paulo-shaped
+route into the Inference API. Files must be Pillow-decodable (the Inference API
+loads pixels with `image.load()`). Swap in real roadside frames by editing
+`manifest.json` and adding image files.
 
 | id | GPS (approx) | timestamp (UTC) |
 |----|--------------|-----------------|
