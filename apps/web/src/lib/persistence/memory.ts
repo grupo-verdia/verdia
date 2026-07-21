@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 import {
+  DEFAULT_TRECHO_LENGTH_METERS,
   severidadeFromClasse,
-  severidadeFromClasses,
   type Captura,
   type Trecho,
 } from "@/lib/domain";
@@ -13,34 +13,14 @@ export function createMemoryStore(): CapturaStore {
   const capturas = new Map<string, Captura>();
   const objects = new Map<string, Uint8Array>();
 
-  async function refreshTrechoSeveridade(trechoId: string): Promise<void> {
-    const trecho = trechos.get(trechoId);
-    if (!trecho) {
-      return;
-    }
-    const classes = [...capturas.values()]
-      .filter((captura) => captura.trechoId === trechoId)
-      .map((captura) => captura.classe);
-    trechos.set(trechoId, {
-      ...trecho,
-      severidade: severidadeFromClasses(classes),
-    });
-  }
-
   return {
     async createCaptura(input: CreateCapturaInput): Promise<Captura> {
-      let trechoId = input.trechoId;
-      if (trechoId) {
-        if (!trechos.has(trechoId)) {
-          throw new Error(`trecho not found: ${trechoId}`);
-        }
-      } else {
-        trechoId = randomUUID();
-        trechos.set(trechoId, {
-          id: trechoId,
-          severidade: severidadeFromClasse(input.classe),
-        });
-      }
+      const trechoId = randomUUID();
+      trechos.set(trechoId, {
+        id: trechoId,
+        severidade: severidadeFromClasse(input.classe),
+        lengthMeters: DEFAULT_TRECHO_LENGTH_METERS,
+      });
 
       const id = randomUUID();
       const storageKey = `capturas/${id}.bin`;
@@ -66,7 +46,6 @@ export function createMemoryStore(): CapturaStore {
         inferenceError: input.inferenceError ?? null,
       };
       capturas.set(id, captura);
-      await refreshTrechoSeveridade(trechoId);
       return captura;
     },
 

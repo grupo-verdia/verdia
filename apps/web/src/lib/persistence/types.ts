@@ -1,7 +1,6 @@
 import type { Captura, Classe, Trecho } from "@/lib/domain";
 
 export type CreateCapturaInput = {
-  trechoId?: string;
   lat: number;
   lon: number;
   capturedAt: string;

@@ -1,8 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import {
+  DEFAULT_TRECHO_LENGTH_METERS,
   severidadeFromClasse,
-  severidadeFromClasses,
   type Captura,
   type Classe,
   type Severidade,
@@ -13,6 +13,7 @@ import type { CapturaStore, CreateCapturaInput } from "@/lib/persistence/types";
 type TrechoRow = {
   id: string;
   severidade: Severidade;
+  length_meters: number;
 };
 
 type CapturaRow = {
@@ -61,52 +62,20 @@ export function createSupabaseStore(options: {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-  async function refreshTrechoSeveridade(trechoId: string): Promise<void> {
-    const { data, error } = await client
-      .from("capturas")
-      .select("classe")
-      .eq("trecho_id", trechoId);
-    if (error) {
-      throw new Error(`failed to load capturas for trecho: ${error.message}`);
-    }
-    const severidade = severidadeFromClasses(
-      (data ?? []).map((row) => row.classe as Classe | null),
-    );
-    const { error: updateError } = await client
-      .from("trechos")
-      .update({ severidade })
-      .eq("id", trechoId);
-    if (updateError) {
-      throw new Error(`failed to update trecho severidade: ${updateError.message}`);
-    }
-  }
-
   return {
     async createCaptura(input: CreateCapturaInput): Promise<Captura> {
-      let trechoId = input.trechoId;
-      if (trechoId) {
-        const { data, error } = await client
-          .from("trechos")
-          .select("id")
-          .eq("id", trechoId)
-          .maybeSingle();
-        if (error) {
-          throw new Error(`failed to load trecho: ${error.message}`);
-        }
-        if (!data) {
-          throw new Error(`trecho not found: ${trechoId}`);
-        }
-      } else {
-        const { data, error } = await client
-          .from("trechos")
-          .insert({ severidade: severidadeFromClasse(input.classe) })
-          .select("id")
-          .single();
-        if (error || !data) {
-          throw new Error(`failed to create trecho: ${error?.message ?? "unknown"}`);
-        }
-        trechoId = data.id as string;
+      const { data, error } = await client
+        .from("trechos")
+        .insert({
+          severidade: severidadeFromClasse(input.classe),
+          length_meters: DEFAULT_TRECHO_LENGTH_METERS,
+        })
+        .select("id")
+        .single();
+      if (error || !data) {
+        throw new Error(`failed to create trecho: ${error?.message ?? "unknown"}`);
       }
+      const trechoId = data.id as string;
 
       const id = crypto.randomUUID();
       const storageKey = `${id}.bin`;
@@ -160,7 +129,6 @@ export function createSupabaseStore(options: {
         );
       }
 
-      await refreshTrechoSeveridade(trechoId);
       return rowToCaptura(row as CapturaRow);
     },
 
@@ -204,7 +172,7 @@ export function createSupabaseStore(options: {
     async getTrecho(id: string): Promise<Trecho | null> {
       const { data, error } = await client
         .from("trechos")
-        .select("id, severidade")
+        .select("id, severidade, length_meters")
         .eq("id", id)
         .maybeSingle();
       if (error) {
@@ -214,7 +182,11 @@ export function createSupabaseStore(options: {
         return null;
       }
       const row = data as TrechoRow;
-      return { id: row.id, severidade: row.severidade };
+      return {
+        id: row.id,
+        severidade: row.severidade,
+        lengthMeters: row.length_meters,
+      };
     },
   };
 }

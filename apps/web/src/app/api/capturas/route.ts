@@ -112,14 +112,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const trechoId =
-    body.trechoId === undefined
-      ? undefined
-      : typeof body.trechoId === "string"
-        ? body.trechoId
-        : undefined;
-  if (body.trechoId !== undefined && trechoId === undefined) {
-    return NextResponse.json({ error: "trechoId must be a string" }, { status: 400 });
+  if (body.trechoId !== undefined) {
+    return NextResponse.json(
+      { error: "trechoId is not accepted; each captura creates its own trecho" },
+      { status: 400 },
+    );
   }
 
   let imageBytes: Uint8Array;
@@ -166,7 +163,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const captura = await getCapturaStore().createCaptura({
-      trechoId,
       lat: body.lat,
       lon: body.lon,
       capturedAt: body.capturedAt,
@@ -182,9 +178,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(captura, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "create failed";
-    if (message.startsWith("trecho not found")) {
-      return NextResponse.json({ error: message }, { status: 404 });
-    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

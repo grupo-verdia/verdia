@@ -20,9 +20,14 @@ export type Captura = {
   inferenceError: string | null;
 };
 
+/** Motiva’s current manual-analysis constant for roadside stretch length. */
+export const DEFAULT_TRECHO_LENGTH_METERS = 500;
+
 export type Trecho = {
   id: string;
   severidade: Severidade;
+  /** Stored roadside length in meters; defaults to Motiva’s 500 m constant. */
+  lengthMeters: number;
 };
 
 export const CLASSES: readonly Classe[] = ["baixa", "média", "alta"] as const;
