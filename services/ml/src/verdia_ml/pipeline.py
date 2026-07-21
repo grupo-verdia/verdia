@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from io import BytesIO
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 from verdia_ml.classificador import classificar_ordinal
 from verdia_ml.labels import Classe
@@ -41,6 +41,8 @@ def decode_rgb(image_bytes: bytes) -> np.ndarray:
     try:
         with Image.open(BytesIO(image_bytes)) as image:
             image.load()
-            return np.asarray(image.convert("RGB"), dtype=np.uint8)
+            # Phone geotagged capturas often store sensor orientation in EXIF.
+            oriented = ImageOps.exif_transpose(image)
+            return np.asarray(oriented.convert("RGB"), dtype=np.uint8)
     except OSError as exc:
         raise ValueError("image must be a decodable image") from exc
