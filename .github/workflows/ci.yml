@@ -1,0 +1,189 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  changes:
+    name: Detect paths
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      ml: ${{ steps.filter.outputs.ml }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+              - 'scripts/ci/**'
+              - '.github/workflows/**'
+              - 'AGENTS.md'
+              - 'docs/agents/ci.md'
+              - 'docs/adr/0007-pr-ci-and-post-ci-bugbot.md'
+            ml:
+              - 'services/ml/**'
+              - 'scripts/ci/**'
+              - '.github/workflows/**'
+              - 'AGENTS.md'
+              - 'docs/agents/ci.md'
+              - 'docs/adr/0007-pr-ci-and-post-ci-bugbot.md'
+
+  web:
+    name: Web
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Lint (incl. anti-slop)
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        run: npm test
+      - name: File size caps
+        working-directory: .
+        run: node scripts/ci/check-file-size.mjs --root apps/web --max 400 --ext .ts,.tsx
+      - name: CI helper tests (file size)
+        working-directory: .
+        run: node --test scripts/ci/check-file-size.test.mjs
+
+  ml:
+    name: ML
+    needs: changes
+    if: needs.changes.outputs.ml == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/ml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Sync
+        run: uv sync --all-groups
+      - name: Ruff check
+        run: uv run ruff check .
+      - name: Ruff format
+        run: uv run ruff format --check .
+      - name: Pytest
+        run: uv run pytest
+      - name: File size caps
+        working-directory: .
+        run: node scripts/ci/check-file-size.mjs --root services/ml --max 500 --ext .py
+      - name: Function size caps
+        working-directory: .
+        run: python3 scripts/ci/check_python_function_size.py --root services/ml --max 60
+      - name: CI helper tests (function size)
+        run: uv run pytest ../../scripts/ci/test_check_python_function_size.py
+
+  # Single required check for branch protection (path-skipped jobs report skipped).
+  ci:
+    name: CI
+    needs: [changes, web, ml]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aggregate
+        run: |
+          set -euo pipefail
+          changes="${{ needs.changes.result }}"
+          web="${{ needs.web.result }}"
+          ml="${{ needs.ml.result }}"
+          echo "changes=$changes web=$web ml=$ml"
+          if [[ "$changes" != "success" ]]; then
+            echo "Path detection failed: $changes"
+            exit 1
+          fi
+          if [[ "$web" == "failure" || "$web" == "cancelled" ]]; then
+            echo "Web job failed ($web)"
+            exit 1
+          fi
+          if [[ "$ml" == "failure" || "$ml" == "cancelled" ]]; then
+            echo "ML job failed ($ml)"
+            exit 1
+          fi
+          if [[ "$web" != "success" && "$web" != "skipped" ]]; then
+            echo "Unexpected web result: $web"
+            exit 1
+          fi
+          if [[ "$ml" != "success" && "$ml" != "skipped" ]]; then
+            echo "Unexpected ml result: $ml"
+            exit 1
+          fi
+          if [[ "$web" == "skipped" && "$ml" == "skipped" ]]; then
+            echo "No package paths changed — nothing to verify."
+          fi
+          echo "CI gate passed"
+
+  trigger-bugbot:
+    name: Trigger Bugbot
+    needs: [ci]
+    if: >
+      always() &&
+      needs.ci.result == 'success' &&
+      github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment bugbot run
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = "<!-- verdia-ci-bugbot-trigger -->";
+            const body = [
+              marker,
+              "CI is green on this ready PR — requesting Bugbot review.",
+              "",
+              "bugbot run",
+            ].join("\n");
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+
+            // Fresh comment so Bugbot sees a new mention; remove prior triggers.
+            for (const c of comments) {
+              if (c.user?.type === "Bot" && c.body?.includes(marker)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: c.id,
+                });
+              }
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+            core.info("Created Bugbot trigger comment");

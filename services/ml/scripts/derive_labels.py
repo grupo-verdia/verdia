@@ -30,13 +30,17 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     thresholds = load_thresholds(args.thresholds)
-    for line_no, line in enumerate(args.input_jsonl.read_text(encoding="utf-8").splitlines(), 1):
+    for line_no, line in enumerate(
+        args.input_jsonl.read_text(encoding="utf-8").splitlines(), 1
+    ):
         raw = line.strip()
         if not raw or raw.startswith("#"):
             continue
         row = json.loads(raw)
         if "id" not in row or "cobertura" not in row:
-            print(f"{args.input_jsonl}:{line_no}: need id and cobertura", file=sys.stderr)
+            print(
+                f"{args.input_jsonl}:{line_no}: need id and cobertura", file=sys.stderr
+            )
             return 1
         classe = classe_from_cobertura(float(row["cobertura"]), thresholds)
         out = {

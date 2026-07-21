@@ -89,7 +89,7 @@ export default async function CapturaDetailPage({ params }: PageProps) {
           <figcaption style={{ marginBottom: "0.5rem", fontWeight: 600 }}>
             Foto
           </figcaption>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL; next/image needs remotePatterns per bucket */}
           <img
             src={photoUrl}
             alt="Foto da captura"
@@ -107,7 +107,7 @@ export default async function CapturaDetailPage({ params }: PageProps) {
             Segmentação (overlay)
           </figcaption>
           {overlayUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
+            /* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL; next/image needs remotePatterns per bucket */
             <img
               src={overlayUrl}
               alt="Overlay de segmentação da vegetação"

@@ -74,7 +74,9 @@ def cobertura_from_masks(
         raise ValueError("roadside mask must be non-empty")
     height = len(roadside)
     width = len(roadside[0])
-    if len(tall_grass) != height or any(len(row) != width for row in [*roadside, *tall_grass]):
+    if len(tall_grass) != height or any(
+        len(row) != width for row in [*roadside, *tall_grass]
+    ):
         raise ValueError("roadside and tall_grass masks must share the same H×W shape")
 
     roadside_count = 0
@@ -103,7 +105,9 @@ def load_thresholds(path: Path) -> CoberturaThresholds:
 
 def load_labeled_fixtures(path: Path) -> list[LabeledSample]:
     samples: list[LabeledSample] = []
-    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for line_no, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
         raw = line.strip()
         if not raw or raw.startswith("#"):
             continue
@@ -164,7 +168,9 @@ def _sample_from_row(row: dict[str, object], path: Path, line_no: int) -> Labele
             cobertura=float(row["cobertura"]),  # type: ignore[arg-type]
             classe=classe,  # type: ignore[arg-type]
             license=str(row["license"]),
-            source_label=None if row.get("source_label") is None else str(row["source_label"]),
+            source_label=None
+            if row.get("source_label") is None
+            else str(row["source_label"]),
         )
     except (KeyError, TypeError, ValueError) as exc:
         raise ValueError(f"{path}:{line_no}: invalid fixture row ({exc})") from exc
