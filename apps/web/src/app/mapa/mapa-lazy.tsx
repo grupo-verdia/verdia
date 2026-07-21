@@ -29,8 +29,9 @@ const MapaClient = nextDynamic(
 
 type MapaLazyProps = {
   trechos: MapTrecho[];
+  planOrdemById?: Readonly<Record<string, number>>;
 };
 
-export function MapaLazy({ trechos }: MapaLazyProps) {
-  return <MapaClient trechos={trechos} />;
+export function MapaLazy({ trechos, planOrdemById }: MapaLazyProps) {
+  return <MapaClient trechos={trechos} planOrdemById={planOrdemById} />;
 }

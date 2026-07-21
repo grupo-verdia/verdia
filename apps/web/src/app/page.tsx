@@ -26,6 +26,12 @@ export default async function Home() {
           Mapa de trechos
         </Link>
         <Link
+          href="/planejamento"
+          style={{ color: "#246", textDecoration: "underline" }}
+        >
+          Planejamento
+        </Link>
+        <Link
           href="/observabilidade"
           style={{ color: "#246", textDecoration: "underline" }}
         >

@@ -1,7 +1,7 @@
 # verdia web (`apps/web`)
 
-Next.js (TypeScript) product surface: dashboard, map, planning, observability
-(later tickets), gated by a single shared password.
+Next.js (TypeScript) product surface: dashboard, map, planning, observability,
+gated by a single shared password.
 
 ## Local
 
