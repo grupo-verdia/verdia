@@ -9,6 +9,7 @@ Raw downloads are **not** committed. This tree holds:
 |------|---------|
 | `thresholds.json` | Cobertura bin edges calibrated on the DNIT validation fixtures |
 | `fixtures/*.jsonl` | Small labeled rows downstream training/eval can consume today |
+| `eval_metrics.json` | Latest DNIT ordinal-aware eval report (`EVAL_METRICS_JSON` shape) |
 | `raw/` (gitignored) | Optional local downloads created by `prepare_datasets.py` |
 
 ## Roles and licenses

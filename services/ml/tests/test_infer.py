@@ -4,19 +4,18 @@ import base64
 from io import BytesIO
 
 from fastapi.testclient import TestClient
+from PIL import Image
 
 from verdia_ml.app import app
 
 CLASSES = {"baixa", "média", "alta"}
 
 
-def _png_bytes() -> bytes:
-    # Minimal valid 1x1 PNG
-    return (
-        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
-        b"\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f"
-        b"\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82"
-    )
+def _png_bytes(rgb: tuple[int, int, int] = (70, 140, 55), size: int = 16) -> bytes:
+    image = Image.new("RGB", (size, size), rgb)
+    buf = BytesIO()
+    image.save(buf, format="PNG")
+    return buf.getvalue()
 
 
 def test_infer_returns_ordinal_classe_for_captura():
@@ -38,7 +37,12 @@ def test_infer_returns_ordinal_classe_for_captura():
     assert 0.0 <= body["confidence"] <= 1.0
     assert isinstance(body["model_version"], str)
     assert body["model_version"]
-
+    assert set(body.keys()) == {
+        "classe",
+        "confidence",
+        "model_version",
+        "overlay_png_base64",
+    }
 
 def test_infer_returns_segmentacao_overlay_without_replacing_classe():
     """Segmentação overlay is visualization only; classe stays the ordinal field."""
@@ -62,7 +66,8 @@ def test_infer_returns_segmentacao_overlay_without_replacing_classe():
     assert overlay.startswith(b"\x89PNG")
     # Overlay must not be treated as the classe source of truth.
     assert "classe" in body
-    assert body["classe"] == "média"
+    assert body["model_version"]
+    assert body["model_version"] != "stub-0.1"
 
 def test_infer_rejects_missing_image():
     client = TestClient(app)
