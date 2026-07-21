@@ -16,7 +16,8 @@ visualization, designed to grow into the full platform.
   shared password** (simple middleware). Real auth (Supabase Auth) is future vision.
 - `services/ml` — **Python**: training + inference service (segmentação + classificador
   ordinal), exposed as an always-on API.
-- **Simulador de ingestão** — replays geotagged images into the inference API.
+- **Nova captura** — browser multi-select upload of geotagged photos into the inference
+  API (see ADR-0005). Supersedes the earlier CLI simulador.
 - **Data:** **Supabase** — Postgres for capture metadata and predictions (path, GPS,
   timestamp, predicted classe, confidence, model version); Storage for images.
 
