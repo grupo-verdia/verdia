@@ -34,3 +34,13 @@ def test_segmentar_produces_mask_and_overlay_without_deciding_classe():
     assert overlay.startswith(b"\x89PNG")
     # Segmentação must not decide classe (no classe attribute on the result).
     assert not hasattr(result, "classe")
+
+
+def test_segmentar_keeps_full_mask_when_exg_is_unsplittable():
+    """Constant ExG must not yield an empty mask (Option A cleaned-region path)."""
+    rgb = np.zeros((24, 24, 3), dtype=np.uint8)
+    rgb[:, :] = (30, 200, 40)
+
+    result = segmentar(rgb)
+
+    assert result.mask.all()

@@ -41,25 +41,30 @@ def _vegetation_mask(rgb: np.ndarray) -> np.ndarray:
 
 
 def _otsu_threshold(values: np.ndarray) -> float:
-    """Otsu threshold on a continuous ExG map (256-bin histogram)."""
+    """Otsu threshold on a continuous ExG map (256-bin histogram).
+
+    When ExG is constant / unsplittable, return -inf so the mask keeps the full
+    frame. That avoids an all-false mask that would skip cleaned-region
+    preprocessing in the ordinal classifier (Option A).
+    """
     flat = values.ravel()
     vmin = float(flat.min())
     vmax = float(flat.max())
     if vmax <= vmin:
-        return vmin
+        return float("-inf")
 
     hist, bin_edges = np.histogram(flat, bins=256, range=(vmin, vmax))
     hist = hist.astype(np.float64)
     total = hist.sum()
     if total <= 0:
-        return vmin
+        return float("-inf")
 
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
     weight_bg = np.cumsum(hist)
     weight_fg = total - weight_bg
     valid = (weight_bg > 0) & (weight_fg > 0)
     if not np.any(valid):
-        return float(bin_centers[len(bin_centers) // 2])
+        return float("-inf")
 
     sum_total = np.dot(hist, bin_centers)
     sum_bg = np.cumsum(hist * bin_centers)
