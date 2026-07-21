@@ -74,8 +74,8 @@ describe("mapa product read surface", () => {
     });
   });
 
-  it("averages captura lat/lon for a trecho without requiring PostGIS", async () => {
-    const first = await createCaptura(
+  it("places each captura’s trecho at that captura’s lat/lon (1:1)", async () => {
+    const response = await createCaptura(
       new NextRequest("http://localhost:3000/api/capturas", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -91,34 +91,16 @@ describe("mapa product read surface", () => {
         }),
       }),
     );
-    const firstBody = (await first.json()) as { trechoId: string };
-
-    await createCaptura(
-      new NextRequest("http://localhost:3000/api/capturas", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          trechoId: firstBody.trechoId,
-          lat: -23.7,
-          lon: -46.8,
-          capturedAt: "2026-07-20T11:00:00.000Z",
-          classe: "baixa",
-          confidence: 0.6,
-          modelVersion: "stub-0.1",
-          imageBase64: Buffer.from("b").toString("base64"),
-          contentType: "image/jpeg",
-        }),
-      }),
-    );
+    const body = (await response.json()) as { trechoId: string };
 
     const trechos = await loadMapTrechos();
     expect(trechos).toHaveLength(1);
     expect(trechos[0]).toMatchObject({
-      id: firstBody.trechoId,
-      lat: -23.6,
-      lon: -46.7,
+      id: body.trechoId,
+      lat: -23.5,
+      lon: -46.6,
       severidade: "média",
-      capturaCount: 2,
+      capturaCount: 1,
     });
   });
 

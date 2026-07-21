@@ -52,8 +52,8 @@ describe("capturas product read surface", () => {
     expect(body.capturas[0]?.classe).toBe("alta");
   });
 
-  it("associates capturas to a trecho whose severidade follows the highest classe", async () => {
-    const first = await createCaptura(
+  it("creates a trecho whose severidade follows the captura classe", async () => {
+    const response = await createCaptura(
       new NextRequest("http://localhost:3000/api/capturas", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -61,49 +61,30 @@ describe("capturas product read surface", () => {
           lat: -23.55,
           lon: -46.63,
           capturedAt: "2026-07-20T10:00:00.000Z",
-          classe: "baixa",
-          confidence: 0.8,
+          classe: "alta",
+          confidence: 0.95,
           modelVersion: "stub-0.1",
           imageBase64: Buffer.from("a").toString("base64"),
           contentType: "image/jpeg",
         }),
       }),
     );
-    expect(first.status).toBe(201);
-    const firstBody = (await first.json()) as { id: string; trechoId: string };
-
-    const second = await createCaptura(
-      new NextRequest("http://localhost:3000/api/capturas", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          trechoId: firstBody.trechoId,
-          lat: -23.56,
-          lon: -46.64,
-          capturedAt: "2026-07-20T11:00:00.000Z",
-          classe: "alta",
-          confidence: 0.95,
-          modelVersion: "stub-0.1",
-          imageBase64: Buffer.from("b").toString("base64"),
-          contentType: "image/jpeg",
-        }),
-      }),
-    );
-    expect(second.status).toBe(201);
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as { id: string; trechoId: string };
 
     const trechoResponse = await fetchTrecho(
-      new NextRequest(
-        `http://localhost:3000/api/trechos/${firstBody.trechoId}`,
-      ),
-      { params: Promise.resolve({ id: firstBody.trechoId }) },
+      new NextRequest(`http://localhost:3000/api/trechos/${body.trechoId}`),
+      { params: Promise.resolve({ id: body.trechoId }) },
     );
     expect(trechoResponse.status).toBe(200);
     const trecho = (await trechoResponse.json()) as {
       id: string;
       severidade: string;
+      lengthMeters: number;
     };
-    expect(trecho.id).toBe(firstBody.trechoId);
+    expect(trecho.id).toBe(body.trechoId);
     expect(trecho.severidade).toBe("alta");
+    expect(trecho.lengthMeters).toBe(500);
   });
 
   it("exposes persisted capturas with classe on the dashboard read path", async () => {

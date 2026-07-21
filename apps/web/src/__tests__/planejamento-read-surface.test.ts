@@ -68,29 +68,18 @@ describe("planejamento product read surface", () => {
     expect(plan.map((t) => t.severidade)).toEqual(["alta", "média", "baixa"]);
   });
 
-  it("drives plan severidade primarily from classe (max among capturas)", async () => {
-    const first = await seedCaptura({
+  it("drives plan severidade from each captura’s classe (1:1 trecho)", async () => {
+    const alta = await seedCaptura({
       lat: -23.5,
       lon: -46.6,
       capturedAt: "2026-07-20T10:00:00.000Z",
-      classe: "baixa",
-      confidence: 0.6,
+      classe: "alta",
+      confidence: 0.9,
       modelVersion: "stub-0.1",
       imageBase64: Buffer.from("a").toString("base64"),
       contentType: "image/jpeg",
     });
-    await seedCaptura({
-      trechoId: first.trechoId,
-      lat: -23.7,
-      lon: -46.8,
-      capturedAt: "2026-07-20T11:00:00.000Z",
-      classe: "alta",
-      confidence: 0.9,
-      modelVersion: "stub-0.1",
-      imageBase64: Buffer.from("b").toString("base64"),
-      contentType: "image/jpeg",
-    });
-    const onlyBaixa = await seedCaptura({
+    const baixa = await seedCaptura({
       lat: -22.9,
       lon: -43.2,
       capturedAt: "2026-07-20T12:00:00.000Z",
@@ -105,12 +94,12 @@ describe("planejamento product read surface", () => {
 
     expect(plan).toHaveLength(2);
     expect(plan[0]).toMatchObject({
-      id: first.trechoId,
+      id: alta.trechoId,
       severidade: "alta",
       ordem: 1,
     });
     expect(plan[1]).toMatchObject({
-      id: onlyBaixa.trechoId,
+      id: baixa.trechoId,
       severidade: "baixa",
       ordem: 2,
     });
