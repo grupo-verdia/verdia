@@ -30,14 +30,14 @@ jobs:
               - '.github/workflows/**'
               - 'AGENTS.md'
               - 'docs/agents/ci.md'
-              - 'docs/adr/0007-pr-ci-and-post-ci-bugbot.md'
+              - 'docs/adr/0007-pr-ci-gate.md'
             ml:
               - 'services/ml/**'
               - 'scripts/ci/**'
               - '.github/workflows/**'
               - 'AGENTS.md'
               - 'docs/agents/ci.md'
-              - 'docs/adr/0007-pr-ci-and-post-ci-bugbot.md'
+              - 'docs/adr/0007-pr-ci-gate.md'
 
   web:
     name: Web
@@ -79,6 +79,10 @@ jobs:
         working-directory: services/ml
     steps:
       - uses: actions/checkout@v4
+      # Node is required for the shared file-size helper (scripts/ci/check-file-size.mjs).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true

@@ -23,6 +23,12 @@ Anti-slop on web includes: no inline `require()` / unjustified `import()`,
 `no-explicit-any`, justified `eslint-disable` only, exhaustive `switch`, function
 size caps (file size is the shared script above).
 
+**Function-size counting is intentionally not identical across stacks:** web ESLint
+`max-lines-per-function` skips blank lines and comments; the ML checker
+(`scripts/ci/check_python_function_size.py`) uses raw AST `lineno`/`end_lineno`
+spans (blanks, comments, and docstrings inside the function count). Do not expect
+parity when comparing a TS function to a Python one.
+
 Require the aggregate **`CI`** job for branch protection (not the
 path-skipped package jobs).
 
@@ -33,5 +39,5 @@ does not trigger Bugbot. Bugbot is not a required check.
 
 - Branch protection should require the job named **`CI`**.
 - Function-line ratchet on web is intentional debt, recorded here.
-- Prefer running Bugbot after CI is green so it does not nags about issues the
+- Prefer running Bugbot after CI is green so it does not nag about issues the
   mechanical gate already covers.
