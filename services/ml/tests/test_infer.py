@@ -44,6 +44,7 @@ def test_infer_returns_ordinal_classe_for_captura():
         "overlay_png_base64",
     }
 
+
 def test_infer_returns_segmentacao_overlay_without_replacing_classe():
     """Segmentação overlay is visualization only; classe stays the ordinal field."""
     client = TestClient(app)
@@ -68,6 +69,7 @@ def test_infer_returns_segmentacao_overlay_without_replacing_classe():
     assert "classe" in body
     assert body["model_version"]
     assert body["model_version"] != "stub-0.1"
+
 
 def test_infer_rejects_missing_image():
     client = TestClient(app)

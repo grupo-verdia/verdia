@@ -83,4 +83,4 @@ detection, real route optimization, Supabase Auth.
 ## Decisions
 
 See `docs/adr/` for the full rationale behind the key choices (including ADR-0005 Nova
-captura, ADR-0006 Colab train / CPU infer).
+captura, ADR-0006 Colab→CPU CV, ADR-0007 PR CI gate).

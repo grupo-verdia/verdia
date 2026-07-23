@@ -15,13 +15,16 @@ DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 def test_ordinal_mae_is_mean_absolute_rank_error():
     # baixa=0, média=1, alta=2 → errors 0, 1, 2 → mean 1.0
-    assert ordinal_mae(
-        [
-            ("baixa", "baixa"),
-            ("média", "baixa"),
-            ("alta", "baixa"),
-        ]
-    ) == 1.0
+    assert (
+        ordinal_mae(
+            [
+                ("baixa", "baixa"),
+                ("média", "baixa"),
+                ("alta", "baixa"),
+            ]
+        )
+        == 1.0
+    )
 
 
 def test_dnit_validation_reports_ordinal_aware_metric():

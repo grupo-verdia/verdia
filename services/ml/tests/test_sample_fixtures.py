@@ -7,11 +7,7 @@ import pytest
 from verdia_ml.pipeline import decode_rgb, infer_captura
 
 FIXTURES = (
-    Path(__file__).resolve().parents[3]
-    / "apps"
-    / "web"
-    / "fixtures"
-    / "capturas"
+    Path(__file__).resolve().parents[3] / "apps" / "web" / "fixtures" / "capturas"
 )
 
 
