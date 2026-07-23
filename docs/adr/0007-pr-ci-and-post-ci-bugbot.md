@@ -1,4 +1,4 @@
-# ADR-0007: PR CI gate + post-CI Bugbot
+# ADR-0007: PR CI gate (mechanical + anti-slop)
 
 Status: Accepted
 Date: 2026-07-21
@@ -6,9 +6,8 @@ Date: 2026-07-21
 ## Context
 
 Agent edits need a merge-blocking double-check for correctness and common AI
-slop, without relying on LLM taste inside CI. Cursor Bugbot already reviews PRs,
-but if it runs in parallel with broken types/lint it wastes review on problems
-mechanical CI should own.
+slop, without relying on LLM taste inside CI. Bugbot may still be used by
+humans on PRs, but it is not part of the automated gate.
 
 ## Decision
 
@@ -27,13 +26,12 @@ size caps (file size is the shared script above).
 Require the aggregate **`CI`** job for branch protection (not the
 path-skipped package jobs).
 
-After **green CI** on a **non-draft** PR, Actions posts a comment containing
-`bugbot run`. Configure the repo so Bugbot does **not** auto-run on every push
-(manual / mention-only); Bugbot remains **informational** (not a required check).
+**Bugbot is manual:** humans mention it on the PR when they want a review. CI
+does not trigger Bugbot. Bugbot is not a required check.
 
 ## Consequences
 
-- Humans must set Bugbot to mention-only in the Cursor dashboard for sequencing
-  to work.
 - Branch protection should require the job named **`CI`**.
 - Function-line ratchet on web is intentional debt, recorded here.
+- Prefer running Bugbot after CI is green so it does not nags about issues the
+  mechanical gate already covers.

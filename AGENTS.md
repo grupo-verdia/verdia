@@ -14,8 +14,7 @@ Single-context layout (`CONTEXT.md` + `docs/adr/` at repo root). See `docs/agent
 
 ### CI
 
-PR mechanical + anti-slop gate (and post-CI Bugbot trigger). See `docs/agents/ci.md`
-and ADR-0007.
+PR mechanical + anti-slop gate. See `docs/agents/ci.md` and ADR-0007.
 
 ## Learned User Preferences
 
