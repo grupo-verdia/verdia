@@ -53,12 +53,12 @@ function rowToCaptura(row: CapturaRow): Captura {
 
 export function createSupabaseStore(options: {
   url: string;
-  serviceRoleKey: string;
+  secretKey: string;
   client?: SupabaseClient;
 }): CapturaStore {
   const client =
     options.client ??
-    createClient(options.url, options.serviceRoleKey, {
+    createClient(options.url, options.secretKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
