@@ -21,7 +21,8 @@ Public URLs use provider defaults (`*.vercel.app`, `*.onrender.com`). No custom 
    - `20260720140000_capturas_inference_error.sql`
    - `20260720160000_capturas_overlay.sql`
 3. Confirm Storage bucket `capturas` exists (created by the first migration).
-4. Copy **Project URL** and **service_role** key (Settings → API).
+4. Copy **Project URL** and a **secret** key (`sb_secret_…`) from Settings → API Keys.
+   Disable the legacy JWT `anon` / `service_role` keys once nothing depends on them.
 
 ## 2. Render (Inference API)
 
@@ -44,7 +45,7 @@ Auto-deploy: later pushes to the connected branch rebuild the service.
    |------|--------|
    | `DEMO_PASSWORD` | Shared demo password |
    | `SUPABASE_URL` | From Supabase |
-   | `SUPABASE_SERVICE_ROLE_KEY` | From Supabase (server-only; never expose to the browser) |
+   | `SUPABASE_SECRET_KEY` | From Supabase secret key `sb_secret_…` (server-only; never expose to the browser) |
 
 5. Deploy. Note the URL, e.g. `https://verdia-….vercel.app`.
 
@@ -81,7 +82,7 @@ First request after Render idle may take ~1 minute (Free spin-up).
 |----------|--------|
 | `DEMO_PASSWORD` | Vercel + local web / simulador |
 | `SUPABASE_URL` | Vercel (+ local if not using in-memory) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Vercel (+ local) |
+| `SUPABASE_SECRET_KEY` | Vercel (+ local) |
 | `INFERENCE_API_KEY` | Render (+ local ML when testing auth; simulador when calling a keyed API) |
 | `INFERENCE_URL` | Local simulador only (points at Render for live E2E) |
 | `WEB_URL` | Local simulador only (points at Vercel for live E2E) |

@@ -74,7 +74,7 @@ filters) to focus the demo on the worst stretches.
 1. Apply [`supabase/migrations/20260720120000_capturas_trechos.sql`](../../supabase/migrations/20260720120000_capturas_trechos.sql).
 2. Apply [`supabase/migrations/20260720140000_capturas_inference_error.sql`](../../supabase/migrations/20260720140000_capturas_inference_error.sql).
 3. Apply [`supabase/migrations/20260720160000_capturas_overlay.sql`](../../supabase/migrations/20260720160000_capturas_overlay.sql).
-4. Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.
+4. Set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in `.env.local` (Dashboard → API Keys → secret key `sb_secret_…`).
 
 ```bash
 npm test
