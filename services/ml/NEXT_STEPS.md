@@ -4,9 +4,9 @@ Hand-trained CV track is abandoned. Focus: hosted VLM prototype. Plan: `docs/pla
 
 ## This week (AI team)
 
-- Build `vlm` client module (AI Studio key, JSON schema / validate+retry).
-- Thin harness: folder of photos → JSON verdicts (script and/or notebook calling the module).
-- Drop overlay from `InferResponse` + tests; leave `/infer` dormant otherwise.
+- [x] Build `vlm` client module (AI Studio key, JSON schema / validate+retry).
+- [x] Thin harness: folder of photos → JSON verdicts (`python -m verdia_ml.classify` / `scripts/classify_folder.py`).
+- Drop overlay from `InferResponse` + tests; leave `/infer` dormant otherwise (web/overlay agent).
 - Retire ExG/CORAL/cobertura from the live path (leave files or mark unused — don't rewrite history).
 
 ## Later

@@ -7,15 +7,16 @@ CPU inference is enough for the demo.
 
 `POST /infer` runs the hybrid sequential path:
 
-1. **Segmentação** (ExG + Otsu) — vegetation mask + `overlay_png_base64` visualization.
-   Does **not** decide classe.
+1. **Segmentação** (ExG + Otsu) — vegetation mask for classifier cleanup.
+   Does **not** decide classe. No overlay is returned on the API contract.
 2. **Classificador ordinal** — frozen feature stand-in (mean ExG on the cleaned
    vegetation region; CPU stand-in for DINOv2/SigLIP per ADR-0001 early path) +
    small CORAL head. **Single source of truth** for `classe`. Mask area / cobertura
    is not fused into the decision (Option B stays out of scope).
 
 Model version: `hybrid-ordinal-0.1`. Option B (fuse cobertura into the classifier) is
-not built. External request/response fields are unchanged from the stub baseline.
+not built. VLM will replace this dormant path; the `/infer` shape is classe + confidence
++ model_version only.
 
 ## Local
 
@@ -26,8 +27,7 @@ uv run python -m verdia_ml
 
 - Health: `GET /health` → `{"status":"ok"}` (always public)
 - Infer: `POST /infer` (multipart) — fields `image`, `lat`, `lon`, `captured_at`
-  → `{"classe":"baixa"|"média"|"alta","confidence":0.0–1.0,"model_version":"...","overlay_png_base64":"..."}`
-- `overlay_png_base64` is the segmentação visualization; classe remains the ordinal field
+  → `{"classe":"baixa"|"média"|"alta","confidence":0.0–1.0,"model_version":"..."}`
 - Default bind: `0.0.0.0:8000`
 - Auth: when `INFERENCE_API_KEY` is set, callers must send `Authorization: Bearer <key>`.
   When unset, `/infer` stays open (local ergonomics).
@@ -76,6 +76,21 @@ Public-dataset roles, licenses, cobertura → classe thresholds, and fixtures:
 - Docs: [`data/README.md`](./data/README.md)
 - Thresholds: `data/thresholds.json` (calibrated on DNIT validation fixtures)
 - Prepare layout: `uv run python scripts/prepare_datasets.py`
+
+## VLM prototype (Gemma 4)
+
+Importable classifier in `verdia_ml.vlm` (not wired into `/infer` yet). Needs
+`GOOGLE_API_KEY` for live Google AI Studio calls; optional `VLM_MODEL`,
+`VLM_BASE_URL`. Offline: omit the key or set `VLM_FAKE=1`.
+
+```bash
+# Fake / CI-safe
+VLM_FAKE=1 uv run python -m verdia_ml.classify path/to/photos --summary
+
+# Live (model default: gemma-4-26b-a4b-it)
+export GOOGLE_API_KEY=...
+uv run python -m verdia_ml.classify path/to/photos
+```
 
 ## Tests
 
