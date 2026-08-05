@@ -1,12 +1,19 @@
-"""Run the Inference API: `uv run verdia-ml` or `python -m verdia_ml`."""
+"""Package entry — HTTP serve is deferred; use the classify CLI."""
 
-import uvicorn
+from __future__ import annotations
 
-from verdia_ml.app import app
+import sys
 
 
 def main() -> None:
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    print(
+        "HTTP Inference API is deferred.\n"
+        "Classify photos with:\n"
+        "  uv run python -m verdia_ml.classify path/to/photos\n"
+        "  VLM_FAKE=1 uv run python -m verdia_ml.classify path/to/photos --summary",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
 
 
 if __name__ == "__main__":

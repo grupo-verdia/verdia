@@ -16,25 +16,14 @@ the BFF uses an **in-memory** store (fine for local demos; data resets on restar
 
 ### Simulador de ingestão
 
-Replays geotagged sample capturas into the Inference API, then persists results
-via the BFF so they appear on the dashboard.
+**Deferred** — needs ML HTTP `POST /infer`, which is not shipped this week. The
+CLI exits with a clear message. Unit tests still cover the simulador with a
+mocked InferClient.
 
-1. Start the ML service (`uv run python -m verdia_ml` in `services/ml`).
-2. Start this app (`npm run dev`).
-3. From `apps/web` (with `DEMO_PASSWORD` set, e.g. via `.env.local`):
+ML classification this week: `services/ml` VLM CLI / notebook
+(`uv run python -m verdia_ml.classify …`).
 
-```bash
-set -a && source .env.local && set +a
-npm run simulate-ingest
-```
-
-Sample pack: [`fixtures/capturas/`](./fixtures/capturas/) (manifest + tiny PNGs).
-Failed inferences are persisted with `inferenceError` and shown on the dashboard
-instead of being dropped.
-
-Env overrides: `INFERENCE_URL`, `INFERENCE_API_KEY`, `WEB_URL`, `SAMPLE_MANIFEST`.
-
-Live stack: point those at Vercel + Render (see [`docs/DEPLOY.md`](../../docs/DEPLOY.md)).
+Sample pack (for when ingest returns): [`fixtures/capturas/`](./fixtures/capturas/).
 
 ### Persist capturas (seed via BFF)
 

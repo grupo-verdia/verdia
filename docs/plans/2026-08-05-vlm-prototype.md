@@ -29,6 +29,7 @@
 ## Deferred
 
 - Wiring into FastAPI `/infer`, Render deploy, Colab training, TAS500/forefield datasets.
+- **Purged for now:** old `/infer` ASGI app + ExG/CORAL CV stand-ins; HTTP serve returns later in a new shape if needed.
 
 ## Shape
 

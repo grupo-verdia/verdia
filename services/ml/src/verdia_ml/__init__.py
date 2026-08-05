@@ -1,1 +1,1 @@
-"""verdia ML service — Inference API package."""
+"""verdia ML — VLM grass classifier prototype (HTTP API deferred)."""

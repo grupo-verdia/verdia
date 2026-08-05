@@ -14,9 +14,9 @@
 
 Monorepo with two services (standard run/test commands live in `README.md`):
 
-- `services/ml` — Python FastAPI Inference API (`uv`, Python 3.12). Run with `uv run python -m verdia_ml` (serves on `:8000`, health at `/health`); test with `uv run pytest`. `uv` installs to `~/.local/bin`.
+- `services/ml` — Python VLM prototype (`uv`, Python 3.12). Classify with `uv run python -m verdia_ml.classify …` (fake: `VLM_FAKE=1`); test with `uv run pytest`. HTTP `/infer` serve is deferred. `uv` installs to `~/.local/bin`.
 - `apps/web` — Next.js + TypeScript (Node 22, `npm`). Run `npm run dev` (`:3000`); `npm test` / `npm run lint` / `npm run typecheck`. Copy `.env.example` → `.env.local` (needs `DEMO_PASSWORD`, default `verdia-demo`). This is a newer Next.js with breaking changes — see `apps/web/AGENTS.md`.
-- `npm run simulate-ingest` (from `apps/web`, with env sourced) exercises the core flow end-to-end: login → ML inference → BFF persist. Needs both services running.
+- `npm run simulate-ingest` is deferred until a new ML HTTP API lands (exits with a clear message).
 
 Non-obvious gotchas:
 

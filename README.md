@@ -8,8 +8,7 @@ Monorepo layout:
 | Path | Role |
 |------|------|
 | `apps/web` | Next.js (TypeScript) product + BFF, shared-password gate |
-| `services/ml` | Python Inference API (segmentação + classificador ordinal) |
-| `services/ml/data` | Public-dataset roles, cobertura thresholds, eval fixtures |
+| `services/ml` | Python VLM grass classifier prototype (CLI + notebook; HTTP deferred) |
 
 Domain glossary and ADRs: [`CONTEXT.md`](./CONTEXT.md), [`docs/adr/`](./docs/adr/).
 
@@ -20,15 +19,15 @@ Domain glossary and ADRs: [`CONTEXT.md`](./CONTEXT.md), [`docs/adr/`](./docs/adr
 
 ## Run locally
 
-### 1. Inference API (`services/ml`)
+### 1. ML VLM prototype (`services/ml`)
 
 ```bash
 cd services/ml
 uv sync
-uv run python -m verdia_ml
+VLM_FAKE=1 uv run python -m verdia_ml.classify path/to/photos --summary
 ```
 
-Health check: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
+HTTP Inference API serve is **deferred**. Details: [`services/ml/README.md`](./services/ml/README.md).
 
 Tests:
 
@@ -53,17 +52,8 @@ vars after applying `supabase/migrations/`).
 
 ### 3. Simulador de ingestão
 
-With both services running, replay the sample capturas (geotagged PNGs under
-`apps/web/fixtures/capturas/`):
-
-```bash
-cd apps/web
-set -a && source .env.local && set +a
-npm run simulate-ingest
-```
-
-Successful predictions persist through the BFF and show on the dashboard. Failed
-inferences are kept with an `inferenceError` signal (not silently dropped).
+**Deferred** — needs the HTTP Inference API (`POST /infer`), which is not shipped
+this week. The CLI exits with a clear message until a new API shape lands.
 
 Tests / typecheck:
 
@@ -75,10 +65,8 @@ npm run typecheck
 
 ## Fully live deploy
 
-Shareable Motiva demo stack (Vercel + hosted Supabase + Render Free): see
-[`docs/DEPLOY.md`](./docs/DEPLOY.md). Agent prepares configs in-repo; you create
-the cloud projects and set secrets. Live E2E uses this same simulador pointed at
-the deployed URLs.
+Shareable Motiva demo stack (Vercel + hosted Supabase); ML Render hosting is
+deferred with the HTTP API. See [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
 ## Spec / tickets
 

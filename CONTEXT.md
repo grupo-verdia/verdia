@@ -42,14 +42,16 @@ Use these terms consistently in issues, code, tests, and docs.
   (alta first).
 - **Nova captura** — web-app flow to upload one or more geotagged photos (multi-select);
   each valid file becomes a **captura** (infer → persist → show on dashboard/map). Ingest
-  is browser-only (no CLI). Uploads without valid GPS are rejected per file.
+  is browser-only (no CLI). Uploads without valid GPS are rejected per file. **App↔AI
+  HTTP integrate is deferred this week** (VLM prototype only).
 
 ## Fronts (all in scope)
 
-1. **CV pipeline (hybrid, sequential):** segmentação → classificador ordinal.
-   See ADR-0001.
-2. **Inference API** (Python, always-on).
-3. **Nova captura** (web upload → API).
+1. **Classifier path (current):** hosted VLM prototype (`services/ml` module + CLI +
+   notebook). Hand-trained hybrid CV + always-on `/infer` are deferred / removed for now
+   (see ADR-0001 historically; plan `docs/plans/2026-08-05-vlm-prototype.md`).
+2. **Inference HTTP API** — deferred (reintroduce later in a new shape if needed).
+3. **Nova captura** (web upload → API) — deferred until AI path lands.
 4. **Dashboard** (results).
 5. **Geospatial map** of trechos.
 6. **Observability (lean):** basic counters + model accuracy.
@@ -73,12 +75,12 @@ detection, real route optimization, Supabase Auth.
 
 - `apps/web` — **Next.js (TypeScript)**: dashboard, map, planning, observability, and
   API routes. Access gated by a **single shared password**.
-- `services/ml` — **Python**: training + inference service (segmentação + classificador
-  ordinal).
-- **Nova captura** (in `apps/web`).
+- `services/ml` — **Python**: VLM grass classifier prototype (module + CLI + notebook).
+  HTTP Inference API deferred.
+- **Nova captura** (in `apps/web`) — deferred until AI HTTP lands.
 - **Data:** **Supabase** (Postgres for metadata/predictions; Storage for images).
-- **Deploy (fully live):** web on **Vercel**, data on **Supabase**, ML service on a
-  hobby CPU container on **Render**. See ADR-0003 and ADR-0004.
+- **Deploy:** web on **Vercel**, data on **Supabase**. ML Render hosting deferred with
+  the HTTP API. See ADR-0003 and ADR-0004 (historical deploy target).
 
 ## Decisions
 

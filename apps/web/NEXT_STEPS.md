@@ -5,6 +5,7 @@ Hand-trained CV / overlay path is abandoned. ML plan: `docs/plans/2026-08-05-vlm
 ## Prep we can do now
 
 - [x] Remove overlay from client, types, persistence, captura detail; migration drops overlay column.
+- [x] Mark `simulate-ingest` deferred (ML HTTP `/infer` purged; CLI exits clearly).
 
 ## App team ownership
 

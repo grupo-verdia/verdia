@@ -3,13 +3,18 @@
 Prepare-in-repo runbook for issue #10 / ADR-0004. **Humans** create the cloud
 projects and paste secrets; Git auto-deploy handles later pushes.
 
+**Status (2026-08):** ML HTTP Inference API + Render Blueprint (`render.yaml` /
+`services/ml/Dockerfile`) are **deferred** while the VLM prototype lives as CLI +
+notebook only. Sections below keep the historical Vercel + Supabase + Render shape
+for when an API returns.
+
 ## Stack
 
 | Piece | Host | Notes |
 |-------|------|--------|
 | Web (`apps/web`) | **Vercel** | Root Directory = `apps/web`; password gate via `DEMO_PASSWORD` |
 | Data | **Hosted Supabase** | Postgres + Storage; apply migrations in order |
-| Inference API (`services/ml`) | **Render Free** | Docker via [`render.yaml`](../render.yaml); sleeps after idle (cold starts OK) |
+| Inference API (`services/ml`) | **Render Free (deferred)** | Was Docker via `render.yaml`; reintroduce with a new API shape later |
 
 Public URLs use provider defaults (`*.vercel.app`, `*.onrender.com`). No custom domain.
 
@@ -26,15 +31,13 @@ Public URLs use provider defaults (`*.vercel.app`, `*.onrender.com`). No custom 
 4. Copy **Project URL** and a **secret** key (`sb_secret_…`) from Settings → API Keys.
    Disable the legacy JWT `anon` / `service_role` keys once nothing depends on them.
 
-## 2. Render (Inference API)
+## 2. Render (Inference API) — deferred
 
-1. In [Render](https://render.com), **New → Blueprint** and connect this GitHub repo.
-2. Render reads [`render.yaml`](../render.yaml): Free web service, Docker build from `services/ml`.
-3. Set secret env var **`INFERENCE_API_KEY`** to a long random string (same value you will use locally for the simulador).
-4. Deploy. Note the service URL, e.g. `https://verdia-ml.onrender.com`.
-5. Check `GET /health` (public, no auth). `POST /infer` requires `Authorization: Bearer <INFERENCE_API_KEY>`.
+HTTP `/infer` + Dockerfile + `render.yaml` were removed with the hand-CV path.
+Reintroduce hosting only after the VLM prototype is wired into a new API shape.
 
-Auto-deploy: later pushes to the connected branch rebuild the service.
+~~Previous steps: Blueprint from `render.yaml`, set `INFERENCE_API_KEY`, health on
+`GET /health`, auth on `POST /infer`.~~
 
 ## 3. Vercel (web)
 
@@ -55,36 +58,23 @@ The web app does **not** call the Inference API directly. Only the simulador (CL
 
 Auto-deploy: later pushes to the connected branch redeploy the web app.
 
-## 4. Live E2E verification (local simulador → live stack)
+## 4. Live E2E verification — deferred
 
-Presenters only need the Vercel URL + `DEMO_PASSWORD`. To prove captura → inference → dashboard against the **live** stack, run the simulador from your machine:
+`npm run simulate-ingest` exits until an Inference HTTP API returns. Presenters can
+still use the Vercel URL + `DEMO_PASSWORD` for the web UI; seed capturas via BFF or
+Supabase if needed.
 
-```bash
-cd apps/web
-export DEMO_PASSWORD='…'          # same as Vercel
-export WEB_URL='https://….vercel.app'
-export INFERENCE_URL='https://….onrender.com'
-export INFERENCE_API_KEY='…'      # same as Render
-npm run simulate-ingest
-```
+## 5. Local development
 
-Then open `$WEB_URL/`, log in, and confirm the new capturas (and any `inferenceError` rows).
-
-First request after Render idle may take ~1 minute (Free spin-up).
-
-## 5. Local development (unchanged)
-
-- Omit `INFERENCE_API_KEY` on the ML process to keep `POST /infer` open for local curl.
-- Set the key on both ML and the simulador when you want to exercise auth locally.
-- See root [`README.md`](../README.md) and [`apps/web/.env.example`](../apps/web/.env.example).
+- ML: VLM CLI / notebook (`services/ml/README.md`). No local `:8000` server.
+- Web: see root [`README.md`](../README.md) and [`apps/web/.env.example`](../apps/web/.env.example).
 
 ## Env cheat sheet
 
 | Variable | Where |
 |----------|--------|
-| `DEMO_PASSWORD` | Vercel + local web / simulador |
+| `DEMO_PASSWORD` | Vercel + local web |
 | `SUPABASE_URL` | Vercel (+ local if not using in-memory) |
 | `SUPABASE_SECRET_KEY` | Vercel (+ local) |
-| `INFERENCE_API_KEY` | Render (+ local ML when testing auth; simulador when calling a keyed API) |
-| `INFERENCE_URL` | Local simulador only (points at Render for live E2E) |
-| `WEB_URL` | Local simulador only (points at Vercel for live E2E) |
+| `GOOGLE_API_KEY` | Local ML VLM live calls (`services/ml`) |
+| `INFERENCE_*` / `WEB_URL` | Historical simulador → live stack (deferred) |

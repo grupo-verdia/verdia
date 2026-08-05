@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 
 import pytest
-from PIL import Image
 
 from verdia_ml.vlm import (
     DEFAULT_MODEL,
@@ -17,9 +16,15 @@ from verdia_ml.vlm import (
     use_fake_mode,
 )
 
+# Minimal 1×1 PNG (fake mode only needs a path with an image suffix).
+_MIN_PNG = bytes.fromhex(
+    "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489"
+    "0000000a49444154789c63000100000500010d0a2db40000000049454e44ae426082"
+)
 
-def _write_png(path: Path, color: tuple[int, int, int] = (40, 160, 50)) -> Path:
-    Image.new("RGB", (32, 32), color).save(path)
+
+def _write_png(path: Path) -> Path:
+    path.write_bytes(_MIN_PNG)
     return path
 
 

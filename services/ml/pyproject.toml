@@ -1,21 +1,15 @@
 [project]
 name = "verdia-ml"
 version = "0.1.0"
-description = "verdia Inference API (segmentação + classificador ordinal)"
+description = "verdia VLM grass classifier prototype (HTTP API deferred)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi>=0.139.2",
     "google-genai>=2.16.0",
-    "numpy>=2.5.1",
-    "pillow>=12.3.0",
-    "python-multipart>=0.0.32",
-    "uvicorn>=0.51.0",
 ]
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
     "ipykernel>=7.0.0",
     "jupyter>=1.1.0",
     "pytest>=9.1.1",
