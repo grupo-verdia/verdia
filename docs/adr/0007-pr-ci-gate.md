@@ -5,9 +5,8 @@ Date: 2026-07-21
 
 ## Context
 
-Agent edits need a merge-blocking double-check for correctness and common AI
-slop, without relying on LLM taste inside CI. Bugbot may still be used by
-humans on PRs, but it is not part of the automated gate.
+PRs need a merge-blocking check for correctness and common AI-generated slop,
+without relying on LLM taste inside CI.
 
 ## Decision
 
@@ -32,12 +31,7 @@ parity when comparing a TS function to a Python one.
 Require the aggregate **`CI`** job for branch protection (not the
 path-skipped package jobs).
 
-**Bugbot is manual:** humans mention it on the PR when they want a review. CI
-does not trigger Bugbot. Bugbot is not a required check.
-
 ## Consequences
 
 - Branch protection should require the job named **`CI`**.
 - Function-line ratchet on web is intentional debt, recorded here.
-- Prefer running Bugbot after CI is green so it does not nag about issues the
-  mechanical gate already covers.

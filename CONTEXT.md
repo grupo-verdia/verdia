@@ -18,7 +18,7 @@ a time) — we do not assume a 360º camera.
 
 verdia targets: cost optimization, technical standardization, operational efficiency.
 
-## Glossary (ubiquitous language)
+## Glossary
 
 Use these terms consistently in issues, code, tests, and docs.
 

@@ -1,20 +1,8 @@
-## Agent skills
+## Project notes
 
-### Issue tracker
-
-Issues live in this repo's GitHub Issues (via `gh`). See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Default triage vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context layout (`CONTEXT.md` + `docs/adr/` at repo root). See `docs/agents/domain.md`.
-
-### CI
-
-PR mechanical + anti-slop gate. See `docs/agents/ci.md` and ADR-0007.
+- Domain glossary: `CONTEXT.md`
+- Architecture decisions: `docs/adr/`
+- PR CI gate: ADR-0007 and `.github/workflows/ci.yml`
 
 ## Learned User Preferences
 

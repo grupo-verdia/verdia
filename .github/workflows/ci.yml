@@ -29,14 +29,12 @@ jobs:
               - 'scripts/ci/**'
               - '.github/workflows/**'
               - 'AGENTS.md'
-              - 'docs/agents/ci.md'
               - 'docs/adr/0007-pr-ci-gate.md'
             ml:
               - 'services/ml/**'
               - 'scripts/ci/**'
               - '.github/workflows/**'
               - 'AGENTS.md'
-              - 'docs/agents/ci.md'
               - 'docs/adr/0007-pr-ci-gate.md'
 
   web:
