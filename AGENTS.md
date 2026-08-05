@@ -2,6 +2,8 @@
 
 - Domain glossary: `CONTEXT.md`
 - Architecture decisions: `docs/adr/`
+- Short plans: `docs/plans/YYYY-MM-DD-short-name.md` (keep brief). Do not dump large research under `docs/research/`.
+- Near-term work: `services/ml/NEXT_STEPS.md`, `apps/web/NEXT_STEPS.md`
 - PR CI gate: ADR-0007 and `.github/workflows/ci.yml`
 
 ## Learned User Preferences
