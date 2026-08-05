@@ -29,13 +29,13 @@ jobs:
               - 'scripts/ci/**'
               - '.github/workflows/**'
               - 'AGENTS.md'
-              - 'docs/adr/0007-pr-ci-gate.md'
+              - 'docs/plans/2026-08-05-standing-decisions.md'
             ai:
               - 'services/ai/**'
               - 'scripts/ci/**'
               - '.github/workflows/**'
               - 'AGENTS.md'
-              - 'docs/adr/0007-pr-ci-gate.md'
+              - 'docs/plans/2026-08-05-standing-decisions.md'
 
   web:
     name: Web

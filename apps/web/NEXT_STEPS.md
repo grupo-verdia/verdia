@@ -14,3 +14,4 @@ Hand-trained CV / overlay path is abandoned. AI plan: `docs/plans/2026-08-05-vlm
 ## Still relevant (not blocked on VLM this week)
 
 - Nova captura / GPS / pitch UI.
+- Standing: shared-password gate; Nova captura is the only ingest path (GPS required; 1 captura = 1 trecho @ 500 m default); Supabase for UI persistence. Cross-cutting: `docs/plans/2026-08-05-standing-decisions.md`.

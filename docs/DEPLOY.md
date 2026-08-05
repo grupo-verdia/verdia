@@ -1,7 +1,8 @@
 # Fully live deploy (Vercel + Supabase + Render)
 
-Prepare-in-repo runbook for issue #10 / ADR-0004. **Humans** create the cloud
-projects and paste secrets; Git auto-deploy handles later pushes.
+Prepare-in-repo runbook for issue #10. **Humans** create the cloud projects and
+paste secrets; Git auto-deploy handles later pushes.
+
 
 **Status (2026-08):** AI HTTP Inference API + Render Blueprint (`render.yaml` /
 `services/ai/Dockerfile`) are **deferred** while the VLM prototype lives as CLI +

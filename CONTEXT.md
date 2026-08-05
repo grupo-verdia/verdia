@@ -49,7 +49,7 @@ Use these terms consistently in issues, code, tests, and docs.
 
 1. **Classifier path (current):** hosted VLM prototype (`services/ai` module + CLI +
    notebook). Hand-trained hybrid CV + always-on `/infer` are deferred / removed for now
-   (see ADR-0001 historically; plan `docs/plans/2026-08-05-vlm-prototype.md`).
+   (plan `docs/plans/2026-08-05-vlm-prototype.md`).
 2. **Inference HTTP API** — deferred (reintroduce later in a new shape if needed).
 3. **Nova captura** (web upload → API) — deferred until AI path lands.
 4. **Dashboard** (results).
@@ -62,13 +62,8 @@ detection, real route optimization, Supabase Auth.
 
 ## Data & modeling
 
-- **Segmentation + height training:** TAS500 (built-in low/high grass at a 20 cm
-  threshold).
-- **Classifier reinforcement:** forefield_grassland (~15k mowed vs. grass images).
-- **BR-realistic validation:** a hand-relabeled subset of the DNIT Brazilian-highway
-  images (CC BY 4.0).
-- **3 classes** derived by **cobertura** of tall grass, with thresholds calibrated on
-  the DNIT set. See ADR-0002.
+- **Current:** VLM natural-language maintenance judgment (`baixa` | `média` | `alta`).
+- **Abandoned:** TAS500 / forefield / DNIT cobertura-bin label story (old CV track).
 - Narrative stays fixed; concrete labels adapt to available public data.
 
 ## Architecture & stack (monorepo)
@@ -80,9 +75,9 @@ detection, real route optimization, Supabase Auth.
 - **Nova captura** (in `apps/web`) — deferred until AI HTTP lands.
 - **Data:** **Supabase** (Postgres for metadata/predictions; Storage for images).
 - **Deploy:** web on **Vercel**, data on **Supabase**. AI Render hosting deferred with
-  the HTTP API. See ADR-0003 and ADR-0004 (historical deploy target).
+  the HTTP API.
 
 ## Decisions
 
-See `docs/adr/` for the full rationale behind the key choices (including ADR-0005 Nova
-captura, ADR-0006 Colab→CPU CV, ADR-0007 PR CI gate).
+Standing stack / ingest / CI notes: `docs/plans/2026-08-05-standing-decisions.md`.
+New durable notes go in `docs/plans/YYYY-MM-DD-…` (not ADRs).

@@ -10,7 +10,8 @@ Monorepo layout:
 | `apps/web` | Next.js (TypeScript) product + BFF, shared-password gate |
 | `services/ai` | Python VLM grass classifier prototype (CLI + notebook; HTTP deferred) |
 
-Domain glossary and ADRs: [`CONTEXT.md`](./CONTEXT.md), [`docs/adr/`](./docs/adr/).
+Domain glossary: [`CONTEXT.md`](./CONTEXT.md). Standing decisions / plans: [`docs/plans/`](./docs/plans/).
+
 
 ## Prerequisites
 

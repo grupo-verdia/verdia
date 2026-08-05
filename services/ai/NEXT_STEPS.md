@@ -15,3 +15,4 @@ Hand-trained CV track is abandoned. Focus: hosted VLM prototype. Plan: `docs/pla
 
 - Field photos + measurement protocol.
 - Reintroduce an HTTP Inference API in a new shape only after the VLM prototype looks right (not this week).
+- Standing: no Colab/TAS500/cobertura CV track; when HTTP returns, gate `POST /infer` with a shared secret (`GET /health` public). Cross-cutting: `docs/plans/2026-08-05-standing-decisions.md`.

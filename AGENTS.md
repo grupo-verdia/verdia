@@ -1,10 +1,10 @@
 ## Project notes
 
 - Domain glossary: `CONTEXT.md`
-- Architecture decisions: `docs/adr/`
-- Short plans: `docs/plans/YYYY-MM-DD-short-name.md` (keep brief). Do not dump large research under `docs/research/`.
+- Durable decisions / short plans: `docs/plans/YYYY-MM-DD-short-name.md` (keep brief; no ADRs). Standing stack/CI/ingest notes: `docs/plans/2026-08-05-standing-decisions.md`. Do not dump large research under `docs/research/`.
 - Near-term work: `services/ai/NEXT_STEPS.md`, `apps/web/NEXT_STEPS.md`
-- PR CI gate: ADR-0007 and `.github/workflows/ci.yml`
+- PR CI gate: `.github/workflows/ci.yml` (summary in the standing-decisions plan)
+
 
 ## Learned User Preferences
 
