@@ -111,11 +111,8 @@ describe("capturas product read surface", () => {
     expect(capturas[0]?.classe).toBe("média");
   });
 
-  it("shows segmentação overlay alongside photo on captura detail without replacing classe", async () => {
+  it("loads captura detail with photo and classe", async () => {
     const photoBytes = new Uint8Array([10, 20, 30]);
-    const overlayBytes = new Uint8Array([
-      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-    ]);
 
     const writeResponse = await createCaptura(
       new NextRequest("http://localhost:3000/api/capturas", {
@@ -130,8 +127,6 @@ describe("capturas product read surface", () => {
           modelVersion: "stub-0.1",
           imageBase64: Buffer.from(photoBytes).toString("base64"),
           contentType: "image/jpeg",
-          overlayBase64: Buffer.from(overlayBytes).toString("base64"),
-          overlayContentType: "image/png",
         }),
       }),
     );
@@ -139,19 +134,13 @@ describe("capturas product read surface", () => {
     const written = (await writeResponse.json()) as {
       id: string;
       classe: string;
-      overlayStorageKey: string | null;
     };
     expect(written.classe).toBe("alta");
-    expect(written.overlayStorageKey).toBeTruthy();
 
     const detail = await loadCapturaDetail(written.id);
     expect(detail).not.toBeNull();
     expect(detail?.captura.classe).toBe("alta");
-    expect(detail?.captura.overlayStorageKey).toBeTruthy();
     expect(detail?.photoBytes).toEqual(photoBytes);
-    expect(detail?.overlayBytes).toEqual(overlayBytes);
-    // Overlay is visualization only — classe remains the ordinal prediction field.
-    expect(detail?.captura.classe).not.toBeNull();
   });
 
   it("lists captura from simulador ingest path with classe on the dashboard", async () => {
@@ -176,7 +165,6 @@ describe("capturas product read surface", () => {
               classe: "baixa",
               confidence: 0.6,
               modelVersion: "stub-0.1",
-              overlayPngBytes: new Uint8Array([0x89, 0x50]),
             };
           },
         },
@@ -192,8 +180,6 @@ describe("capturas product read surface", () => {
               inferenceError: input.inferenceError,
               imageBytes: input.sample.imageBytes,
               contentType: input.sample.contentType,
-              overlayBytes: input.overlayPngBytes,
-              overlayContentType: input.overlayPngBytes ? "image/png" : null,
             });
             return { ok: true, capturaId: captura.id };
           },
@@ -241,8 +227,6 @@ describe("capturas product read surface", () => {
               inferenceError: input.inferenceError,
               imageBytes: input.sample.imageBytes,
               contentType: input.sample.contentType,
-              overlayBytes: input.overlayPngBytes,
-              overlayContentType: input.overlayPngBytes ? "image/png" : null,
             });
             return { ok: true, capturaId: captura.id };
           },

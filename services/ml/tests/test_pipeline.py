@@ -1,6 +1,5 @@
 """Pipeline seam: segmentação then classificador ordinal (Option A)."""
 
-import base64
 from io import BytesIO
 
 import numpy as np
@@ -16,7 +15,7 @@ def _png(rgb: np.ndarray) -> bytes:
 
 
 def test_infer_captura_runs_segmentacao_then_ordinal_classifier_option_a():
-    """Classe comes from the ordinal classifier; overlay from segmentação only."""
+    """Classe comes from the ordinal classifier (segmentação mask is internal only)."""
     size = 48
     baixa_img = np.zeros((size, size, 3), dtype=np.uint8)
     baixa_img[:, :] = (130, 95, 55)
@@ -31,10 +30,8 @@ def test_infer_captura_runs_segmentacao_then_ordinal_classifier_option_a():
     assert alta.classe == "alta"
     assert 0.0 <= baixa.confidence <= 1.0
     assert 0.0 <= alta.confidence <= 1.0
-
-    for result in (baixa, alta):
-        overlay = base64.b64decode(result.overlay_png_base64)
-        assert overlay.startswith(b"\x89PNG")
+    assert baixa.model_version
+    assert alta.model_version
 
 
 def test_decode_rgb_applies_exif_orientation():

@@ -18,7 +18,6 @@ const sample: SampleCaptura = {
 
 describe("simulador de ingestão orchestrator", () => {
   it("persists a successful inference with classe from the Inference API", async () => {
-    const overlayPngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
     const infer: InferClient = {
       async infer() {
         return {
@@ -26,21 +25,18 @@ describe("simulador de ingestão orchestrator", () => {
           classe: "alta",
           confidence: 0.91,
           modelVersion: "stub-0.1",
-          overlayPngBytes,
         };
       },
     };
     const persisted: Array<{
       classe: string | null;
       inferenceError: string | null;
-      overlayPngBytes: Uint8Array | null;
     }> = [];
     const persist: PersistClient = {
       async persist(input) {
         persisted.push({
           classe: input.classe,
           inferenceError: input.inferenceError,
-          overlayPngBytes: input.overlayPngBytes,
         });
         return { ok: true, capturaId: "cap-1" };
       },
@@ -56,9 +52,7 @@ describe("simulador de ingestão orchestrator", () => {
         classe: "alta",
       },
     ]);
-    expect(persisted).toEqual([
-      { classe: "alta", inferenceError: null, overlayPngBytes },
-    ]);
+    expect(persisted).toEqual([{ classe: "alta", inferenceError: null }]);
   });
 
   it("persists a failed inference with an error signal instead of dropping it", async () => {
@@ -70,14 +64,12 @@ describe("simulador de ingestão orchestrator", () => {
     const persisted: Array<{
       classe: string | null;
       inferenceError: string | null;
-      overlayPngBytes: Uint8Array | null;
     }> = [];
     const persist: PersistClient = {
       async persist(input) {
         persisted.push({
           classe: input.classe,
           inferenceError: input.inferenceError,
-          overlayPngBytes: input.overlayPngBytes,
         });
         return { ok: true, capturaId: "cap-err" };
       },
@@ -97,7 +89,6 @@ describe("simulador de ingestão orchestrator", () => {
       {
         classe: null,
         inferenceError: "Inference API unavailable",
-        overlayPngBytes: null,
       },
     ]);
   });

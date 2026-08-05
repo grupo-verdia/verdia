@@ -15,8 +15,6 @@ const okInferBody = {
   classe: "média",
   confidence: 0.5,
   model_version: "stub-0.1",
-  overlay_png_base64:
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
 };
 
 afterEach(() => {

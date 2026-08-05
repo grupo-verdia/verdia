@@ -20,6 +20,8 @@ Public URLs use provider defaults (`*.vercel.app`, `*.onrender.com`). No custom 
    - `20260720120000_capturas_trechos.sql`
    - `20260720140000_capturas_inference_error.sql`
    - `20260720160000_capturas_overlay.sql`
+   - `20260721100000_trechos_length_meters.sql`
+   - `20260805140000_drop_capturas_overlay.sql`
 3. Confirm Storage bucket `capturas` exists (created by the first migration).
 4. Copy **Project URL** and a **secret** key (`sb_secret_…`) from Settings → API Keys.
    Disable the legacy JWT `anon` / `service_role` keys once nothing depends on them.

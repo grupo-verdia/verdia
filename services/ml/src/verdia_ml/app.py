@@ -17,8 +17,6 @@ class InferResponse(BaseModel):
     classe: Classe
     confidence: Annotated[float, Field(ge=0.0, le=1.0)]
     model_version: str
-    # Segmentação visualization only — never used as the classe source of truth.
-    overlay_png_base64: str
 
 
 def require_inference_api_key(
@@ -79,5 +77,4 @@ async def infer(
         classe=result.classe,
         confidence=result.confidence,
         model_version=result.model_version,
-        overlay_png_base64=result.overlay_png_base64,
     )

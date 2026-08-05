@@ -26,4 +26,4 @@ def test_simulador_fixture_runs_hybrid_pipeline(name: str) -> None:
     result = infer_captura(image_bytes)
     assert result.classe in {"baixa", "média", "alta"}
     assert 0.0 <= result.confidence <= 1.0
-    assert result.overlay_png_base64
+    assert result.model_version

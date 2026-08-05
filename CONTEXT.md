@@ -31,9 +31,9 @@ Use these terms consistently in issues, code, tests, and docs.
 - **Captura** — a single geotagged, timestamped roadside photo (as if taken by a
   vehicle-mounted camera driving a stretch). Without valid GPS, it is not a captura.
   One captura creates one trecho.
-- **Segmentação** — the "where" step: isolates the roadside vegetation region and
-  produces the visual overlay. It does **not** decide the class. In the UI, the
-  overlay defaults to a **blend** on the photo, with a toggle for original / mask.
+- **Segmentação** — the "where" step: isolates the roadside vegetation region for
+  classifier cleanup. It does **not** decide the class. (Visual overlay was dropped;
+  VLM produces no mask.)
 - **Classificador ordinal** — the "how much" step: takes the cleaned region and outputs
   baixa/média/alta. It is the **single source of truth** for the class.
 - **Cobertura** — the fraction of "tall grass" pixels in the roadside region; used to

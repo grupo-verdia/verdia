@@ -19,19 +19,17 @@ MODEL_VERSION = "hybrid-ordinal-0.1"
 class InferResult:
     classe: Classe
     confidence: float
-    overlay_png_base64: str
     model_version: str = MODEL_VERSION
 
 
 def infer_captura(image_bytes: bytes) -> InferResult:
-    """Run Option A: segment for overlay, ordinal classifier decides classe."""
+    """Run Option A: segment for mask cleanup, ordinal classifier decides classe."""
     rgb = decode_rgb(image_bytes)
     segmentacao = segmentar(rgb)
     classificacao = classificar_ordinal(rgb, segmentacao.mask)
     return InferResult(
         classe=classificacao.classe,
         confidence=classificacao.confidence,
-        overlay_png_base64=segmentacao.overlay_png_base64,
     )
 
 
