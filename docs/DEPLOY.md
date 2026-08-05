@@ -3,8 +3,8 @@
 Prepare-in-repo runbook for issue #10 / ADR-0004. **Humans** create the cloud
 projects and paste secrets; Git auto-deploy handles later pushes.
 
-**Status (2026-08):** ML HTTP Inference API + Render Blueprint (`render.yaml` /
-`services/ml/Dockerfile`) are **deferred** while the VLM prototype lives as CLI +
+**Status (2026-08):** AI HTTP Inference API + Render Blueprint (`render.yaml` /
+`services/ai/Dockerfile`) are **deferred** while the VLM prototype lives as CLI +
 notebook only. Sections below keep the historical Vercel + Supabase + Render shape
 for when an API returns.
 
@@ -14,7 +14,7 @@ for when an API returns.
 |-------|------|--------|
 | Web (`apps/web`) | **Vercel** | Root Directory = `apps/web`; password gate via `DEMO_PASSWORD` |
 | Data | **Hosted Supabase** | Postgres + Storage; apply migrations in order |
-| Inference API (`services/ml`) | **Render Free (deferred)** | Was Docker via `render.yaml`; reintroduce with a new API shape later |
+| Inference API (`services/ai`) | **Render Free (deferred)** | Was Docker via `render.yaml`; reintroduce with a new API shape later |
 
 Public URLs use provider defaults (`*.vercel.app`, `*.onrender.com`). No custom domain.
 
@@ -66,7 +66,7 @@ Supabase if needed.
 
 ## 5. Local development
 
-- ML: VLM CLI / notebook (`services/ml/README.md`). No local `:8000` server.
+- AI: VLM CLI / notebook (`services/ai/README.md`). No local `:8000` server.
 - Web: see root [`README.md`](../README.md) and [`apps/web/.env.example`](../apps/web/.env.example).
 
 ## Env cheat sheet
@@ -76,5 +76,5 @@ Supabase if needed.
 | `DEMO_PASSWORD` | Vercel + local web |
 | `SUPABASE_URL` | Vercel (+ local if not using in-memory) |
 | `SUPABASE_SECRET_KEY` | Vercel (+ local) |
-| `GOOGLE_API_KEY` | Local ML VLM live calls (`services/ml`) |
+| `GOOGLE_API_KEY` | Local AI VLM live calls (`services/ai`) |
 | `INFERENCE_*` / `WEB_URL` | Historical simulador → live stack (deferred) |

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from verdia_ml.vlm import (
+from verdia_ai.vlm import (
     DEFAULT_MODEL,
     VlmError,
     classify_folder,

@@ -15,7 +15,7 @@ Run **GitHub Actions on pull requests only**, path-filtered across the monorepo:
 - **`apps/web`:** ESLint (anti-slop pack) · `tsc` · Vitest · file size ≤ 400 lines
   via `scripts/ci/check-file-size.mjs` (tests excluded). Function size enforced via
   ESLint at **150** lines for v1 (current baseline ~133; ratchet toward 50 later).
-- **`services/ml`:** Ruff check + format · pytest · file size ≤ 500 · function
+- **`services/ai`:** Ruff check + format · pytest · file size ≤ 500 · function
   size ≤ 60 (tests excluded). No mypy in v1.
 
 Anti-slop on web includes: no inline `require()` / unjustified `import()`,

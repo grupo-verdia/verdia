@@ -2,7 +2,7 @@
  * Simulador de ingestão CLI — replay geotagged sample capturas:
  * Inference API → BFF persist → dashboard.
  *
- * DEFERRED: ML HTTP `/infer` was removed with the hand-CV path. This CLI exits
+ * DEFERRED: AI HTTP `/infer` was removed with the hand-CV path. This CLI exits
  * until a new Inference API shape lands. Unit tests still exercise the
  * simulador with mocked InferClient (`src/__tests__/simulador.test.ts`).
  *
@@ -14,9 +14,9 @@
  */
 async function main(): Promise<void> {
   console.error(
-    "simulate-ingest is deferred: ML HTTP Inference API (/infer) is not shipped.\n" +
-      "Use services/ml VLM CLI/notebook for classification this week.\n" +
-      "See services/ml/README.md and docs/plans/2026-08-05-vlm-prototype.md.",
+    "simulate-ingest is deferred: AI HTTP Inference API (/infer) is not shipped.\n" +
+      "Use services/ai VLM CLI/notebook for classification this week.\n" +
+      "See services/ai/README.md and docs/plans/2026-08-05-vlm-prototype.md.",
   );
   process.exitCode = 1;
 }

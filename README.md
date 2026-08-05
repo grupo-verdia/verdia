@@ -8,7 +8,7 @@ Monorepo layout:
 | Path | Role |
 |------|------|
 | `apps/web` | Next.js (TypeScript) product + BFF, shared-password gate |
-| `services/ml` | Python VLM grass classifier prototype (CLI + notebook; HTTP deferred) |
+| `services/ai` | Python VLM grass classifier prototype (CLI + notebook; HTTP deferred) |
 
 Domain glossary and ADRs: [`CONTEXT.md`](./CONTEXT.md), [`docs/adr/`](./docs/adr/).
 
@@ -19,20 +19,20 @@ Domain glossary and ADRs: [`CONTEXT.md`](./CONTEXT.md), [`docs/adr/`](./docs/adr
 
 ## Run locally
 
-### 1. ML VLM prototype (`services/ml`)
+### 1. AI VLM prototype (`services/ai`)
 
 ```bash
-cd services/ml
+cd services/ai
 uv sync
-VLM_FAKE=1 uv run python -m verdia_ml.classify path/to/photos --summary
+VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary
 ```
 
-HTTP Inference API serve is **deferred**. Details: [`services/ml/README.md`](./services/ml/README.md).
+HTTP Inference API serve is **deferred**. Details: [`services/ai/README.md`](./services/ai/README.md).
 
 Tests:
 
 ```bash
-cd services/ml
+cd services/ai
 uv run pytest
 ```
 
@@ -65,7 +65,7 @@ npm run typecheck
 
 ## Fully live deploy
 
-Shareable Motiva demo stack (Vercel + hosted Supabase); ML Render hosting is
+Shareable Motiva demo stack (Vercel + hosted Supabase); AI Render hosting is
 deferred with the HTTP API. See [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
 ## Spec / tickets

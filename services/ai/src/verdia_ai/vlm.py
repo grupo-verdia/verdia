@@ -13,7 +13,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-from verdia_ml.labels import CLASSES, Classe
+from verdia_ai.labels import CLASSES, Classe
 
 DEFAULT_MODEL = "gemma-4-26b-a4b-it"
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tif", ".tiff"}
@@ -117,7 +117,9 @@ class VlmError(ValueError):
 
 def use_fake_mode(*, api_key: str | None = None, fake_env: str | None = None) -> bool:
     """True when live Google calls should be skipped."""
-    if (fake_env if fake_env is not None else os.environ.get("VLM_FAKE", "")).strip() in {
+    if (
+        fake_env if fake_env is not None else os.environ.get("VLM_FAKE", "")
+    ).strip() in {
         "1",
         "true",
         "True",
@@ -152,7 +154,9 @@ def classify_image(
     if fake:
         return _fake_verdict(resolved_model, source_name=source_name)
 
-    key = (api_key if api_key is not None else os.environ.get("GOOGLE_API_KEY") or "").strip()
+    key = (
+        api_key if api_key is not None else os.environ.get("GOOGLE_API_KEY") or ""
+    ).strip()
     if not key:
         raise VlmError("GOOGLE_API_KEY is required for live VLM calls")
 

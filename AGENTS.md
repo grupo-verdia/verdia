@@ -3,7 +3,7 @@
 - Domain glossary: `CONTEXT.md`
 - Architecture decisions: `docs/adr/`
 - Short plans: `docs/plans/YYYY-MM-DD-short-name.md` (keep brief). Do not dump large research under `docs/research/`.
-- Near-term work: `services/ml/NEXT_STEPS.md`, `apps/web/NEXT_STEPS.md`
+- Near-term work: `services/ai/NEXT_STEPS.md`, `apps/web/NEXT_STEPS.md`
 - PR CI gate: ADR-0007 and `.github/workflows/ci.yml`
 
 ## Learned User Preferences
@@ -14,9 +14,9 @@
 
 Monorepo with two services (standard run/test commands live in `README.md`):
 
-- `services/ml` — Python VLM prototype (`uv`, Python 3.12). Classify with `uv run python -m verdia_ml.classify …` (fake: `VLM_FAKE=1`); test with `uv run pytest`. HTTP `/infer` serve is deferred. `uv` installs to `~/.local/bin`.
+- `services/ai` — Python VLM prototype (`uv`, Python 3.12). Classify with `uv run python -m verdia_ai.classify …` (fake: `VLM_FAKE=1`); test with `uv run pytest`. HTTP `/infer` serve is deferred. `uv` installs to `~/.local/bin`.
 - `apps/web` — Next.js + TypeScript (Node 22, `npm`). Run `npm run dev` (`:3000`); `npm test` / `npm run lint` / `npm run typecheck`. Copy `.env.example` → `.env.local` (needs `DEMO_PASSWORD`, default `verdia-demo`). This is a newer Next.js with breaking changes — see `apps/web/AGENTS.md`.
-- `npm run simulate-ingest` is deferred until a new ML HTTP API lands (exits with a clear message).
+- `npm run simulate-ingest` is deferred until a new AI HTTP API lands (exits with a clear message).
 
 Non-obvious gotchas:
 

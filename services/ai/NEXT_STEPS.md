@@ -1,4 +1,4 @@
-# ML — next steps (VLM pivot)
+# AI — next steps (VLM pivot)
 
 Hand-trained CV track is abandoned. Focus: hosted VLM prototype. Plan: `docs/plans/2026-08-05-vlm-prototype.md`.
 

@@ -9,8 +9,8 @@ def main() -> None:
     print(
         "HTTP Inference API is deferred.\n"
         "Classify photos with:\n"
-        "  uv run python -m verdia_ml.classify path/to/photos\n"
-        "  VLM_FAKE=1 uv run python -m verdia_ml.classify path/to/photos --summary",
+        "  uv run python -m verdia_ai.classify path/to/photos\n"
+        "  VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary",
         file=sys.stderr,
     )
     raise SystemExit(2)

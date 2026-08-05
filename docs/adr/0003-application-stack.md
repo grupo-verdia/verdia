@@ -14,7 +14,7 @@ visualization, designed to grow into the full platform.
 - `apps/web` — **Next.js (TypeScript)**: dashboard, geospatial map, heuristic planning,
   lean observability, and API routes (backend-for-frontend). Access gated by a **single
   shared password** (simple middleware). Real auth (Supabase Auth) is future vision.
-- `services/ml` — **Python**: training + inference service (segmentação + classificador
+- `services/ai` — **Python**: training + inference service (segmentação + classificador
   ordinal), exposed as an always-on API.
 - **Nova captura** — browser multi-select upload of geotagged photos into the inference
   API (see ADR-0005). Supersedes the earlier CLI simulador.

@@ -16,12 +16,12 @@ the BFF uses an **in-memory** store (fine for local demos; data resets on restar
 
 ### Simulador de ingestão
 
-**Deferred** — needs ML HTTP `POST /infer`, which is not shipped this week. The
+**Deferred** — needs AI HTTP `POST /infer`, which is not shipped this week. The
 CLI exits with a clear message. Unit tests still cover the simulador with a
 mocked InferClient.
 
-ML classification this week: `services/ml` VLM CLI / notebook
-(`uv run python -m verdia_ml.classify …`).
+AI classification this week: `services/ai` VLM CLI / notebook
+(`uv run python -m verdia_ai.classify …`).
 
 Sample pack (for when ingest returns): [`fixtures/capturas/`](./fixtures/capturas/).
 

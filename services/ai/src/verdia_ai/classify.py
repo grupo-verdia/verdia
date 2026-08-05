@@ -1,9 +1,9 @@
 """CLI: classify a folder of roadside grass photos via the VLM module.
 
 Usage:
-  uv run python -m verdia_ml.classify path/to/photos
-  uv run python -m verdia_ml.classify path/to/photos --summary
-  VLM_FAKE=1 uv run python -m verdia_ml.classify path/to/photos
+  uv run python -m verdia_ai.classify path/to/photos
+  uv run python -m verdia_ai.classify path/to/photos --summary
+  VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ import argparse
 import json
 import sys
 
-from verdia_ml.vlm import classify_folder, use_fake_mode
+from verdia_ai.vlm import classify_folder, use_fake_mode
 
 
 def main(argv: list[str] | None = None) -> int:
