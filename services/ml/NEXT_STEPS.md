@@ -5,7 +5,8 @@ Hand-trained CV track is abandoned. Focus: hosted VLM prototype. Plan: `docs/pla
 ## This week (AI team)
 
 - Build `vlm` client module (AI Studio key, JSON schema / validate+retry).
-- Thin harness: folder of photos → JSON verdicts (script and/or notebook calling the module).
+- Thin harness: folder of photos → JSON verdicts (CLI + notebook calling the module).
+- [x] Notebook demo: `uv run --with jupyter jupyter notebook notebooks/demo_vlm_grass.ipynb` (samples in `notebooks/samples/`).
 - [x] Drop overlay from `InferResponse` + tests; leave `/infer` dormant otherwise.
 - Retire ExG/CORAL/cobertura from the live path (leave files or mark unused — don't rewrite history).
 
