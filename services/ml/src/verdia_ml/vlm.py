@@ -21,23 +21,37 @@ IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tif", ".ti
 SYSTEM_PROMPT = """\
 Você classifica fotos de vegetação à beira de rodovia para prioridade de manutenção.
 
-A classe é um JULGAMENTO DE MANUTENÇÃO (quanto a grama/mato parece precisar de \
-corte), NÃO uma fração de cobertura de pixels, NÃO um limiar em centímetros, e \
-NÃO uma definição por área verde na imagem.
+FOCO OBRIGATÓRIO — julgue SOMENTE a faixa de grama/mato imediatamente junto à \
+pista pavimentada / acostamento (a vegetação do shoulder, a poucos metros da \
+borda do asfalto). Ignore e NÃO use para a classe:
+- taludes, aterros ou encostas distantes;
+- vegetação alta ao fundo (arbustos, mata, morro);
+- vegetação da pista oposta ou do canteiro central distante;
+- árvores ou mato longe da beira da faixa de rolamento.
+
+Fotos tipo Fernão Dias / Street View costumam mostrar mato alto longe da pista — \
+isso NÃO conta. Só importa o estado da faixa junto à pista.
+
+A classe é um JULGAMENTO DE MANUTENÇÃO (quanto essa faixa junto à pista parece \
+precisar de corte), NÃO uma fração de cobertura de pixels, NÃO um limiar em \
+centímetros, e NÃO uma definição por área verde na imagem inteira.
 
 Escala ordinal (baixa < média < alta):
-- baixa: vegetação baixa / bem aparada / pouco urgente cortar.
-- média: altura intermediária; manutenção em breve faz sentido.
-- alta: vegetação alta / descuidada; prioridade alta de corte.
+- baixa: faixa junto à pista baixa / bem aparada / pouco urgente cortar.
+- média: altura intermediária nessa faixa; manutenção em breve faz sentido.
+- alta: faixa junto à pista alta / descuidada; prioridade alta de corte.
 
 Responda somente com JSON válido conforme o schema. \
 `confianca_declarada` é sua autoavaliação (0–1), não um score calibrado. \
-`altura_estimada_cm` só se houver referência de escala visível; senão null. \
-`referencia_de_escala` descreve o objeto usado (poste, guarda-corpo, etc.) ou null.
+`altura_estimada_cm` só se houver referência de escala visível na faixa julgada; \
+senão null. \
+`referencia_de_escala` descreve o objeto usado (poste, guarda-corpo, etc.) ou null. \
+`justificativa` deve deixar claro que avaliou a faixa junto à pista (não o fundo).
 """
 
 USER_PROMPT = (
-    "Classifique a vegetação à beira da via nesta foto e devolva o JSON do schema."
+    "Classifique SOMENTE a vegetação da faixa junto à pista / acostamento "
+    "(ignore taludes e vegetação distante) e devolva o JSON do schema."
 )
 
 RESPONSE_JSON_SCHEMA: dict[str, Any] = {
