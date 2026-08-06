@@ -107,8 +107,7 @@ class VlmVerdict:
     fake: bool = False
 
     def to_dict(self) -> dict[str, Any]:
-        payload = asdict(self)
-        return payload
+        return asdict(self)
 
 
 class VlmError(ValueError):
@@ -322,10 +321,7 @@ def _verdict_from_payload(
     model: str,
     fake: bool,
 ) -> VlmVerdict:
-    classe = payload.get("classe")
-    if classe not in CLASSES:
-        raise VlmError(f"classe must be one of {CLASSES}, got {classe!r}")
-
+    classe = _parse_classe(payload.get("classe"))
     altura = _parse_altura(payload.get("altura_estimada_cm"))
     ref = payload.get("referencia_de_escala")
     if ref is not None and not isinstance(ref, str):
@@ -349,7 +345,7 @@ def _verdict_from_payload(
         raise VlmError("justificativa must be a non-empty string")
 
     return VlmVerdict(
-        classe=classe,  # type: ignore[arg-type]
+        classe=classe,
         altura_estimada_cm=altura,
         referencia_de_escala=ref,
         vegetacao_visivel=vegetacao,
@@ -358,6 +354,14 @@ def _verdict_from_payload(
         model=model,
         fake=fake,
     )
+
+
+def _parse_classe(value: Any) -> Classe:
+    match value:
+        case "baixa" | "média" | "alta":
+            return value
+        case _:
+            raise VlmError(f"classe must be one of {CLASSES}, got {value!r}")
 
 
 def _parse_altura(value: Any) -> AlturaEstimadaCm | None:
