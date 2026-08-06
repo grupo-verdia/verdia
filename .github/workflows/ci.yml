@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       web: ${{ steps.filter.outputs.web }}
-      ml: ${{ steps.filter.outputs.ml }}
+      ai: ${{ steps.filter.outputs.ai }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -29,13 +29,13 @@ jobs:
               - 'scripts/ci/**'
               - '.github/workflows/**'
               - 'AGENTS.md'
-              - 'docs/adr/0007-pr-ci-gate.md'
-            ml:
-              - 'services/ml/**'
+              - 'docs/plans/2026-08-05-standing-decisions.md'
+            ai:
+              - 'services/ai/**'
               - 'scripts/ci/**'
               - '.github/workflows/**'
               - 'AGENTS.md'
-              - 'docs/adr/0007-pr-ci-gate.md'
+              - 'docs/plans/2026-08-05-standing-decisions.md'
 
   web:
     name: Web
@@ -67,14 +67,14 @@ jobs:
         working-directory: .
         run: node --test scripts/ci/check-file-size.test.mjs
 
-  ml:
-    name: ML
+  ai:
+    name: AI
     needs: changes
-    if: needs.changes.outputs.ml == 'true'
+    if: needs.changes.outputs.ai == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: services/ml
+        working-directory: services/ai
     steps:
       - uses: actions/checkout@v4
       # Node is required for the shared file-size helper (scripts/ci/check-file-size.mjs).
@@ -94,17 +94,17 @@ jobs:
         run: uv run pytest
       - name: File size caps
         working-directory: .
-        run: node scripts/ci/check-file-size.mjs --root services/ml --max 500 --ext .py
+        run: node scripts/ci/check-file-size.mjs --root services/ai --max 500 --ext .py
       - name: Function size caps
         working-directory: .
-        run: python3 scripts/ci/check_python_function_size.py --root services/ml --max 60
+        run: python3 scripts/ci/check_python_function_size.py --root services/ai --max 60
       - name: CI helper tests (function size)
         run: uv run pytest ../../scripts/ci/test_check_python_function_size.py
 
   # Single required check for branch protection (path-skipped jobs report skipped).
   ci:
     name: CI
-    needs: [changes, web, ml]
+    needs: [changes, web, ai]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -113,8 +113,8 @@ jobs:
           set -euo pipefail
           changes="${{ needs.changes.result }}"
           web="${{ needs.web.result }}"
-          ml="${{ needs.ml.result }}"
-          echo "changes=$changes web=$web ml=$ml"
+          ai="${{ needs.ai.result }}"
+          echo "changes=$changes web=$web ai=$ai"
           if [[ "$changes" != "success" ]]; then
             echo "Path detection failed: $changes"
             exit 1
@@ -123,19 +123,19 @@ jobs:
             echo "Web job failed ($web)"
             exit 1
           fi
-          if [[ "$ml" == "failure" || "$ml" == "cancelled" ]]; then
-            echo "ML job failed ($ml)"
+          if [[ "$ai" == "failure" || "$ai" == "cancelled" ]]; then
+            echo "AI job failed ($ai)"
             exit 1
           fi
           if [[ "$web" != "success" && "$web" != "skipped" ]]; then
             echo "Unexpected web result: $web"
             exit 1
           fi
-          if [[ "$ml" != "success" && "$ml" != "skipped" ]]; then
-            echo "Unexpected ml result: $ml"
+          if [[ "$ai" != "success" && "$ai" != "skipped" ]]; then
+            echo "Unexpected ai result: $ai"
             exit 1
           fi
-          if [[ "$web" == "skipped" && "$ml" == "skipped" ]]; then
+          if [[ "$web" == "skipped" && "$ai" == "skipped" ]]; then
             echo "No package paths changed — nothing to verify."
           fi
           echo "CI gate passed"

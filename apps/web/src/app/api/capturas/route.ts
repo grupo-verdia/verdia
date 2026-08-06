@@ -13,8 +13,6 @@ type CreateBody = {
   inferenceError?: unknown;
   imageBase64?: unknown;
   contentType?: unknown;
-  overlayBase64?: unknown;
-  overlayContentType?: unknown;
   trechoId?: unknown;
 };
 
@@ -126,41 +124,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "imageBase64 is invalid" }, { status: 400 });
   }
 
-  let overlayBytes: Uint8Array | null = null;
-  if (body.overlayBase64 !== undefined && body.overlayBase64 !== null) {
-    if (typeof body.overlayBase64 !== "string") {
-      return NextResponse.json(
-        { error: "overlayBase64 must be a string or null" },
-        { status: 400 },
-      );
-    }
-    if (body.overlayBase64.length > 0) {
-      try {
-        overlayBytes = Uint8Array.from(Buffer.from(body.overlayBase64, "base64"));
-      } catch {
-        return NextResponse.json(
-          { error: "overlayBase64 is invalid" },
-          { status: 400 },
-        );
-      }
-    }
-  }
-
-  const overlayContentType =
-    body.overlayContentType === undefined || body.overlayContentType === null
-      ? overlayBytes
-        ? "image/png"
-        : null
-      : typeof body.overlayContentType === "string"
-        ? body.overlayContentType
-        : undefined;
-  if (overlayContentType === undefined) {
-    return NextResponse.json(
-      { error: "overlayContentType must be a string or null" },
-      { status: 400 },
-    );
-  }
-
   try {
     const captura = await getCapturaStore().createCaptura({
       lat: body.lat,
@@ -172,8 +135,6 @@ export async function POST(request: NextRequest) {
       inferenceError,
       imageBytes,
       contentType: body.contentType,
-      overlayBytes,
-      overlayContentType,
     });
     return NextResponse.json(captura, { status: 201 });
   } catch (error) {

@@ -9,7 +9,6 @@ import {
   getCapturaStore,
   setCapturaStore,
 } from "@/lib/persistence";
-import { runSimulador } from "@/lib/simulador";
 
 describe("capturas product read surface", () => {
   beforeEach(() => {
@@ -111,11 +110,8 @@ describe("capturas product read surface", () => {
     expect(capturas[0]?.classe).toBe("média");
   });
 
-  it("shows segmentação overlay alongside photo on captura detail without replacing classe", async () => {
+  it("loads captura detail with photo and classe", async () => {
     const photoBytes = new Uint8Array([10, 20, 30]);
-    const overlayBytes = new Uint8Array([
-      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-    ]);
 
     const writeResponse = await createCaptura(
       new NextRequest("http://localhost:3000/api/capturas", {
@@ -130,8 +126,6 @@ describe("capturas product read surface", () => {
           modelVersion: "stub-0.1",
           imageBase64: Buffer.from(photoBytes).toString("base64"),
           contentType: "image/jpeg",
-          overlayBase64: Buffer.from(overlayBytes).toString("base64"),
-          overlayContentType: "image/png",
         }),
       }),
     );
@@ -139,69 +133,29 @@ describe("capturas product read surface", () => {
     const written = (await writeResponse.json()) as {
       id: string;
       classe: string;
-      overlayStorageKey: string | null;
     };
     expect(written.classe).toBe("alta");
-    expect(written.overlayStorageKey).toBeTruthy();
 
     const detail = await loadCapturaDetail(written.id);
     expect(detail).not.toBeNull();
     expect(detail?.captura.classe).toBe("alta");
-    expect(detail?.captura.overlayStorageKey).toBeTruthy();
     expect(detail?.photoBytes).toEqual(photoBytes);
-    expect(detail?.overlayBytes).toEqual(overlayBytes);
-    // Overlay is visualization only — classe remains the ordinal prediction field.
-    expect(detail?.captura.classe).not.toBeNull();
   });
 
-  it("lists captura from simulador ingest path with classe on the dashboard", async () => {
+  it("lists captura with classe on the dashboard after store write", async () => {
     const store = getCapturaStore();
 
-    const report = await runSimulador(
-      [
-        {
-          id: "sample-ok",
-          imageBytes: new Uint8Array([9, 9, 9]),
-          contentType: "image/png",
-          lat: -23.55,
-          lon: -46.63,
-          capturedAt: "2026-07-20T16:00:00.000Z",
-        },
-      ],
-      {
-        infer: {
-          async infer() {
-            return {
-              ok: true,
-              classe: "baixa",
-              confidence: 0.6,
-              modelVersion: "stub-0.1",
-              overlayPngBytes: new Uint8Array([0x89, 0x50]),
-            };
-          },
-        },
-        persist: {
-          async persist(input) {
-            const captura = await store.createCaptura({
-              lat: input.sample.lat,
-              lon: input.sample.lon,
-              capturedAt: input.sample.capturedAt,
-              classe: input.classe,
-              confidence: input.confidence,
-              modelVersion: input.modelVersion,
-              inferenceError: input.inferenceError,
-              imageBytes: input.sample.imageBytes,
-              contentType: input.sample.contentType,
-              overlayBytes: input.overlayPngBytes,
-              overlayContentType: input.overlayPngBytes ? "image/png" : null,
-            });
-            return { ok: true, capturaId: captura.id };
-          },
-        },
-      },
-    );
-
-    expect(report.results[0]?.status).toBe("ok");
+    await store.createCaptura({
+      lat: -23.55,
+      lon: -46.63,
+      capturedAt: "2026-07-20T16:00:00.000Z",
+      classe: "baixa",
+      confidence: 0.6,
+      modelVersion: "stub-0.1",
+      inferenceError: null,
+      imageBytes: new Uint8Array([9, 9, 9]),
+      contentType: "image/png",
+    });
 
     const capturas = await loadDashboardCapturas();
     expect(capturas).toHaveLength(1);
@@ -212,43 +166,17 @@ describe("capturas product read surface", () => {
   it("surfaces failed inference error on the dashboard read path", async () => {
     const store = getCapturaStore();
 
-    await runSimulador(
-      [
-        {
-          id: "sample-fail",
-          imageBytes: new Uint8Array([1]),
-          contentType: "image/png",
-          lat: -23.5,
-          lon: -46.6,
-          capturedAt: "2026-07-20T17:00:00.000Z",
-        },
-      ],
-      {
-        infer: {
-          async infer() {
-            return { ok: false, error: "timeout talking to Inference API" };
-          },
-        },
-        persist: {
-          async persist(input) {
-            const captura = await store.createCaptura({
-              lat: input.sample.lat,
-              lon: input.sample.lon,
-              capturedAt: input.sample.capturedAt,
-              classe: input.classe,
-              confidence: input.confidence,
-              modelVersion: input.modelVersion,
-              inferenceError: input.inferenceError,
-              imageBytes: input.sample.imageBytes,
-              contentType: input.sample.contentType,
-              overlayBytes: input.overlayPngBytes,
-              overlayContentType: input.overlayPngBytes ? "image/png" : null,
-            });
-            return { ok: true, capturaId: captura.id };
-          },
-        },
-      },
-    );
+    await store.createCaptura({
+      lat: -23.5,
+      lon: -46.6,
+      capturedAt: "2026-07-20T17:00:00.000Z",
+      classe: null,
+      confidence: null,
+      modelVersion: null,
+      inferenceError: "timeout talking to Inference API",
+      imageBytes: new Uint8Array([1]),
+      contentType: "image/png",
+    });
 
     const capturas = await loadDashboardCapturas();
     expect(capturas).toHaveLength(1);

@@ -120,7 +120,7 @@ export default async function MapaPage({ searchParams }: PageProps) {
         <p style={{ margin: "0 0 1rem", color: "#666" }}>
           Nenhum trecho para exibir
           {severidade ? ` com severidade ${severidade}` : ""}. Persista capturas
-          pelo simulador ou pelo dashboard.
+          via <code>POST /api/capturas</code> ou pelo dashboard.
         </p>
       ) : (
         <p style={{ margin: "0 0 0.75rem", color: "#666", fontSize: "0.9rem" }}>

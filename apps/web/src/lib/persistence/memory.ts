@@ -26,17 +26,10 @@ export function createMemoryStore(): CapturaStore {
       const storageKey = `capturas/${id}.bin`;
       objects.set(storageKey, input.imageBytes);
 
-      let overlayStorageKey: string | null = null;
-      if (input.overlayBytes && input.overlayBytes.byteLength > 0) {
-        overlayStorageKey = `capturas/${id}-overlay.png`;
-        objects.set(overlayStorageKey, input.overlayBytes);
-      }
-
       const captura: Captura = {
         id,
         trechoId,
         storageKey,
-        overlayStorageKey,
         lat: input.lat,
         lon: input.lon,
         capturedAt: input.capturedAt,

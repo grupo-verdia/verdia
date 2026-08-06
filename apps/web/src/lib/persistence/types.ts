@@ -10,9 +10,6 @@ export type CreateCapturaInput = {
   inferenceError?: string | null;
   imageBytes: Uint8Array;
   contentType: string;
-  /** Optional segmentação overlay bytes (PNG); not used to decide classe. */
-  overlayBytes?: Uint8Array | null;
-  overlayContentType?: string | null;
 };
 
 export type CapturaStore = {

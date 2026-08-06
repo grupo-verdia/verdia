@@ -20,7 +20,6 @@ type CapturaRow = {
   id: string;
   trecho_id: string;
   storage_key: string;
-  overlay_storage_key: string | null;
   lat: number;
   lon: number;
   captured_at: string;
@@ -33,14 +32,13 @@ type CapturaRow = {
 const BUCKET = "capturas";
 
 const CAPTURA_SELECT =
-  "id, trecho_id, storage_key, overlay_storage_key, lat, lon, captured_at, classe, confidence, model_version, inference_error";
+  "id, trecho_id, storage_key, lat, lon, captured_at, classe, confidence, model_version, inference_error";
 
 function rowToCaptura(row: CapturaRow): Captura {
   return {
     id: row.id,
     trechoId: row.trecho_id,
     storageKey: row.storage_key,
-    overlayStorageKey: row.overlay_storage_key,
     lat: row.lat,
     lon: row.lon,
     capturedAt: row.captured_at,
@@ -89,30 +87,12 @@ export function createSupabaseStore(options: {
         throw new Error(`failed to upload image: ${uploadError.message}`);
       }
 
-      let overlayStorageKey: string | null = null;
-      if (input.overlayBytes && input.overlayBytes.byteLength > 0) {
-        overlayStorageKey = `${id}-overlay.png`;
-        const overlayType = input.overlayContentType ?? "image/png";
-        const { error: overlayUploadError } = await client.storage
-          .from(BUCKET)
-          .upload(overlayStorageKey, input.overlayBytes, {
-            contentType: overlayType,
-            upsert: false,
-          });
-        if (overlayUploadError) {
-          throw new Error(
-            `failed to upload overlay: ${overlayUploadError.message}`,
-          );
-        }
-      }
-
       const { data: row, error: insertError } = await client
         .from("capturas")
         .insert({
           id,
           trecho_id: trechoId,
           storage_key: storageKey,
-          overlay_storage_key: overlayStorageKey,
           lat: input.lat,
           lon: input.lon,
           captured_at: input.capturedAt,

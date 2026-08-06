@@ -1,20 +1,21 @@
 ## Project notes
 
 - Domain glossary: `CONTEXT.md`
-- Architecture decisions: `docs/adr/`
-- PR CI gate: ADR-0007 and `.github/workflows/ci.yml`
+- Durable decisions / short plans: `docs/plans/YYYY-MM-DD-short-name.md` (keep brief; no ADRs). Standing stack/CI/ingest notes: `docs/plans/2026-08-05-standing-decisions.md`. Do not dump large research under `docs/research/`.
+- PR CI gate: `.github/workflows/ci.yml` (summary in the standing-decisions plan)
+
 
 ## Learned User Preferences
 
 - Use Conventional Commits for all git commits.
+- Durable notes go in `docs/plans/YYYY-MM-DD-…`.
 
 ## Cursor Cloud specific instructions
 
 Monorepo with two services (standard run/test commands live in `README.md`):
 
-- `services/ml` — Python FastAPI Inference API (`uv`, Python 3.12). Run with `uv run python -m verdia_ml` (serves on `:8000`, health at `/health`); test with `uv run pytest`. `uv` installs to `~/.local/bin`.
+- `services/ai` — Python VLM prototype (`uv`, Python 3.12). Classify with `uv run python -m verdia_ai.classify …` (fake: `VLM_FAKE=1`); test with `uv run pytest`. HTTP Inference API is deferred. `uv` installs to `~/.local/bin`.
 - `apps/web` — Next.js + TypeScript (Node 22, `npm`). Run `npm run dev` (`:3000`); `npm test` / `npm run lint` / `npm run typecheck`. Copy `.env.example` → `.env.local` (needs `DEMO_PASSWORD`, default `verdia-demo`). This is a newer Next.js with breaking changes — see `apps/web/AGENTS.md`.
-- `npm run simulate-ingest` (from `apps/web`, with env sourced) exercises the core flow end-to-end: login → ML inference → BFF persist. Needs both services running.
 
 Non-obvious gotchas:
 

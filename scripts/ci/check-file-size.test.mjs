@@ -6,12 +6,12 @@ describe("isExcludedPath", () => {
   it("excludes web and ML test paths", () => {
     assert.equal(isExcludedPath("apps/web/src/__tests__/foo.test.ts"), true);
     assert.equal(isExcludedPath("apps/web/src/lib/foo.test.ts"), true);
-    assert.equal(isExcludedPath("services/ml/tests/test_infer.py"), true);
+    assert.equal(isExcludedPath("services/ai/tests/test_infer.py"), true);
   });
 
   it("keeps production paths", () => {
     assert.equal(isExcludedPath("apps/web/src/lib/mapa.ts"), false);
-    assert.equal(isExcludedPath("services/ml/src/verdia_ml/app.py"), false);
+    assert.equal(isExcludedPath("services/ai/src/verdia_ai/app.py"), false);
   });
 });
 
@@ -43,7 +43,7 @@ describe("collectFileSizeViolations", () => {
 
   it("uses the provided max for ML packages", () => {
     const violations = collectFileSizeViolations(
-      [{ path: "services/ml/src/verdia_ml/big.py", lineCount: 501 }],
+      [{ path: "services/ai/src/verdia_ai/big.py", lineCount: 501 }],
       { maxFileLines: 500 },
     );
     assert.equal(violations.length, 1);

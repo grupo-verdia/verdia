@@ -41,9 +41,8 @@ export default async function Home() {
 
       {capturas.length === 0 ? (
         <p style={{ margin: 0, color: "#666" }}>
-          Nenhuma captura persistida ainda. Rode o simulador de ingestão (
-          <code>npm run simulate-ingest</code> em <code>apps/web</code>) com a
-          Inference API no ar.
+          Nenhuma captura persistida ainda. Persista capturas via{" "}
+          <code>POST /api/capturas</code> (veja o README do web).
         </p>
       ) : (
         <ul
