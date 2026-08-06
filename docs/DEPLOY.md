@@ -1,11 +1,10 @@
 # Fully live deploy (Vercel + Supabase)
 
-Prepare-in-repo runbook for issue #10. **Humans** create the cloud projects and
-paste secrets; Git auto-deploy handles later pushes.
+Create the Vercel and Supabase projects, set env vars, then push — later commits
+auto-deploy the web app.
 
 **Status (2026-08):** shareable Motiva demo is web + data. AI is a local VLM
-prototype (CLI / notebook); an HTTP Inference API for live ingest is not shipped
-yet.
+prototype (CLI / notebook); HTTP Inference API for live ingest is not shipped yet.
 
 ## Stack
 

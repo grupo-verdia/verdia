@@ -34,7 +34,7 @@ verdia targets: cost optimization, technical standardization, operational effici
 
 ## Glossary
 
-Use these terms consistently in issues, code, tests, and docs.
+Use these terms consistently in code, tests, and docs.
 
 - **Trecho** — a stretch/segment of highway with a maintenance **severidade**. In the
   product, each **captura** defines exactly one trecho (1:1): the photo stands for a

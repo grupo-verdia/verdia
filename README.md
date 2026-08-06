@@ -63,8 +63,3 @@ npm run typecheck
 
 Shareable Motiva demo stack (Vercel + hosted Supabase). See
 [`docs/DEPLOY.md`](./docs/DEPLOY.md).
-
-## Spec / tickets
-
-Parent spec: GitHub issue #1. Tracer tickets `#2`–`#12` implement fronts from
-`CONTEXT.md`.
