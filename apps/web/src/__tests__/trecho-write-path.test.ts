@@ -44,7 +44,6 @@ describe("trecho write path (1 captura = 1 trecho @ 500 m)", () => {
     const trecho = await store.getTrecho(captura.trechoId);
     expect(trecho).not.toBeNull();
     expect(trecho?.lengthMeters).toBe(500);
-    // Motiva manual-analysis constant — domain must stay aligned.
     expect(DEFAULT_TRECHO_LENGTH_METERS).toBe(500);
   });
 
