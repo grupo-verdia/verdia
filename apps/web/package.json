@@ -9,8 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "check:size": "node ../../scripts/ci/check-file-size.mjs --root apps/web --max 400 --ext .ts,.tsx",
-    "simulate-ingest": "tsx scripts/simulate-ingest.ts"
+    "check:size": "node ../../scripts/ci/check-file-size.mjs --root apps/web --max 400 --ext .ts,.tsx"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",
@@ -28,7 +27,6 @@
     "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
-    "tsx": "^4.20.5",
     "typescript": "^5",
     "vite": "^8.1.5",
     "vitest": "^4.1.10"
