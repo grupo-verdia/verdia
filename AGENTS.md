@@ -8,12 +8,13 @@
 ## Learned User Preferences
 
 - Use Conventional Commits for all git commits.
+- Durable notes go in `docs/plans/YYYY-MM-DD-…`.
 
 ## Cursor Cloud specific instructions
 
 Monorepo with two services (standard run/test commands live in `README.md`):
 
-- `services/ai` — Python VLM prototype (`uv`, Python 3.12). Classify with `uv run python -m verdia_ai.classify …` (fake: `VLM_FAKE=1`); test with `uv run pytest`. HTTP `/infer` serve is deferred. `uv` installs to `~/.local/bin`.
+- `services/ai` — Python VLM prototype (`uv`, Python 3.12). Classify with `uv run python -m verdia_ai.classify …` (fake: `VLM_FAKE=1`); test with `uv run pytest`. HTTP Inference API is deferred. `uv` installs to `~/.local/bin`.
 - `apps/web` — Next.js + TypeScript (Node 22, `npm`). Run `npm run dev` (`:3000`); `npm test` / `npm run lint` / `npm run typecheck`. Copy `.env.example` → `.env.local` (needs `DEMO_PASSWORD`, default `verdia-demo`). This is a newer Next.js with breaking changes — see `apps/web/AGENTS.md`.
 
 Non-obvious gotchas:

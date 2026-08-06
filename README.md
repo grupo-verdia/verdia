@@ -61,8 +61,8 @@ npm run typecheck
 
 ## Fully live deploy
 
-Shareable Motiva demo stack (Vercel + hosted Supabase); AI Render hosting is
-deferred with the HTTP API. See [`docs/DEPLOY.md`](./docs/DEPLOY.md).
+Shareable Motiva demo stack (Vercel + hosted Supabase). See
+[`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
 ## Spec / tickets
 

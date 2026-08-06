@@ -4,7 +4,7 @@
 
 - Week-1 **script/notebook** that classifies roadside grass photos as `baixa` | `média` | `alta` via a hosted open-weight VLM.
 - JSON out: `classe`, optional height range, self-reported confidence, `justificativa`.
-- **Not** integrated into `/infer`, **not** deployed.
+- **Not** wired into an HTTP Inference API yet, **not** deployed as a service.
 
 ## Model pick
 
@@ -15,12 +15,11 @@
 
 ## Class definitions
 
-- Plain natural-language **maintenance judgment** (not cobertura / cm thresholds).
+- Plain natural-language **maintenance judgment** (not cm thresholds).
 
 ## Overlay gone (do now)
 
 - Drop `overlay_png_base64` from ML contract, overlay DB column, and web client fail-closed check.
-- App team hasn't started — clean this up immediately.
 
 ## Success bar
 
@@ -28,8 +27,7 @@
 
 ## Deferred
 
-- Wiring into FastAPI `/infer`, Render deploy, Colab training, TAS500/forefield datasets.
-- **Purged for now:** old `/infer` ASGI app + ExG/CORAL CV stand-ins; HTTP serve returns later in a new shape if needed.
+- HTTP Inference API that serves the VLM classifier (new shape when ready).
 
 ## Shape
 

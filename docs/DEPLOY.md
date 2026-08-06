@@ -1,13 +1,11 @@
-# Fully live deploy (Vercel + Supabase + Render)
+# Fully live deploy (Vercel + Supabase)
 
 Prepare-in-repo runbook for issue #10. **Humans** create the cloud projects and
 paste secrets; Git auto-deploy handles later pushes.
 
-
-**Status (2026-08):** AI HTTP Inference API + Render Blueprint (`render.yaml` /
-`services/ai/Dockerfile`) are **deferred** while the VLM prototype lives as CLI +
-notebook only. Sections below keep the historical Vercel + Supabase + Render shape
-for when an API returns.
+**Status (2026-08):** shareable Motiva demo is web + data. AI is a local VLM
+prototype (CLI / notebook); an HTTP Inference API for live ingest is not shipped
+yet.
 
 ## Stack
 
@@ -15,9 +13,9 @@ for when an API returns.
 |-------|------|--------|
 | Web (`apps/web`) | **Vercel** | Root Directory = `apps/web`; password gate via `DEMO_PASSWORD` |
 | Data | **Hosted Supabase** | Postgres + Storage; apply migrations in order |
-| Inference API (`services/ai`) | **Render Free (deferred)** | Was Docker via `render.yaml`; reintroduce with a new API shape later |
+| AI (`services/ai`) | Local | VLM CLI / notebook; HTTP API later if needed |
 
-Public URLs use provider defaults (`*.vercel.app`, `*.onrender.com`). No custom domain.
+Public URL uses the provider default (`*.vercel.app`). No custom domain.
 
 ## 1. Supabase (data plane)
 
@@ -32,15 +30,7 @@ Public URLs use provider defaults (`*.vercel.app`, `*.onrender.com`). No custom 
 4. Copy **Project URL** and a **secret** key (`sb_secret_…`) from Settings → API Keys.
    Disable the legacy JWT `anon` / `service_role` keys once nothing depends on them.
 
-## 2. Render (Inference API) — deferred
-
-HTTP `/infer` + Dockerfile + `render.yaml` were removed with the hand-CV path.
-Reintroduce hosting only after the VLM prototype is wired into a new API shape.
-
-~~Previous steps: Blueprint from `render.yaml`, set `INFERENCE_API_KEY`, health on
-`GET /health`, auth on `POST /infer`.~~
-
-## 3. Vercel (web)
+## 2. Vercel (web)
 
 1. **New Project** → import this repo.
 2. Set **Root Directory** to `apps/web`.
@@ -55,19 +45,16 @@ Reintroduce hosting only after the VLM prototype is wired into a new API shape.
 
 5. Deploy. Note the URL, e.g. `https://verdia-….vercel.app`.
 
-The web app does **not** call the Inference API directly. Only the simulador (CLI) does.
-
 Auto-deploy: later pushes to the connected branch redeploy the web app.
 
-## 4. Live E2E verification — deferred
+## 3. Live demo notes
 
-`npm run simulate-ingest` exits until an Inference HTTP API returns. Presenters can
-still use the Vercel URL + `DEMO_PASSWORD` for the web UI; seed capturas via BFF or
-Supabase if needed.
+Presenters can use the Vercel URL + `DEMO_PASSWORD` for the web UI. Seed capturas
+via BFF or Supabase if needed.
 
-## 5. Local development
+## 4. Local development
 
-- AI: VLM CLI / notebook (`services/ai/README.md`). No local `:8000` server.
+- AI: VLM CLI / notebook (`services/ai/README.md`).
 - Web: see root [`README.md`](../README.md) and [`apps/web/.env.example`](../apps/web/.env.example).
 
 ## Env cheat sheet
@@ -78,4 +65,3 @@ Supabase if needed.
 | `SUPABASE_URL` | Vercel (+ local if not using in-memory) |
 | `SUPABASE_SECRET_KEY` | Vercel (+ local) |
 | `GOOGLE_API_KEY` | Local AI VLM live calls (`services/ai`) |
-| `INFERENCE_*` / `WEB_URL` | Historical simulador → live stack (deferred) |

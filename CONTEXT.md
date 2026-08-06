@@ -1,14 +1,28 @@
 # verdia — Context
 
-verdia turns roadside vegetation photos into maintenance intelligence for **Motiva**
-(a Brazilian highway operator). Instead of judging when a stretch needs mowing by the
-human "olhômetro" (eyeballing), verdia classifies the state of the vegetation at the
-edge of a highway from a geotagged photo and helps **prioritize maintenance**.
+verdia turns roadside vegetation photos into maintenance intelligence for **Motiva**.
+Instead of judging when a stretch needs mowing by the human "olhômetro" (eyeballing),
+verdia classifies the state of the vegetation at the edge of a highway from a geotagged
+photo and helps **prioritize maintenance**.
 
 This repository is an **academic prototype / demo**. We have **no access to Motiva's
 real data**, so we design for the real scenario but drive the demo with **public
 datasets**. The image source is treated as **generic** (one geotagged lateral photo at
 a time) — we do not assume a 360º camera.
+
+## Motiva (customer context)
+
+- **Website:** [https://www.motiva.com.br/](https://www.motiva.com.br/)
+- **About:** [Sobre a Motiva](https://www.motiva.com.br/motiva/sobre-a-motiva/)
+- **Who:** Motiva Infraestrutura de Mobilidade S.A. (formerly **Grupo CCR**). Brazil’s
+  largest mobility-infrastructure company; publicly listed (B3: MOTV3). Purpose:
+  *melhorar a vida das pessoas através da mobilidade*.
+- **Businesses:** concessions in **rodovias**, urban rail (trens / metrôs / VLT), and
+  aeroportos. ~37 concessions across 13 Brazilian states; ~5.000 km of administered
+  highways carrying 2M+ vehicles/day.
+- **Why verdia cares:** Motiva’s **Rodovias** platform owns roadside vegetation
+  maintenance along concession stretches. verdia is scoped to that highway maintenance
+  problem (classe → severidade → planning), not to rail or airports.
 
 ## The problem (from the field work)
 
@@ -31,13 +45,6 @@ Use these terms consistently in issues, code, tests, and docs.
 - **Captura** — a single geotagged, timestamped roadside photo (as if taken by a
   vehicle-mounted camera driving a stretch). Without valid GPS, it is not a captura.
   One captura creates one trecho.
-- **Segmentação** — the "where" step: isolates the roadside vegetation region for
-  classifier cleanup. It does **not** decide the class. (Visual overlay was dropped;
-  VLM produces no mask.)
-- **Classificador ordinal** — the "how much" step: takes the cleaned region and outputs
-  baixa/média/alta. It is the **single source of truth** for the class.
-- **Cobertura** — the fraction of "tall grass" pixels in the roadside region; used to
-  derive the 3-class ground truth from binary-height source labels.
 - **Severidade** — maintenance priority of a trecho, driven primarily by its classe
   (alta first).
 - **Nova captura** — web-app flow to upload one or more geotagged photos (multi-select);
@@ -48,9 +55,8 @@ Use these terms consistently in issues, code, tests, and docs.
 ## Fronts (all in scope)
 
 1. **Classifier path (current):** hosted VLM prototype (`services/ai` module + CLI +
-   notebook). Hand-trained hybrid CV + always-on `/infer` are deferred / removed for now
-   (plan `docs/plans/2026-08-05-vlm-prototype.md`).
-2. **Inference HTTP API** — deferred (reintroduce later in a new shape if needed).
+   notebook). Plan: `docs/plans/2026-08-05-vlm-prototype.md`.
+2. **Inference API** — deferred (wire the VLM into a service later if needed).
 3. **Nova captura** (web upload → API) — deferred until AI path lands.
 4. **Dashboard** (results).
 5. **Geospatial map** of trechos.
@@ -63,7 +69,6 @@ detection, real route optimization, Supabase Auth.
 ## Data & modeling
 
 - **Current:** VLM natural-language maintenance judgment (`baixa` | `média` | `alta`).
-- **Abandoned:** TAS500 / forefield / DNIT cobertura-bin label story (old CV track).
 - Narrative stays fixed; concrete labels adapt to available public data.
 
 ## Architecture & stack (monorepo)
@@ -74,10 +79,8 @@ detection, real route optimization, Supabase Auth.
   HTTP Inference API deferred.
 - **Nova captura** (in `apps/web`) — deferred until AI HTTP lands.
 - **Data:** **Supabase** (Postgres for metadata/predictions; Storage for images).
-- **Deploy:** web on **Vercel**, data on **Supabase**. AI Render hosting deferred with
-  the HTTP API.
+- **Deploy:** web on **Vercel**, data on **Supabase**.
 
 ## Decisions
 
 Standing stack / ingest / CI notes: `docs/plans/2026-08-05-standing-decisions.md`.
-New durable notes go in `docs/plans/YYYY-MM-DD-…` (not ADRs).

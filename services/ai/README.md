@@ -1,8 +1,7 @@
 # verdia AI — VLM prototype
 
 Hosted Gemma VLM classifier for roadside grass photos (`baixa` | `média` | `alta`).
-Importable module + CLI + notebook. **HTTP serve (`/infer`) is deferred** — no FastAPI
-app in this package right now.
+Importable module + CLI + notebook. **HTTP Inference API is deferred.**
 
 ## Local
 
@@ -31,7 +30,3 @@ uv run jupyter notebook notebooks/demo_vlm_grass.ipynb
 ```bash
 uv run pytest
 ```
-
-## Deploy
-
-HTTP Inference API / Render / Dockerfile hosting is deferred until a later API shape.

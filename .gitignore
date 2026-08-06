@@ -8,13 +8,16 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.ipynb_checkpoints/
 *.pyc
 .DS_Store
 
 # Environments
-.env
-.env.local
+.env*
 !.env.example
+
+# Local scratch
+.scratch/
 
 # Next.js
 apps/web/.next/
