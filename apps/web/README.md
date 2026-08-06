@@ -14,17 +14,6 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000). Without Supabase env vars,
 the BFF uses an **in-memory** store (fine for local demos; data resets on restart).
 
-### Simulador de ingestão
-
-**Deferred** — needs AI HTTP `POST /infer`, which is not shipped this week. The
-CLI exits with a clear message. Unit tests still cover the simulador with a
-mocked InferClient.
-
-AI classification this week: `services/ai` VLM CLI / notebook
-(`uv run python -m verdia_ai.classify …`).
-
-Sample pack (for when ingest returns): [`fixtures/capturas/`](./fixtures/capturas/).
-
 ### Persist capturas (seed via BFF)
 
 After logging in (cookie required for browser calls; curl can hit the API directly

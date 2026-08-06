@@ -51,11 +51,6 @@ redirected to `/login`; the shared `DEMO_PASSWORD` unlocks the app. The home
 dashboard lists persisted **capturas** (in-memory by default; set Supabase env
 vars after applying `supabase/migrations/`).
 
-### 3. Simulador de ingestão
-
-**Deferred** — needs the HTTP Inference API (`POST /infer`), which is not shipped
-this week. The CLI exits with a clear message until a new API shape lands.
-
 Tests / typecheck:
 
 ```bash
