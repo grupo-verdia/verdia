@@ -38,8 +38,8 @@ export default async function PlanejamentoPage() {
 
       {plan.length === 0 ? (
         <p style={{ margin: "0 0 1rem", color: "#666" }}>
-          Nenhum trecho no plano. Persista capturas pelo simulador ou pelo
-          dashboard.
+          Nenhum trecho no plano. Persista capturas via{" "}
+          <code>POST /api/capturas</code> ou pelo dashboard.
         </p>
       ) : (
         <>
