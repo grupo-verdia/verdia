@@ -28,16 +28,24 @@ def _write_png(path: Path) -> Path:
     return path
 
 
-def test_use_fake_mode_without_key(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+def test_use_fake_mode_without_vlm_fake(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("VLM_FAKE", raising=False)
-    assert use_fake_mode() is True
+    assert use_fake_mode() is False
 
 
 def test_use_fake_mode_with_vlm_fake(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("GOOGLE_API_KEY", "not-a-real-key")
     monkeypatch.setenv("VLM_FAKE", "1")
     assert use_fake_mode() is True
+
+
+def test_classify_image_missing_key_raises(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("VLM_FAKE", raising=False)
+    path = _write_png(tmp_path / "x.png")
+    with pytest.raises(VlmError, match="GOOGLE_API_KEY"):
+        classify_image(path)
 
 
 def test_classify_image_fake_by_filename(tmp_path: Path) -> None:
@@ -126,14 +134,3 @@ def test_parse_verdict_fenced_json() -> None:
 ```"""
     verdict = parse_verdict(raw, model="m")
     assert verdict.classe == "alta"
-
-
-def test_classify_image_missing_key_without_fake_raises(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
-    monkeypatch.delenv("VLM_FAKE", raising=False)
-    path = _write_png(tmp_path / "x.png")
-    # fake=False forces live path; missing key must fail (not silently fake).
-    with pytest.raises(VlmError, match="GOOGLE_API_KEY"):
-        classify_image(path, fake=False)
