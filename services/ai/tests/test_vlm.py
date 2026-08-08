@@ -82,7 +82,6 @@ def test_parse_verdict_happy_path() -> None:
         {
             "classe": "baixa",
             "altura_estimada_cm": {"min": 5, "max": 15},
-            "referencia_de_escala": "guarda-corpo",
             "vegetacao_visivel": True,
             "confianca_declarada": 0.8,
             "justificativa": "Vegetação aparada ao longo da faixa.",
@@ -93,7 +92,6 @@ def test_parse_verdict_happy_path() -> None:
     assert verdict.altura_estimada_cm is not None
     assert verdict.altura_estimada_cm.min == 5
     assert verdict.altura_estimada_cm.max == 15
-    assert verdict.referencia_de_escala == "guarda-corpo"
 
 
 def test_parse_verdict_rejects_bad_classe() -> None:
@@ -101,7 +99,6 @@ def test_parse_verdict_rejects_bad_classe() -> None:
         {
             "classe": "muito_alta",
             "altura_estimada_cm": None,
-            "referencia_de_escala": None,
             "vegetacao_visivel": True,
             "confianca_declarada": 0.5,
             "justificativa": "x",
@@ -116,7 +113,6 @@ def test_parse_verdict_rejects_confidence_out_of_range() -> None:
         {
             "classe": "média",
             "altura_estimada_cm": None,
-            "referencia_de_escala": None,
             "vegetacao_visivel": False,
             "confianca_declarada": 1.5,
             "justificativa": "sem vegetação clara",
@@ -128,7 +124,7 @@ def test_parse_verdict_rejects_confidence_out_of_range() -> None:
 
 def test_parse_verdict_fenced_json() -> None:
     raw = """```json
-{"classe":"alta","altura_estimada_cm":null,"referencia_de_escala":null,
+{"classe":"alta","altura_estimada_cm":null,
 "vegetacao_visivel":true,"confianca_declarada":0.9,
 "justificativa":"mato alto"}
 ```"""

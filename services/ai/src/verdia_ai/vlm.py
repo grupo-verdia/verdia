@@ -5,109 +5,115 @@ Prototype only — not wired into FastAPI `/infer`.
 
 from __future__ import annotations
 
+import copy
 import json
 import mimetypes
 import os
 import re
-from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-from verdia_ai.labels import CLASSES, Classe
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
+
+from verdia_ai.labels import Classe
 
 DEFAULT_MODEL = "gemma-4-26b-a4b-it"
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tif", ".tiff"}
 
 SYSTEM_PROMPT = """\
-Você classifica fotos de vegetação à beira de rodovia para prioridade de manutenção.
+Classifique vegetação à beira de rodovia para prioridade de corte.
 
-FOCO OBRIGATÓRIO — julgue SOMENTE a faixa de grama/mato imediatamente junto à \
-pista pavimentada / acostamento (a vegetação do shoulder, a poucos metros da \
-borda do asfalto). Ignore e NÃO use para a classe:
-- taludes, aterros ou encostas distantes;
-- vegetação alta ao fundo (arbustos, mata, morro);
-- vegetação da pista oposta ou do canteiro central distante;
-- árvores ou mato longe da beira da faixa de rolamento.
+Julgue só a faixa de grama/mato junto à pista/acostamento (poucos metros da borda do asfalto).
+Ignore: taludes e encostas distantes; vegetação ao fundo; pista oposta ou canteiro central; árvores/mato longe da beira.
 
-Fotos tipo Fernão Dias / Street View costumam mostrar mato alto longe da pista — \
-isso NÃO conta. Só importa o estado da faixa junto à pista.
+Classe = urgência de manutenção nessa faixa. Não use cobertura de pixels, limiar em cm, nem área verde da imagem inteira.
 
-A classe é um JULGAMENTO DE MANUTENÇÃO (quanto essa faixa junto à pista parece \
-precisar de corte), NÃO uma fração de cobertura de pixels, NÃO um limiar em \
-centímetros, e NÃO uma definição por área verde na imagem inteira.
+- baixa: aparada / pouco urgente
+- média: altura intermediária; cortar em breve
+- alta: alta / descuidada; prioridade de corte
 
-Escala ordinal (baixa < média < alta):
-- baixa: faixa junto à pista baixa / bem aparada / pouco urgente cortar.
-- média: altura intermediária nessa faixa; manutenção em breve faz sentido.
-- alta: faixa junto à pista alta / descuidada; prioridade alta de corte.
-
-Responda somente com JSON válido conforme o schema. \
-`confianca_declarada` é sua autoavaliação (0–1), não um score calibrado. \
-`altura_estimada_cm` só se houver referência de escala visível na faixa julgada; \
-senão null. \
-`referencia_de_escala` descreve o objeto usado (poste, guarda-corpo, etc.) ou null. \
-`justificativa` deve deixar claro que avaliou a faixa junto à pista (não o fundo).
+Responda só com JSON válido do schema.
+confianca_declarada: autoavaliação 0–1 (não calibrada).
+altura_estimada_cm: só com referência de escala na faixa julgada; senão null.
+justificativa: cite a faixa junto à pista, não o fundo.
 """
 
 USER_PROMPT = (
-    "Classifique SOMENTE a vegetação da faixa junto à pista / acostamento "
-    "(ignore taludes e vegetação distante) e devolva o JSON do schema."
+    "Classifique a vegetação da faixa junto à pista e devolva o JSON do schema."
 )
 
-RESPONSE_JSON_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "properties": {
-        "classe": {"type": "string", "enum": list(CLASSES)},
-        "altura_estimada_cm": {
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "min": {"type": "number"},
-                        "max": {"type": "number"},
-                    },
-                    "required": ["min", "max"],
-                },
-                {"type": "null"},
-            ]
-        },
-        "referencia_de_escala": {
-            "anyOf": [{"type": "string"}, {"type": "null"}],
-        },
-        "vegetacao_visivel": {"type": "boolean"},
-        "confianca_declarada": {"type": "number"},
-        "justificativa": {"type": "string"},
-    },
-    "required": [
-        "classe",
-        "altura_estimada_cm",
-        "referencia_de_escala",
-        "vegetacao_visivel",
-        "confianca_declarada",
-        "justificativa",
-    ],
-}
 
+class AlturaEstimadaCm(BaseModel):
+    model_config = ConfigDict(frozen=True)
 
-@dataclass(frozen=True)
-class AlturaEstimadaCm:
     min: float
     max: float
 
+    @model_validator(mode="after")
+    def _min_le_max(self) -> AlturaEstimadaCm:
+        if self.min > self.max:
+            raise ValueError(f"altura_estimada_cm min > max ({self.min} > {self.max})")
+        return self
 
-@dataclass(frozen=True)
-class VlmVerdict:
+
+class VlmResponse(BaseModel):
+    """LLM JSON payload (excludes call metadata)."""
+
+    model_config = ConfigDict(frozen=True)
+
     classe: Classe
     altura_estimada_cm: AlturaEstimadaCm | None
-    referencia_de_escala: str | None
     vegetacao_visivel: bool
-    confianca_declarada: float
-    justificativa: str
+    confianca_declarada: float = Field(ge=0.0, le=1.0)
+    justificativa: str = Field(min_length=1)
+
+    @field_validator("justificativa", mode="before")
+    @classmethod
+    def _strip_justificativa(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+
+class VlmVerdict(VlmResponse):
+    """Validated classification plus call metadata."""
+
     model: str
     fake: bool = False
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return self.model_dump()
+
+
+def _response_json_schema() -> dict[str, Any]:
+    """JSON Schema for GenAI structured output ($refs inlined)."""
+    schema = VlmResponse.model_json_schema()
+    defs = schema.pop("$defs", {})
+    schema.pop("title", None)
+    schema.pop("description", None)
+
+    def resolve(node: Any) -> Any:
+        if isinstance(node, dict):
+            ref = node.get("$ref")
+            if isinstance(ref, str) and ref.startswith("#/$defs/"):
+                key = ref.rsplit("/", 1)[-1]
+                return resolve(copy.deepcopy(defs[key]))
+            return {k: resolve(v) for k, v in node.items() if k != "title"}
+        if isinstance(node, list):
+            return [resolve(v) for v in node]
+        return node
+
+    return resolve(schema)
+
+
+RESPONSE_JSON_SCHEMA: dict[str, Any] = _response_json_schema()
 
 
 class VlmError(ValueError):
@@ -202,7 +208,11 @@ def classify_folder(
 def parse_verdict(raw: str, *, model: str) -> VlmVerdict:
     """Parse and validate model text into a VlmVerdict."""
     payload = _extract_json_object(raw)
-    return _verdict_from_payload(payload, model=model, fake=False)
+    try:
+        response = VlmResponse.model_validate(payload)
+    except ValidationError as exc:
+        raise VlmError(str(exc)) from exc
+    return VlmVerdict(**response.model_dump(), model=model, fake=False)
 
 
 def _fake_verdict(model: str, *, source_name: str) -> VlmVerdict:
@@ -222,7 +232,6 @@ def _fake_verdict(model: str, *, source_name: str) -> VlmVerdict:
     return VlmVerdict(
         classe=classe,
         altura_estimada_cm=None,
-        referencia_de_escala=None,
         vegetacao_visivel=True,
         confianca_declarada=conf,
         justificativa="fake mode (no live API call)",
@@ -310,67 +319,3 @@ def _extract_json_object(raw: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise VlmError("JSON root must be an object")
     return payload
-
-
-def _verdict_from_payload(
-    payload: dict[str, Any],
-    *,
-    model: str,
-    fake: bool,
-) -> VlmVerdict:
-    classe = _parse_classe(payload.get("classe"))
-    altura = _parse_altura(payload.get("altura_estimada_cm"))
-    ref = payload.get("referencia_de_escala")
-    if ref is not None and not isinstance(ref, str):
-        raise VlmError("referencia_de_escala must be string or null")
-    if isinstance(ref, str) and not ref.strip():
-        ref = None
-
-    vegetacao = payload.get("vegetacao_visivel")
-    if not isinstance(vegetacao, bool):
-        raise VlmError("vegetacao_visivel must be bool")
-
-    conf = payload.get("confianca_declarada")
-    if not isinstance(conf, (int, float)) or isinstance(conf, bool):
-        raise VlmError("confianca_declarada must be a number")
-    conf_f = float(conf)
-    if not 0.0 <= conf_f <= 1.0:
-        raise VlmError(f"confianca_declarada must be in [0, 1], got {conf_f}")
-
-    just = payload.get("justificativa")
-    if not isinstance(just, str) or not just.strip():
-        raise VlmError("justificativa must be a non-empty string")
-
-    return VlmVerdict(
-        classe=classe,
-        altura_estimada_cm=altura,
-        referencia_de_escala=ref,
-        vegetacao_visivel=vegetacao,
-        confianca_declarada=conf_f,
-        justificativa=just.strip(),
-        model=model,
-        fake=fake,
-    )
-
-
-def _parse_classe(value: Any) -> Classe:
-    match value:
-        case "baixa" | "média" | "alta":
-            return value
-        case _:
-            raise VlmError(f"classe must be one of {CLASSES}, got {value!r}")
-
-
-def _parse_altura(value: Any) -> AlturaEstimadaCm | None:
-    if value is None:
-        return None
-    if not isinstance(value, dict):
-        raise VlmError("altura_estimada_cm must be object or null")
-    try:
-        lo = float(value["min"])
-        hi = float(value["max"])
-    except (KeyError, TypeError, ValueError) as exc:
-        raise VlmError("altura_estimada_cm requires numeric min/max") from exc
-    if lo > hi:
-        raise VlmError(f"altura_estimada_cm min > max ({lo} > {hi})")
-    return AlturaEstimadaCm(min=lo, max=hi)
