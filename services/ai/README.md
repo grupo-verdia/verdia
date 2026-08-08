@@ -10,7 +10,7 @@ uv sync
 ```
 
 Needs `GOOGLE_API_KEY` for live Google AI Studio calls; optional `VLM_MODEL`,
-`VLM_BASE_URL`. Offline: omit the key or set `VLM_FAKE=1`.
+`VLM_BASE_URL`. Offline stub: set `VLM_FAKE=1` or pass `--fake` (missing key errors).
 
 ```bash
 # Fake / CI-safe
@@ -20,7 +20,7 @@ VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary
 export GOOGLE_API_KEY=...
 uv run python -m verdia_ai.classify path/to/photos
 
-# Notebook demo (loads services/ai/.env; fake if key missing)
+# Notebook demo (loads services/ai/.env; use VLM_FAKE=1 for stub)
 uv sync --group dev
 uv run jupyter notebook notebooks/demo_vlm_grass.ipynb
 ```

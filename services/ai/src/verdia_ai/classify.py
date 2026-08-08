@@ -36,7 +36,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--fake",
         action="store_true",
-        help="Force offline fake mode (also used when GOOGLE_API_KEY is unset)",
+        help="Force offline fake mode (also: VLM_FAKE=1)",
     )
     args = parser.parse_args(argv)
 

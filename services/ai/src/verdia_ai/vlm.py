@@ -114,9 +114,9 @@ class VlmError(ValueError):
     """Invalid VLM response or configuration."""
 
 
-def use_fake_mode(*, api_key: str | None = None, fake_env: str | None = None) -> bool:
-    """True when live Google calls should be skipped."""
-    if (
+def use_fake_mode(*, fake_env: str | None = None) -> bool:
+    """True when VLM_FAKE explicitly opts into offline stubs (missing key is an error)."""
+    return (
         fake_env if fake_env is not None else os.environ.get("VLM_FAKE", "")
     ).strip() in {
         "1",
@@ -124,10 +124,7 @@ def use_fake_mode(*, api_key: str | None = None, fake_env: str | None = None) ->
         "True",
         "yes",
         "YES",
-    }:
-        return True
-    key = api_key if api_key is not None else os.environ.get("GOOGLE_API_KEY")
-    return not (key and key.strip())
+    }
 
 
 def resolve_model(model: str | None = None) -> str:
@@ -149,7 +146,7 @@ def classify_image(
     image_bytes, resolved_mime, source_name = _load_image(image, mime_type=mime_type)
 
     if fake is None:
-        fake = use_fake_mode(api_key=api_key)
+        fake = use_fake_mode()
     if fake:
         return _fake_verdict(resolved_model, source_name=source_name)
 
