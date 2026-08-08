@@ -13,7 +13,14 @@ import re
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 from verdia_ai.labels import Classe
 
@@ -98,11 +105,7 @@ def _response_json_schema() -> dict[str, Any]:
             if isinstance(ref, str) and ref.startswith("#/$defs/"):
                 key = ref.rsplit("/", 1)[-1]
                 return resolve(copy.deepcopy(defs[key]))
-            return {
-                k: resolve(v)
-                for k, v in node.items()
-                if k != "title"
-            }
+            return {k: resolve(v) for k, v in node.items() if k != "title"}
         if isinstance(node, list):
             return [resolve(v) for v in node]
         return node
