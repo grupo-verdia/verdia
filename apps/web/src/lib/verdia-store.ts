@@ -21,7 +21,11 @@ let loadPromise: Promise<void> | null = null;
 
 // Fallback local persistente para desenvolvimento sem Supabase.
 // Assim, trocar de rota, atualizar a página ou ocorrer um HMR não apaga as capturas importadas.
-const localDataPath = process.env.VERDIA_LOCAL_DATA_PATH ? path.resolve(process.env.VERDIA_LOCAL_DATA_PATH) : path.join(process.cwd(), ".data", "verdia-local.json");
+function getLocalDataPath() {
+  return process.env.VERDIA_LOCAL_DATA_PATH
+    ? path.resolve(process.env.VERDIA_LOCAL_DATA_PATH)
+    : path.join(process.cwd(), ".data", "verdia-local.json");
+}
 
 async function loadLocalData() {
   if (memory.loaded) return;
@@ -29,7 +33,7 @@ async function loadLocalData() {
   loadPromise = (async () => {
     seedMemory();
     try {
-      const raw = await fs.readFile(localDataPath, "utf8");
+      const raw = await fs.readFile(getLocalDataPath(), "utf8");
       const parsed = JSON.parse(raw) as { capturas?: Captura[] };
       if (Array.isArray(parsed.capturas)) {
         for (const capture of parsed.capturas) {
@@ -47,6 +51,7 @@ async function loadLocalData() {
 let savePromise: Promise<void> = Promise.resolve();
 async function persistLocalData() {
   savePromise = savePromise.then(async () => {
+    const localDataPath = getLocalDataPath();
     await fs.mkdir(path.dirname(localDataPath), { recursive: true });
     const payload = JSON.stringify({ version: 1, capturas: [...memory.capturas.values()] }, null, 2);
     const tmp = `${localDataPath}.tmp`;
@@ -126,6 +131,19 @@ export async function getCaptura(id: string): Promise<Captura | null> {
   return data ? rowToCapture(data) : null;
 }
 
+export async function getCapturaImageBytes(
+  storageKey: string,
+): Promise<Uint8Array | null> {
+  const db = useSupabase();
+  if (!db) {
+    await loadLocalData();
+    return memory.images.get(storageKey) ?? null;
+  }
+  const { data, error } = await db.storage.from("capturas").download(storageKey);
+  if (error || !data) return null;
+  return new Uint8Array(await data.arrayBuffer());
+}
+
 export async function overrideCaptura(id: string, input: OverrideInput): Promise<Captura> {
   const now = new Date().toISOString();
   const current = await getCaptura(id);
@@ -142,13 +160,26 @@ export async function overrideCaptura(id: string, input: OverrideInput): Promise
   return rowToCapture(data);
 }
 
+/** Test helper: clears in-memory/local capturas so suites don't share Excel seed data. */
+export async function resetVerdiaStoreForTests() {
+  memory.capturas.clear();
+  memory.images.clear();
+  memory.rodovias.clear();
+  memory.loaded = false;
+  loadPromise = null;
+  seedMemory();
+  memory.loaded = true;
+}
+
 export async function createCaptura(input: CreateCaptureInput): Promise<Captura> {
   const id = crypto.randomUUID();
   const rodovia = await getRodovia(input.rodoviaId);
   if (!rodovia) throw new Error("Rodovia não encontrada");
   const classeFinal = input.aiClasse ?? classeFromAltura(input.alturaCm, rodovia);
   const storageKey = `capturas/${id}.bin`;
-  const capture: Captura = { id, storageKey, rodoviaId: input.rodoviaId, trechoId: input.trechoId, lat: input.lat, lon: input.lon, capturedAt: input.capturedAt, km: input.km, sentido: input.sentido, alturaCm: input.alturaCm, aiClasse: input.aiClasse, aiConfidence: input.aiConfidence, modelVersion: input.modelVersion, classeFinal, decisaoOrigem: "ia", overrideMotivo: null, overrideAt: null, inferenceError: input.inferenceError };
+  // 1 captura = 1 trecho when the client doesn't pass trechoId (legacy + Excel rows).
+  const trechoId = input.trechoId ?? id;
+  const capture: Captura = { id, storageKey, rodoviaId: input.rodoviaId, trechoId, lat: input.lat, lon: input.lon, capturedAt: input.capturedAt, km: input.km, sentido: input.sentido, alturaCm: input.alturaCm, aiClasse: input.aiClasse, aiConfidence: input.aiConfidence, modelVersion: input.modelVersion, classeFinal, decisaoOrigem: "ia", overrideMotivo: null, overrideAt: null, inferenceError: input.inferenceError };
   const db = useSupabase();
   if (!db) { await loadLocalData(); memory.capturas.set(id, capture); if (input.imageBytes) memory.images.set(storageKey, input.imageBytes); await persistLocalData(); return capture; }
   if (input.imageBytes) {
@@ -172,5 +203,5 @@ export async function localPersistenceInfo() {
   const db = useSupabase();
   if (db) return { source: "supabase" as const, path: null, count: (await listCapturas()).length };
   await loadLocalData();
-  return { source: "local" as const, path: localDataPath, count: memory.capturas.size };
+  return { source: "local" as const, path: getLocalDataPath(), count: memory.capturas.size };
 }

@@ -6,6 +6,7 @@ import { POST as login } from "@/app/api/auth/login/route";
 import { SESSION_COOKIE } from "@/lib/auth";
 import { loadPlanTrechos } from "@/lib/planejamento";
 import { createMemoryStore, setCapturaStore } from "@/lib/persistence";
+import { isolateVerdiaStore } from "@/__tests__/test-store";
 import { proxy } from "@/proxy";
 
 async function seedCaptura(body: Record<string, unknown>) {
@@ -21,7 +22,8 @@ async function seedCaptura(body: Record<string, unknown>) {
 }
 
 describe("planejamento product read surface", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await isolateVerdiaStore();
     setCapturaStore(createMemoryStore());
     process.env.DEMO_PASSWORD = "verdia-demo";
   });

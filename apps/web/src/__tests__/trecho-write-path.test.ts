@@ -1,10 +1,15 @@
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { POST as createCaptura } from "@/app/api/capturas/route";
 import { GET as fetchTrecho } from "@/app/api/trechos/[id]/route";
 import { DEFAULT_TRECHO_LENGTH_METERS } from "@/lib/domain";
-import { createMemoryStore, setCapturaStore } from "@/lib/persistence";
+import { createMemoryStore } from "@/lib/persistence";
+import { resetVerdiaStoreForTests } from "@/lib/verdia-store";
 
 const baseInput = {
   lat: -23.55,
@@ -32,8 +37,14 @@ function postBody(overrides: Record<string, unknown> = {}) {
 }
 
 describe("trecho write path (1 captura = 1 trecho @ 500 m)", () => {
-  beforeEach(() => {
-    setCapturaStore(createMemoryStore());
+  beforeEach(async () => {
+    process.env.VERDIA_LOCAL_DATA_PATH = path.join(
+      mkdtempSync(path.join(tmpdir(), "verdia-test-")),
+      "data.json",
+    );
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SECRET_KEY;
+    await resetVerdiaStoreForTests();
   });
 
   it("createCaptura always creates a new trecho at the Motiva 500 m default", async () => {
@@ -65,7 +76,7 @@ describe("trecho write path (1 captura = 1 trecho @ 500 m)", () => {
     expect(secondTrecho?.lengthMeters).toBe(500);
   });
 
-  it("POST /api/capturas rejects attaching a captura to an existing trecho", async () => {
+  it("POST /api/capturas keeps an explicit trechoId from the spreadsheet row", async () => {
     const first = await createCaptura(
       new NextRequest("http://localhost:3000/api/capturas", {
         method: "POST",
@@ -90,9 +101,9 @@ describe("trecho write path (1 captura = 1 trecho @ 500 m)", () => {
       }),
     );
 
-    expect(second.status).toBe(400);
-    const errorBody = (await second.json()) as { error: string };
-    expect(errorBody.error).toMatch(/trechoId/i);
+    expect(second.status).toBe(201);
+    const secondBody = (await second.json()) as { trechoId: string };
+    expect(secondBody.trechoId).toBe(firstBody.trechoId);
   });
 
   it("POST /api/capturas creates a distinct 500 m trecho for each captura", async () => {

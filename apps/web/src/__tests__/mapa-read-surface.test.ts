@@ -4,12 +4,14 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { POST as createCaptura } from "@/app/api/capturas/route";
 import { loadMapTrechos } from "@/lib/mapa";
 import { createMemoryStore, setCapturaStore } from "@/lib/persistence";
+import { isolateVerdiaStore } from "@/__tests__/test-store";
 import { proxy } from "@/proxy";
 import { POST as login } from "@/app/api/auth/login/route";
 import { SESSION_COOKIE } from "@/lib/auth";
 
 describe("mapa product read surface", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await isolateVerdiaStore();
     setCapturaStore(createMemoryStore());
     process.env.DEMO_PASSWORD = "verdia-demo";
   });

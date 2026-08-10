@@ -9,9 +9,12 @@ import {
   getCapturaStore,
   setCapturaStore,
 } from "@/lib/persistence";
+import { runSimulador } from "@/lib/simulador";
+import { isolateVerdiaStore } from "@/__tests__/test-store";
 
 describe("capturas product read surface", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await isolateVerdiaStore();
     setCapturaStore(createMemoryStore());
   });
 
@@ -110,7 +113,7 @@ describe("capturas product read surface", () => {
     expect(capturas[0]?.classe).toBe("média");
   });
 
-  it("loads captura detail with photo and classe", async () => {
+  it("keeps classe on captura detail and serves the stored photo bytes", async () => {
     const photoBytes = new Uint8Array([10, 20, 30]);
 
     const writeResponse = await createCaptura(
@@ -142,20 +145,61 @@ describe("capturas product read surface", () => {
     expect(detail?.photoBytes).toEqual(photoBytes);
   });
 
-  it("lists captura with classe on the dashboard after store write", async () => {
-    const store = getCapturaStore();
+  it("lists captura from simulador ingest path with classe on the dashboard", async () => {
+    const { createCaptura: persistVerdia } = await import("@/lib/verdia-store");
+    const rodoviaId = (await import("@/lib/verdia-store").then((m) =>
+      m.listRodovias(),
+    ))[0]?.id;
+    expect(rodoviaId).toBeTruthy();
 
-    await store.createCaptura({
-      lat: -23.55,
-      lon: -46.63,
-      capturedAt: "2026-07-20T16:00:00.000Z",
-      classe: "baixa",
-      confidence: 0.6,
-      modelVersion: "stub-0.1",
-      inferenceError: null,
-      imageBytes: new Uint8Array([9, 9, 9]),
-      contentType: "image/png",
-    });
+    const report = await runSimulador(
+      [
+        {
+          id: "sample-ok",
+          imageBytes: new Uint8Array([9, 9, 9]),
+          contentType: "image/png",
+          lat: -23.55,
+          lon: -46.63,
+          capturedAt: "2026-07-20T16:00:00.000Z",
+        },
+      ],
+      {
+        infer: {
+          async infer() {
+            return {
+              ok: true,
+              classe: "baixa",
+              confidence: 0.6,
+              modelVersion: "stub-0.1",
+              overlayPngBytes: new Uint8Array([0x89, 0x50]),
+            };
+          },
+        },
+        persist: {
+          async persist(input) {
+            const captura = await persistVerdia({
+              rodoviaId: rodoviaId!,
+              trechoId: null,
+              lat: input.sample.lat,
+              lon: input.sample.lon,
+              capturedAt: input.sample.capturedAt,
+              km: null,
+              sentido: null,
+              alturaCm: null,
+              aiClasse: input.classe,
+              aiConfidence: input.confidence,
+              modelVersion: input.modelVersion,
+              inferenceError: input.inferenceError,
+              imageBytes: input.sample.imageBytes,
+              contentType: input.sample.contentType,
+            });
+            return { ok: true, capturaId: captura.id };
+          },
+        },
+      },
+    );
+
+    expect(report.results[0]?.status).toBe("ok");
 
     const capturas = await loadDashboardCapturas();
     expect(capturas).toHaveLength(1);
@@ -164,19 +208,52 @@ describe("capturas product read surface", () => {
   });
 
   it("surfaces failed inference error on the dashboard read path", async () => {
-    const store = getCapturaStore();
+    const { createCaptura: persistVerdia, listRodovias } = await import(
+      "@/lib/verdia-store"
+    );
+    const rodoviaId = (await listRodovias())[0]?.id;
+    expect(rodoviaId).toBeTruthy();
 
-    await store.createCaptura({
-      lat: -23.5,
-      lon: -46.6,
-      capturedAt: "2026-07-20T17:00:00.000Z",
-      classe: null,
-      confidence: null,
-      modelVersion: null,
-      inferenceError: "timeout talking to Inference API",
-      imageBytes: new Uint8Array([1]),
-      contentType: "image/png",
-    });
+    await runSimulador(
+      [
+        {
+          id: "sample-fail",
+          imageBytes: new Uint8Array([1]),
+          contentType: "image/png",
+          lat: -23.5,
+          lon: -46.6,
+          capturedAt: "2026-07-20T17:00:00.000Z",
+        },
+      ],
+      {
+        infer: {
+          async infer() {
+            return { ok: false, error: "timeout talking to Inference API" };
+          },
+        },
+        persist: {
+          async persist(input) {
+            const captura = await persistVerdia({
+              rodoviaId: rodoviaId!,
+              trechoId: null,
+              lat: input.sample.lat,
+              lon: input.sample.lon,
+              capturedAt: input.sample.capturedAt,
+              km: null,
+              sentido: null,
+              alturaCm: null,
+              aiClasse: input.classe,
+              aiConfidence: input.confidence,
+              modelVersion: input.modelVersion,
+              inferenceError: input.inferenceError,
+              imageBytes: input.sample.imageBytes,
+              contentType: input.sample.contentType,
+            });
+            return { ok: true, capturaId: captura.id };
+          },
+        },
+      },
+    );
 
     const capturas = await loadDashboardCapturas();
     expect(capturas).toHaveLength(1);
