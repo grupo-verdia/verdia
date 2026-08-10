@@ -110,9 +110,7 @@ def test_classe_from_altura_cm_bands(
     visivel: bool,
     expected: str | None,
 ) -> None:
-    assert (
-        classe_from_altura_cm(min_cm, max_cm, vegetacao_visivel=visivel) == expected
-    )
+    assert classe_from_altura_cm(min_cm, max_cm, vegetacao_visivel=visivel) == expected
 
 
 def test_parse_verdict_happy_path() -> None:

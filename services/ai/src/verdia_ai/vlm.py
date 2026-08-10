@@ -238,7 +238,9 @@ def parse_verdict(raw: str, *, model: str) -> VlmVerdict:
     )
 
 
-def _fake_altura_for_name(source_name: str) -> tuple[AlturaEstimadaCm | None, bool, float]:
+def _fake_altura_for_name(
+    source_name: str,
+) -> tuple[AlturaEstimadaCm | None, bool, float]:
     """Filename heuristics → height stub that exercises the real Motiva mapper."""
     stem = Path(source_name).stem.lower()
     parts = set(re.split(r"[_\-\s.]+", stem))
