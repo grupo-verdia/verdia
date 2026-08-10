@@ -1,6 +1,7 @@
 """Hosted VLM grass classifier (Gemma 4 via Google AI Studio).
 
 Prototype only — not wired into FastAPI `/infer`.
+The VLM estimates roadside grass height; Motiva cm bands map to classe in code.
 """
 
 from __future__ import annotations
@@ -22,31 +23,34 @@ from pydantic import (
     model_validator,
 )
 
-from verdia_ai.labels import Classe
+from verdia_ai.labels import Classe, classe_from_altura_cm
 
 DEFAULT_MODEL = "gemma-4-26b-a4b-it"
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tif", ".tiff"}
 
 SYSTEM_PROMPT = """\
-Classifique vegetação à beira de rodovia para prioridade de corte.
+Estime a altura da vegetação à beira de rodovia (grama/mato na faixa junto à pista).
 
-Julgue só a faixa de grama/mato junto à pista/acostamento (poucos metros da borda do asfalto).
+Julgue só a faixa junto à pista/acostamento (poucos metros da borda do asfalto).
 Ignore: taludes e encostas distantes; vegetação ao fundo; pista oposta ou canteiro central; árvores/mato longe da beira.
 
-Classe = urgência de manutenção nessa faixa. Não use cobertura de pixels, limiar em cm, nem área verde da imagem inteira.
+Não atribua classe de manutenção. Só estime altura em cm e diga se a vegetação da faixa está visível.
 
-- baixa: aparada / pouco urgente
-- média: altura intermediária; cortar em breve
-- alta: alta / descuidada; prioridade de corte
+altura_estimada_cm: intervalo {min, max} em cm na faixa julgada.
+- Estime a altura típica/modal da grama nessa faixa (não o mínimo absoluto nem o máximo raro).
+- Intervalo estreito: span (max − min) de no máximo ~10 cm (ex.: 4–8, 12–18, 35–45). Evite faixas largas tipo 5–25 ou 10–30.
+- Se a grama da faixa estiver visível, sempre dê um intervalo — mesmo com incerteza, escolha o melhor chute estreito. Não use null por dúvida.
+
+vegetacao_visivel: false só se a faixa junto à pista não for visível (obstrução, ângulo, etc.) ou se não houver grama/mato nessa faixa.
+altura_estimada_cm = null somente quando vegetacao_visivel for false.
+confianca_declarada: autoavaliação 0–1 (não calibrada); use valores mais baixos se a estimativa for difícil, sem omitir a altura.
+justificativa: cite a faixa junto à pista e a base da estimativa de altura; não o fundo.
 
 Responda só com JSON válido do schema.
-confianca_declarada: autoavaliação 0–1 (não calibrada).
-altura_estimada_cm: só com referência de escala na faixa julgada; senão null.
-justificativa: cite a faixa junto à pista, não o fundo.
 """
 
 USER_PROMPT = (
-    "Classifique a vegetação da faixa junto à pista e devolva o JSON do schema."
+    "Estime a altura da vegetação da faixa junto à pista e devolva o JSON do schema."
 )
 
 
@@ -64,11 +68,10 @@ class AlturaEstimadaCm(BaseModel):
 
 
 class VlmResponse(BaseModel):
-    """LLM JSON payload (excludes call metadata)."""
+    """LLM JSON payload (excludes derived classe and call metadata)."""
 
     model_config = ConfigDict(frozen=True)
 
-    classe: Classe
     altura_estimada_cm: AlturaEstimadaCm | None
     vegetacao_visivel: bool
     confianca_declarada: float = Field(ge=0.0, le=1.0)
@@ -82,9 +85,16 @@ class VlmResponse(BaseModel):
         return value
 
 
-class VlmVerdict(VlmResponse):
-    """Validated classification plus call metadata."""
+class VlmVerdict(BaseModel):
+    """Validated classification plus call metadata; classe is derived from height."""
 
+    model_config = ConfigDict(frozen=True)
+
+    classe: Classe | None
+    altura_estimada_cm: AlturaEstimadaCm | None
+    vegetacao_visivel: bool
+    confianca_declarada: float = Field(ge=0.0, le=1.0)
+    justificativa: str = Field(min_length=1)
     model: str
     fake: bool = False
 
@@ -147,7 +157,7 @@ def classify_image(
     temperature: float = 0.0,
     fake: bool | None = None,
 ) -> VlmVerdict:
-    """Classify one roadside grass photo as baixa|média|alta."""
+    """Estimate roadside grass height and map to baixa|média|alta|null."""
     resolved_model = resolve_model(model)
     image_bytes, resolved_mime, source_name = _load_image(image, mime_type=mime_type)
 
@@ -206,33 +216,54 @@ def classify_folder(
 
 
 def parse_verdict(raw: str, *, model: str) -> VlmVerdict:
-    """Parse and validate model text into a VlmVerdict."""
+    """Parse model JSON, derive classe from Motiva height bands, return VlmVerdict."""
     payload = _extract_json_object(raw)
+    # Classe is derived in code; ignore any stray key from the model.
+    payload.pop("classe", None)
     try:
         response = VlmResponse.model_validate(payload)
     except ValidationError as exc:
         raise VlmError(str(exc)) from exc
-    return VlmVerdict(**response.model_dump(), model=model, fake=False)
+    altura = response.altura_estimada_cm
+    classe = classe_from_altura_cm(
+        None if altura is None else altura.min,
+        None if altura is None else altura.max,
+        vegetacao_visivel=response.vegetacao_visivel,
+    )
+    return VlmVerdict(
+        **response.model_dump(),
+        classe=classe,
+        model=model,
+        fake=False,
+    )
+
+
+def _fake_altura_for_name(source_name: str) -> tuple[AlturaEstimadaCm | None, bool, float]:
+    """Filename heuristics → height stub that exercises the real Motiva mapper."""
+    stem = Path(source_name).stem.lower()
+    parts = set(re.split(r"[_\-\s.]+", stem))
+    if "na" in parts or "null" in parts:
+        return None, False, 0.5
+    if "alta" in parts:
+        return AlturaEstimadaCm(min=40.0, max=60.0), True, 0.7
+    if "media" in parts or "média" in parts:
+        return AlturaEstimadaCm(min=15.0, max=25.0), True, 0.65
+    if "baixa" in parts:
+        return AlturaEstimadaCm(min=3.0, max=8.0), True, 0.7
+    return AlturaEstimadaCm(min=15.0, max=25.0), True, 0.4
 
 
 def _fake_verdict(model: str, *, source_name: str) -> VlmVerdict:
-    name = source_name.lower()
-    if "alta" in name:
-        classe: Classe = "alta"
-        conf = 0.7
-    elif "media" in name or "média" in name:
-        classe = "média"
-        conf = 0.65
-    elif "baixa" in name:
-        classe = "baixa"
-        conf = 0.7
-    else:
-        classe = "média"
-        conf = 0.4
+    altura, visivel, conf = _fake_altura_for_name(source_name)
+    classe = classe_from_altura_cm(
+        None if altura is None else altura.min,
+        None if altura is None else altura.max,
+        vegetacao_visivel=visivel,
+    )
     return VlmVerdict(
         classe=classe,
-        altura_estimada_cm=None,
-        vegetacao_visivel=True,
+        altura_estimada_cm=altura,
+        vegetacao_visivel=visivel,
         confianca_declarada=conf,
         justificativa="fake mode (no live API call)",
         model=model,

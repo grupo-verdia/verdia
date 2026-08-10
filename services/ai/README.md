@@ -1,7 +1,8 @@
 # verdia AI — VLM prototype
 
-Hosted Gemma VLM classifier for roadside grass photos (`baixa` | `média` | `alta`).
-Importable module + CLI + notebook. **HTTP Inference API is deferred.**
+Hosted Gemma VLM estimates roadside grass height; code maps Motiva cm bands to
+`baixa` | `média` | `alta` (or `null` when height is N/A). Importable module + CLI +
+notebook. **HTTP Inference API is deferred.**
 
 ## Local
 

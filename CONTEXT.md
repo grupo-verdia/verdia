@@ -41,7 +41,11 @@ Use these terms consistently in code, tests, and docs.
   length of roadside at its GPS point. Default length is **500 m** (Motiva’s current
   manual-analysis constant); the value may become configurable later.
 - **Altura da grama / classe** — the ordinal vegetation-height class of a trecho:
-  **baixa < média < alta**. This is an *ordered* scale, not three unrelated labels.
+  **baixa < média < alta**, mapped from estimated height (Motiva bands):
+  **h < 10 cm → baixa**, **10–30 cm → média**, **h > 30 cm → alta**.
+  **classe is null** (N/A) only when the roadside strip is not visible or has no grass;
+  the model should still estimate height under uncertainty (lower confidence), not omit it.
+  This is an *ordered* scale, not three unrelated labels.
 - **Captura** — a single geotagged, timestamped roadside photo (as if taken by a
   vehicle-mounted camera driving a stretch). Without valid GPS, it is not a captura.
   One captura creates one trecho.
@@ -68,7 +72,8 @@ detection, real route optimization, Supabase Auth.
 
 ## Data & modeling
 
-- **Current:** VLM natural-language maintenance judgment (`baixa` | `média` | `alta`).
+- **Current:** VLM estimates roadside grass height; code maps Motiva cm bands to
+  `baixa` | `média` | `alta` (or `null` for N/A).
 - Narrative stays fixed; concrete labels adapt to available public data.
 
 ## Architecture & stack (monorepo)

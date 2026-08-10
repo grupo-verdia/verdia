@@ -17,7 +17,10 @@ from verdia_ai.vlm import classify_folder, use_fake_mode
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Classify roadside grass photos (baixa|média|alta) with Gemma VLM."
+        description=(
+            "Estimate roadside grass height and map to baixa|média|alta|null "
+            "(Motiva cm bands) with Gemma VLM."
+        )
     )
     parser.add_argument(
         "folder",
@@ -46,7 +49,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.summary:
         counts: dict[str, int] = {}
         for row in rows:
-            classe = str(row["classe"])
+            classe = "null" if row["classe"] is None else str(row["classe"])
             counts[classe] = counts.get(classe, 0) + 1
         print(
             json.dumps(
