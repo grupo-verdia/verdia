@@ -1,6 +1,5 @@
 """Hosted VLM grass classifier (Gemma 4 via Google AI Studio).
 
-Prototype only — not wired into FastAPI `/infer`.
 The VLM estimates roadside grass height; Motiva cm bands map to classe in code.
 """
 
