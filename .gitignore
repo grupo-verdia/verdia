@@ -27,9 +27,6 @@ apps/web/out/
 services/ai/*.egg-info/
 services/ai/dist/
 
-# Large public dataset downloads (see services/ai/data/README.md)
-services/ai/data/raw/
-
 # Local Street View / field demo photos (keep folder + README/.gitkeep)
 services/ai/notebooks/samples/*
 !services/ai/notebooks/samples/.gitkeep
