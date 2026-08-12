@@ -24,6 +24,10 @@ export type Captura = {
   sentido: string | null;
   /** Estimated grass height in cm (Motiva bands: <10 / 10–30 / >30). */
   alturaCm: number | null;
+  /** Human override reason when classe was corrected manually. */
+  overrideMotivo: string | null;
+  /** ISO timestamp of the last human override, if any. */
+  overrideAt: string | null;
 };
 
 /** Motiva roadside grass bands (cm), mirrored from services/ai labels. */

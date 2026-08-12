@@ -1,166 +1,96 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { StatusPill } from "@/components/status-pill";
-import type { Captura } from "@/lib/domain";
-import { formatAlturaCm, formatConfianca } from "@/lib/planejamento";
+import {
+  RodoviasCards,
+  type RodoviaCard,
+} from "@/components/rodovias-cards";
+import { RodoviasToolbar } from "@/components/rodovias-toolbar";
+import type { Captura, Severidade } from "@/lib/domain";
 import type { Rodovia } from "@/lib/rodovias";
 
-async function fetchCapturasForRodovia(rodoviaId: string): Promise<Captura[]> {
-  const response = await fetch(
-    `/api/capturas?rodoviaId=${encodeURIComponent(rodoviaId)}&t=${Date.now()}`,
-    {
-      cache: "no-store",
-      headers: { "Cache-Control": "no-cache" },
-    },
-  );
+function buildCards(
+  capturas: Captura[],
+  rodovias: Rodovia[],
+  selected: string,
+  search: string,
+  priority: "todas" | Severidade,
+): RodoviaCard[] {
+  const filtered = capturas
+    .filter((c) => selected === "todas" || c.rodoviaId === selected)
+    .filter((c) => {
+      if (priority !== "todas" && c.classe !== priority) {
+        return false;
+      }
+      if (!search) {
+        return true;
+      }
+      const roadCode =
+        rodovias.find((r) => r.id === c.rodoviaId)?.codigo ?? c.rodoviaId;
+      const hay = `${roadCode} ${c.km} ${c.classe} ${c.alturaCm}`.toLowerCase();
+      return hay.includes(search.toLowerCase());
+    })
+    .sort((a, b) => {
+      const rank = { alta: 0, média: 1, baixa: 2 } as const;
+      const ra = a.classe ? rank[a.classe] : 99;
+      const rb = b.classe ? rank[b.classe] : 99;
+      if (ra !== rb) {
+        return ra - rb;
+      }
+      return (
+        (a.km ?? Number.POSITIVE_INFINITY) - (b.km ?? Number.POSITIVE_INFINITY)
+      );
+    });
+
+  return filtered.map((c, index) => ({
+    id: c.id,
+    ordem: index + 1,
+    rodovia:
+      rodovias.find((r) => r.id === c.rodoviaId)?.codigo ?? c.rodoviaId ?? "—",
+    km: c.km != null ? c.km.toFixed(1) : "—",
+    altura: c.alturaCm != null ? `${c.alturaCm} cm` : "—",
+    severidade: (c.classe ?? "baixa") as Severidade,
+    confianca:
+      c.confidence != null ? `${Math.round(c.confidence * 100)}%` : "—",
+  }));
+}
+
+function exportAllCsv(cards: RodoviaCard[]) {
+  const header = ["Ordem", "Rodovia", "KM", "Altura", "Severidade", "Confiança"];
+  const lines = [
+    header.join(";"),
+    ...cards.map((c) =>
+      [c.ordem, c.rodovia, c.km, c.altura, c.severidade, c.confianca]
+        .map((cell) => `"${String(cell).replaceAll('"', '""')}"`)
+        .join(";"),
+    ),
+  ];
+  const blob = new Blob([`\uFEFF${lines.join("\n")}`], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "verdia-todas-rodovias.csv";
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+async function fetchCapturas(scope: string): Promise<Captura[]> {
+  const url =
+    scope === "todas"
+      ? `/api/capturas?t=${Date.now()}`
+      : `/api/capturas?rodoviaId=${encodeURIComponent(scope)}&t=${Date.now()}`;
+  const response = await fetch(url, {
+    cache: "no-store",
+    headers: { "Cache-Control": "no-cache" },
+  });
   if (!response.ok) {
-    throw new Error("Não foi possível atualizar a tabela.");
+    throw new Error("Não foi possível atualizar os cards.");
   }
   const data = (await response.json()) as { capturas?: Captura[] };
   return data.capturas ?? [];
-}
-
-function RodoviasToolbar({
-  rodovias,
-  selected,
-  search,
-  busy,
-  message,
-  fileRef,
-  onSelect,
-  onSearch,
-  onImport,
-}: {
-  rodovias: Rodovia[];
-  selected: string;
-  search: string;
-  busy: boolean;
-  message: string | null;
-  fileRef: React.RefObject<HTMLInputElement | null>;
-  onSelect: (id: string) => void;
-  onSearch: (value: string) => void;
-  onImport: (file: File) => void;
-}) {
-  return (
-    <div className="card" style={{ marginBottom: 16 }}>
-      <div className="toolbar">
-        <select
-          className="select"
-          value={selected}
-          onChange={(event) => onSelect(event.target.value)}
-        >
-          {rodovias.map((rodovia) => (
-            <option key={rodovia.id} value={rodovia.id}>
-              {rodovia.codigo} · {rodovia.nome}
-            </option>
-          ))}
-        </select>
-        <input
-          className="input"
-          placeholder="Buscar KM, sentido ou severidade"
-          value={search}
-          onChange={(event) => onSearch(event.target.value)}
-        />
-        <label className={`btn ${busy ? "disabled" : ""}`}>
-          {busy ? "Importando…" : "Importar Excel"}
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".xlsx,.xls"
-            hidden
-            disabled={busy || !selected}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) {
-                onImport(file);
-              }
-            }}
-          />
-        </label>
-        {selected ? (
-          <a
-            className="btn btn-primary"
-            href={`/api/capturas/export?rodoviaId=${encodeURIComponent(selected)}`}
-          >
-            Exportar Excel
-          </a>
-        ) : null}
-      </div>
-      {message ? (
-        <div className="muted" style={{ marginTop: 10 }}>
-          {message}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function RodoviasTable({
-  road,
-  rows,
-}: {
-  road: Rodovia | undefined;
-  rows: Captura[];
-}) {
-  return (
-    <div className="card">
-      <div className="page-head" style={{ marginBottom: 16 }}>
-        <div>
-          <h2 className="section-title">
-            {road?.codigo} · {road?.nome}
-          </h2>
-          <span className="muted" style={{ fontSize: 11 }}>
-            {rows.length} registros nesta rodovia · dados sincronizados com o
-            backend
-          </span>
-        </div>
-      </div>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Data/hora</th>
-              <th>KM</th>
-              <th>Sentido</th>
-              <th>Altura</th>
-              <th>Severidade</th>
-              <th>Confiança</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((captura) => (
-              <tr key={captura.id}>
-                <td>{new Date(captura.capturedAt).toLocaleString("pt-BR")}</td>
-                <td>{captura.km?.toFixed(1) ?? "—"}</td>
-                <td>{captura.sentido ?? "—"}</td>
-                <td>{formatAlturaCm(captura.alturaCm)}</td>
-                <td>
-                  <StatusPill value={captura.classe} />
-                </td>
-                <td>{formatConfianca(captura.confidence)}</td>
-                <td>
-                  <Link className="btn" href={`/capturas/${captura.id}`}>
-                    Abrir
-                  </Link>
-                </td>
-              </tr>
-            ))}
-            {!rows.length ? (
-              <tr>
-                <td colSpan={7}>
-                  <div className="empty">Nenhum registro para esta rodovia.</div>
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
 }
 
 export function RodoviasClient({
@@ -170,87 +100,39 @@ export function RodoviasClient({
   rodovias: Rodovia[];
   capturas: Captura[];
 }) {
-  const [selected, setSelected] = useState(rodovias[0]?.id ?? "");
+  const [selected, setSelected] = useState("todas");
   const [capturas, setCapturas] = useState(initialCapturas);
   const [search, setSearch] = useState("");
+  const [priority, setPriority] = useState<"todas" | Severidade>("todas");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!selected) {
-      return;
+  const refresh = useCallback(async (scope: string) => {
+    const next = await fetchCapturas(scope);
+    if (scope === "todas") {
+      setCapturas(next);
+    } else {
+      setCapturas((prev) => [
+        ...prev.filter((c) => c.rodoviaId !== scope),
+        ...next,
+      ]);
     }
+  }, []);
+
+  useEffect(() => {
     const handler = () => {
-      fetchCapturasForRodovia(selected)
-        .then((next) => {
-          setCapturas((prev) => [
-            ...prev.filter((c) => c.rodoviaId !== selected),
-            ...next,
-          ]);
-        })
-        .catch(() => undefined);
+      refresh(selected).catch(() => undefined);
     };
     window.addEventListener("verdia:data-refresh", handler);
     return () => window.removeEventListener("verdia:data-refresh", handler);
-  }, [selected]);
+  }, [refresh, selected]);
 
-  const rows = useMemo(
-    () =>
-      capturas.filter(
-        (c) =>
-          c.rodoviaId === selected &&
-          (!search ||
-            `${c.km} ${c.sentido} ${c.classe}`
-              .toLowerCase()
-              .includes(search.toLowerCase())),
-      ),
-    [capturas, selected, search],
-  );
   const road = rodovias.find((r) => r.id === selected);
-
-  async function importExcel(file: File) {
-    setBusy(true);
-    setMessage(null);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("rodoviaId", selected);
-      const response = await fetch("/api/capturas/import", {
-        method: "POST",
-        body: form,
-        cache: "no-store",
-      });
-      const data = (await response.json()) as {
-        imported?: number;
-        errors?: unknown[];
-        error?: string;
-      };
-      if (!response.ok) {
-        throw new Error(data.error ?? "Falha ao importar.");
-      }
-      const next = await fetchCapturasForRodovia(selected);
-      setCapturas((prev) => [
-        ...prev.filter((c) => c.rodoviaId !== selected),
-        ...next,
-      ]);
-      const failed = data.errors?.length ?? 0;
-      setMessage(
-        `${data.imported ?? 0} registros importados${
-          failed ? ` · ${failed} linhas com erro` : ""
-        }. A tabela foi atualizada.`,
-      );
-      if (fileRef.current) {
-        fileRef.current.value = "";
-      }
-    } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Falha ao importar.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
+  const cards = useMemo(
+    () => buildCards(capturas, rodovias, selected, search, priority),
+    [capturas, selected, search, priority, rodovias],
+  );
 
   return (
     <>
@@ -258,16 +140,171 @@ export function RodoviasClient({
         rodovias={rodovias}
         selected={selected}
         search={search}
+        priority={priority}
         busy={busy}
         message={message}
         fileRef={fileRef}
-        onSelect={setSelected}
-        onSearch={setSearch}
-        onImport={(file) => {
-          void importExcel(file);
+        cardsEmpty={cards.length === 0}
+        onSelect={(id) => {
+          setSelected(id);
+          refresh(id).catch(() =>
+            setMessage("Não foi possível sincronizar os dados."),
+          );
         }}
+        onSearch={setSearch}
+        onPriority={setPriority}
+        onImport={(file) =>
+          void runImport({
+            file,
+            selected,
+            capturas,
+            fileRef,
+            setBusy,
+            setMessage,
+            refresh: () => refresh(selected),
+          })
+        }
+        onExportAll={() => exportAllCsv(cards)}
+        onClear={() =>
+          void runClear({
+            selected,
+            roadCodigo: road?.codigo,
+            setBusy,
+            setMessage,
+            refresh: () => refresh(selected),
+          })
+        }
       />
-      <RodoviasTable road={road} rows={rows} />
+      <div style={{ marginBottom: 12 }}>
+        <h2 className="section-title">
+          {selected === "todas"
+            ? "Todas as rodovias"
+            : `${road?.codigo} · ${road?.nome}`}
+        </h2>
+        <span className="muted" style={{ fontSize: 11 }}>
+          {cards.length} registros · Ordem, Rodovia, KM, Altura, Severidade,
+          Confiança
+        </span>
+      </div>
+      <RodoviasCards
+        cards={cards}
+        emptyHint={
+          selected === "todas"
+            ? "Nenhum registro. Importe uma planilha com a coluna Rodovia."
+            : "Nenhum registro para esta rodovia. Importe a planilha nela ou volte para “Todas as rodovias”."
+        }
+      />
     </>
   );
+}
+
+async function runImport(args: {
+  file: File;
+  selected: string;
+  capturas: Captura[];
+  fileRef: React.RefObject<HTMLInputElement | null>;
+  setBusy: (v: boolean) => void;
+  setMessage: (v: string | null) => void;
+  refresh: () => Promise<void>;
+}) {
+  const { file, selected, capturas, fileRef, setBusy, setMessage, refresh } =
+    args;
+  const existentes =
+    selected === "todas"
+      ? capturas.length
+      : capturas.filter((c) => c.rodoviaId === selected).length;
+  if (existentes > 0) {
+    const ok = window.confirm(
+      `Já existem ${existentes} registro(s) carregado(s).\n\n` +
+        `Importar de novo pode DUPLICAR a mesma base.\n\n` +
+        `Deseja continuar mesmo assim?\n` +
+        `(Recomendado: Cancelar e usar "Limpar" antes.)`,
+    );
+    if (!ok) {
+      if (fileRef.current) {
+        fileRef.current.value = "";
+      }
+      return;
+    }
+  }
+  setBusy(true);
+  setMessage(null);
+  try {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("rodoviaId", selected);
+    const response = await fetch("/api/capturas/import", {
+      method: "POST",
+      body: fd,
+      cache: "no-store",
+    });
+    const data = (await response.json()) as {
+      error?: string;
+      imported?: number;
+      errors?: unknown[];
+    };
+    if (!response.ok) {
+      throw new Error(data.error ?? "Falha ao importar.");
+    }
+    await refresh();
+    const failed = data.errors?.length ?? 0;
+    setMessage(
+      `${data.imported ?? 0} registros importados${
+        failed ? ` · ${failed} linhas com erro` : ""
+      }.`,
+    );
+    if (fileRef.current) {
+      fileRef.current.value = "";
+    }
+  } catch (error) {
+    setMessage(error instanceof Error ? error.message : "Falha ao importar.");
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function runClear(args: {
+  selected: string;
+  roadCodigo: string | undefined;
+  setBusy: (v: boolean) => void;
+  setMessage: (v: string | null) => void;
+  refresh: () => Promise<void>;
+}) {
+  const { selected, roadCodigo, setBusy, setMessage, refresh } = args;
+  const escopo =
+    selected === "todas"
+      ? "TODAS as rodovias"
+      : `a rodovia ${roadCodigo ?? selected}`;
+  const ok = window.confirm(
+    `Limpar os dados de ${escopo}?\n\nIsso remove as capturas importadas e não pode ser desfeito.`,
+  );
+  if (!ok) {
+    return;
+  }
+  setBusy(true);
+  setMessage(null);
+  try {
+    const response = await fetch(
+      `/api/capturas?rodoviaId=${encodeURIComponent(selected)}`,
+      { method: "DELETE", cache: "no-store" },
+    );
+    const text = await response.text();
+    let data: { error?: string; message?: string } = {};
+    if (text) {
+      try {
+        data = JSON.parse(text) as { error?: string; message?: string };
+      } catch {
+        throw new Error(`Resposta inválida ao limpar (${response.status}).`);
+      }
+    }
+    if (!response.ok) {
+      throw new Error(data.error ?? `Falha ao limpar (${response.status}).`);
+    }
+    await refresh();
+    setMessage(data.message ?? "Dados limpos.");
+  } catch (error) {
+    setMessage(error instanceof Error ? error.message : "Falha ao limpar.");
+  } finally {
+    setBusy(false);
+  }
 }

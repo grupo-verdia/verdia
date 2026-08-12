@@ -217,3 +217,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const rodoviaId = request.nextUrl.searchParams.get("rodoviaId") ?? "todas";
+    if (rodoviaId !== "todas" && !getRodoviaById(rodoviaId)) {
+      return NextResponse.json({ error: "rodoviaId not found" }, { status: 400 });
+    }
+    const removed = await getCapturaStore().clearCapturas(rodoviaId);
+    return NextResponse.json({
+      ok: true,
+      removed,
+      message:
+        rodoviaId === "todas"
+          ? `${removed} registros removidos de todas as rodovias.`
+          : `${removed} registros removidos da rodovia selecionada.`,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Falha ao limpar.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

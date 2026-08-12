@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { DashboardLive } from "@/components/dashboard-live";
 import { DataAutoRefresh } from "@/components/data-auto-refresh";
 import { loadDashboardCapturas } from "@/lib/dashboard";
@@ -16,15 +18,28 @@ export default async function Home() {
       <DataAutoRefresh />
       <div className="page-head">
         <div>
-          <div className="eyebrow">OPERAÇÃO</div>
-          <h1 className="page-title">Visão geral</h1>
+          <div className="eyebrow">CENTRO DE OPERAÇÕES · MOTIVA</div>
+          <h1 className="page-title">Monitoramento de vegetação</h1>
           <p className="page-subtitle">
-            Prioridades de vegetação à beira da rodovia a partir das capturas
-            persistidas e planilhas importadas.
+            Visão operacional das capturas realizadas pelo veículo, classificação
+            da IA e prioridades de manutenção.
           </p>
+        </div>
+        <div className="toolbar">
+          <Link className="btn" href="/rodovias">
+            Gerenciar dados
+          </Link>
+          <Link className="btn btn-primary" href="/mapa">
+            Abrir mapa
+          </Link>
         </div>
       </div>
       <DashboardLive initialCapturas={capturas} initialRodovias={rodovias} />
+      <p className="footer-note">
+        Os limites de altura exibidos no protótipo são parâmetros de demonstração
+        e devem ser substituídos pelos critérios operacionais definidos pela
+        Motiva.
+      </p>
     </>
   );
 }

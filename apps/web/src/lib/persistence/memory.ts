@@ -10,6 +10,7 @@ import type {
   CapturaStore,
   CreateCapturaInput,
   ListCapturasFilter,
+  OverrideCapturaInput,
 } from "@/lib/persistence/types";
 import { listMotivaRodovias } from "@/lib/rodovias";
 
@@ -46,6 +47,8 @@ export function createMemoryStore(): CapturaStore {
         km: input.km ?? null,
         sentido: input.sentido ?? null,
         alturaCm: input.alturaCm ?? null,
+        overrideMotivo: null,
+        overrideAt: null,
       };
       capturas.set(id, captura);
       return captura;
@@ -75,6 +78,43 @@ export function createMemoryStore(): CapturaStore {
 
     async listRodovias() {
       return listMotivaRodovias();
+    },
+
+    async overrideCaptura(
+      id: string,
+      input: OverrideCapturaInput,
+    ): Promise<Captura> {
+      const existing = capturas.get(id);
+      if (!existing) {
+        throw new Error("captura not found");
+      }
+      const updated: Captura = {
+        ...existing,
+        classe: input.classe,
+        overrideMotivo: input.motivo,
+        overrideAt: new Date().toISOString(),
+      };
+      capturas.set(id, updated);
+      const trecho = trechos.get(existing.trechoId);
+      if (trecho) {
+        trechos.set(existing.trechoId, {
+          ...trecho,
+          severidade: severidadeFromClasse(input.classe),
+        });
+      }
+      return updated;
+    },
+
+    async clearCapturas(rodoviaId: string): Promise<number> {
+      const toRemove = [...capturas.values()].filter((captura) =>
+        rodoviaId === "todas" ? true : captura.rodoviaId === rodoviaId,
+      );
+      for (const captura of toRemove) {
+        capturas.delete(captura.id);
+        objects.delete(captura.storageKey);
+        trechos.delete(captura.trechoId);
+      }
+      return toRemove.length;
     },
   };
 }
