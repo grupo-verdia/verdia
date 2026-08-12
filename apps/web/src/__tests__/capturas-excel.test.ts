@@ -330,4 +330,27 @@ describe("capturas Excel import/export", () => {
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet!);
     expect(rows.length).toBeGreaterThanOrEqual(1);
   });
+
+  it("seeds Motiva template rows into the memory store for the demo", async () => {
+    const store = createMemoryStore({ seedDemo: true });
+    const rows = await store.listCapturas();
+    expect(rows.length).toBeGreaterThanOrEqual(6);
+    const ids = new Set(rows.map((row) => row.rodoviaId));
+    expect(ids.has("sp-330")).toBe(true);
+    expect(ids.has("sp-348")).toBe(true);
+  });
+
+  it("lists all capturas when rodoviaId=todas", async () => {
+    const bytes = buildCapturasTemplate();
+    expect((await postImport(bytes, "todas")).status).toBe(200);
+
+    const response = await listCapturas(
+      new NextRequest("http://localhost:3000/api/capturas?rodoviaId=todas"),
+    );
+    expect(response.status).toBe(200);
+    const listed = (await response.json()) as {
+      capturas: Array<{ rodoviaId: string | null }>;
+    };
+    expect(listed.capturas.length).toBeGreaterThanOrEqual(6);
+  });
 });

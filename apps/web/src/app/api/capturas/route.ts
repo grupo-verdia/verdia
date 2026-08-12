@@ -66,7 +66,7 @@ export async function GET(request?: NextRequest) {
   try {
     const rodoviaId = request?.nextUrl.searchParams.get("rodoviaId");
     const capturas = await getCapturaStore().listCapturas(
-      rodoviaId ? { rodoviaId } : undefined,
+      !rodoviaId || rodoviaId === "todas" ? undefined : { rodoviaId },
     );
     return NextResponse.json({ capturas });
   } catch (error) {
