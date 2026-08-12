@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import type { Captura } from "@/lib/domain";
 import {
+  isExcelBuffer,
   isExcelFilename,
   MAX_IMPORT_BYTES,
   parseCapturasWorkbook,
@@ -56,6 +58,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const bytes = new Uint8Array(buffer);
+  if (!isExcelBuffer(bytes)) {
+    return NextResponse.json(
+      { error: "file is not a valid Excel workbook" },
+      { status: 400 },
+    );
+  }
+
   const parsed = parseCapturasWorkbook(buffer, rodoviaIdRaw);
   if (!parsed.ok) {
     return NextResponse.json(
@@ -66,18 +76,22 @@ export async function POST(request: NextRequest) {
 
   const store = getCapturaStore();
   const errors: CapturaRowError[] = [...parsed.errors];
-  let imported = 0;
+  const capturas: Captura[] = [];
   const received = parsed.drafts.length + parsed.errors.length;
 
   for (const draft of parsed.drafts) {
     try {
-      await store.createCaptura(draft.input);
-      imported += 1;
+      capturas.push(await store.createCaptura(draft.input));
     } catch (error) {
       const message = error instanceof Error ? error.message : "create failed";
       errors.push({ row: draft.row, message });
     }
   }
 
-  return NextResponse.json({ imported, received, errors });
+  return NextResponse.json({
+    imported: capturas.length,
+    received,
+    errors,
+    capturas,
+  });
 }

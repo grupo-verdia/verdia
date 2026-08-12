@@ -76,6 +76,15 @@ export function RodoviasToolbar({
         </div>
         <button
           type="button"
+          className="btn btn-primary"
+          onClick={() => {
+            window.location.href = "/verdia-teste-rodovias.xlsx";
+          }}
+        >
+          Baixar planilha de teste
+        </button>
+        <button
+          type="button"
           className="btn"
           onClick={() => {
             window.location.href = "/api/capturas/template";
@@ -99,7 +108,7 @@ export function RodoviasToolbar({
             }}
           />
         </label>
-        <a className="btn btn-primary" href={exportHref}>
+        <a className="btn" href={exportHref}>
           Exportar Excel
         </a>
         <button
@@ -112,7 +121,7 @@ export function RodoviasToolbar({
         </button>
       </div>
       {message ? (
-        <div className="muted" style={{ marginTop: 10 }}>
+        <div className="notice" style={{ marginTop: 10 }}>
           {message}
         </div>
       ) : null}
