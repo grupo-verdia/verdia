@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
+  isExcelFilename,
   MAX_IMPORT_BYTES,
   parseCapturasWorkbook,
   type CapturaRowError,
@@ -20,13 +21,20 @@ export async function POST(request: NextRequest) {
   if (typeof rodoviaIdRaw !== "string" || rodoviaIdRaw.length === 0) {
     return NextResponse.json({ error: "rodoviaId is required" }, { status: 400 });
   }
-  if (!getRodoviaById(rodoviaIdRaw)) {
+  if (rodoviaIdRaw !== "todas" && !getRodoviaById(rodoviaIdRaw)) {
     return NextResponse.json({ error: "rodoviaId not found" }, { status: 400 });
   }
 
   const file = form.get("file");
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "file is required" }, { status: 400 });
+  }
+
+  if (!isExcelFilename(file.name)) {
+    return NextResponse.json(
+      { error: "only Excel files (.xlsx, .xls) are accepted" },
+      { status: 400 },
+    );
   }
 
   if (file.size > MAX_IMPORT_BYTES) {

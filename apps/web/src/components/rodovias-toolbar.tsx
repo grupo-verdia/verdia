@@ -16,7 +16,6 @@ export function RodoviasToolbar({
   onSearch,
   onPriority,
   onImport,
-  onExportAll,
   onClear,
 }: {
   rodovias: Rodovia[];
@@ -31,9 +30,10 @@ export function RodoviasToolbar({
   onSearch: (value: string) => void;
   onPriority: (value: "todas" | Severidade) => void;
   onImport: (file: File) => void;
-  onExportAll: () => void;
   onClear: () => void;
 }) {
+  const exportHref = `/api/capturas/export?rodoviaId=${encodeURIComponent(selected)}`;
+
   return (
     <div className="card" style={{ marginBottom: 16 }}>
       <div className="toolbar" style={{ flexWrap: "wrap", gap: 10 }}>
@@ -74,12 +74,15 @@ export function RodoviasToolbar({
             </button>
           ))}
         </div>
+        <a className="btn" href="/api/capturas/template">
+          Baixar template
+        </a>
         <label className={`btn ${busy ? "disabled" : ""}`}>
           {busy ? "Importando…" : "Importar Excel"}
           <input
             ref={fileRef}
             type="file"
-            accept=".xlsx,.xls"
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
             hidden
             disabled={busy}
             onChange={(event) => {
@@ -90,18 +93,9 @@ export function RodoviasToolbar({
             }}
           />
         </label>
-        {selected === "todas" ? (
-          <button type="button" className="btn btn-primary" onClick={onExportAll}>
-            Exportar Excel
-          </button>
-        ) : (
-          <a
-            className="btn btn-primary"
-            href={`/api/capturas/export?rodoviaId=${encodeURIComponent(selected)}`}
-          >
-            Exportar Excel
-          </a>
-        )}
+        <a className="btn btn-primary" href={exportHref}>
+          Exportar Excel
+        </a>
         <button
           type="button"
           className="btn"
