@@ -74,9 +74,15 @@ export function RodoviasToolbar({
             </button>
           ))}
         </div>
-        <a className="btn" href="/api/capturas/template">
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            window.location.href = "/api/capturas/template";
+          }}
+        >
           Baixar template
-        </a>
+        </button>
         <label className={`btn ${busy ? "disabled" : ""}`}>
           {busy ? "Importando…" : "Importar Excel"}
           <input

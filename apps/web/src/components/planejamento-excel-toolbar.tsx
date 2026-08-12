@@ -121,9 +121,15 @@ export function PlanejamentoExcelToolbar({
           </select>
         </label>
 
-        <a className="btn" href="/api/capturas/template">
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            window.location.href = "/api/capturas/template";
+          }}
+        >
           Baixar template
-        </a>
+        </button>
 
         <label className={`btn ${busy || !rodoviaId ? "disabled" : ""}`}>
           Importar
