@@ -182,21 +182,26 @@ describe("capturas Excel import/export", () => {
     );
   });
 
-  it("rejects unknown rodoviaId with 400", async () => {
+  it("uses the sheet Rodovia column when form rodoviaId is unknown", async () => {
     const bytes = buildWorkbook([
       {
         Latitude: -23.55,
         Longitude: -46.63,
         KM: 1,
-        "Altura (cm)": 10,
-        Confiança: 0.5,
+        "Altura (cm)": 12,
+        Confiança: 0.8,
+        Rodovia: "SP-348",
       },
     ]);
 
     const response = await postImport(bytes, "not-a-rodovia");
-    expect(response.status).toBe(400);
-    const body = (await response.json()) as { error: string };
-    expect(body.error).toMatch(/rodoviaId/i);
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      imported: number;
+      capturas: Array<{ rodoviaId: string | null }>;
+    };
+    expect(body.imported).toBe(1);
+    expect(body.capturas[0]?.rodoviaId).toBe("sp-348");
   });
 
   it("accepts Motiva codigo SP-330 as rodoviaId on import", async () => {

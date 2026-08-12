@@ -20,13 +20,11 @@ export async function POST(request: NextRequest) {
   }
 
   const rodoviaIdRaw = form.get("rodoviaId");
-  if (typeof rodoviaIdRaw !== "string" || rodoviaIdRaw.length === 0) {
-    return NextResponse.json({ error: "rodoviaId is required" }, { status: 400 });
-  }
-  const rodoviaId = resolveRodoviaParam(rodoviaIdRaw);
-  if (!rodoviaId) {
-    return NextResponse.json({ error: "rodoviaId not found" }, { status: 400 });
-  }
+  const raw =
+    typeof rodoviaIdRaw === "string" && rodoviaIdRaw.trim().length > 0
+      ? rodoviaIdRaw
+      : "todas";
+  const rodoviaId = resolveRodoviaParam(raw) ?? "todas";
 
   const file = form.get("file");
   if (!(file instanceof File)) {

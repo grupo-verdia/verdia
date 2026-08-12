@@ -18,3 +18,5 @@ Do not send a GitHub link — the browser can save a web page as `.xlsx`, and im
 
 In the app, click **Baixar planilha de teste**, then **Importar Excel**. If a confirm dialog appears, click **Limpar** first and import again.
 
+Import never returns `rodoviaId not found`: unknown or missing form values fall back to `todas`, and the sheet **Rodovia** column assigns each row.
+

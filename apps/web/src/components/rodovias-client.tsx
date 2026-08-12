@@ -270,7 +270,8 @@ async function runImport(args: {
   try {
     const fd = new FormData();
     fd.append("file", file);
-    fd.append("rodoviaId", selected);
+    // Spreadsheet Rodovia column assigns each row; do not send the view filter.
+    fd.append("rodoviaId", "todas");
     const response = await fetch("/api/capturas/import", {
       method: "POST",
       body: fd,
