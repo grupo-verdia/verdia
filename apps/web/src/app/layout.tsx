@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import { AppShell } from "@/components/app-shell";
+
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const mono = Geist_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "verdia",
-  description:
-    "Classifica vegetação à beira da rodovia e prioriza trechos para manutenção.",
+  title: "verdia × MOTIVA",
+  description: "Monitoramento inteligente da vegetação nas rodovias Motiva.",
 };
 
 export default function RootLayout({
@@ -24,8 +26,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+    <html lang="pt-BR" className={`${geist.variable} ${mono.variable}`}>
+      <body>
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }

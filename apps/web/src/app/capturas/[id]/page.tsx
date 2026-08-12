@@ -1,7 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { StatusPill } from "@/components/status-pill";
 import { loadCapturaDetail } from "@/lib/dashboard";
+import { formatAlturaCm, formatConfianca } from "@/lib/planejamento";
+import { getRodoviaById } from "@/lib/rodovias";
 
 export const dynamic = "force-dynamic";
 
@@ -39,59 +41,107 @@ export default async function CapturaDetailPage({ params }: PageProps) {
 
   const { captura, photoBytes } = detail;
   const photoUrl = toDataUrl(photoBytes, "application/octet-stream");
+  const rodovia = captura.rodoviaId
+    ? getRodoviaById(captura.rodoviaId)
+    : null;
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        fontFamily: "var(--font-geist-sans), sans-serif",
-        padding: "1.5rem",
-        maxWidth: "48rem",
-        margin: "0 auto",
-      }}
-    >
-      <p style={{ margin: "0 0 1rem" }}>
-        <Link href="/" style={{ color: "#246", textDecoration: "underline" }}>
-          ← Dashboard
-        </Link>
-      </p>
+    <>
+      <div className="page-head">
+        <div>
+          <div className="eyebrow">CAPTURA</div>
+          <h1 className="page-title">
+            {rodovia?.codigo ?? "Captura"} · KM{" "}
+            {captura.km?.toFixed(1) ?? "—"}
+          </h1>
+          <p className="page-subtitle">
+            GPS {captura.lat.toFixed(5)}, {captura.lon.toFixed(5)} ·{" "}
+            {new Date(captura.capturedAt).toLocaleString("pt-BR")}
+          </p>
+        </div>
+        <StatusPill value={captura.classe} />
+      </div>
 
-      <h1 style={{ margin: "0 0 0.35rem", fontSize: "1.75rem" }}>
-        Captura — classe {captura.classe ?? "—"}
-      </h1>
-      <p style={{ margin: "0 0 1.25rem", color: "#444" }}>
-        GPS {captura.lat.toFixed(5)}, {captura.lon.toFixed(5)} ·{" "}
-        {new Date(captura.capturedAt).toLocaleString("pt-BR")}
-      </p>
+      <div className="grid detail-grid">
+        <section className="card">
+          <h2 className="section-title">Foto</h2>
+          {/* eslint-disable-next-line @next/next/no-img-element -- data URL from stored bytes */}
+          <img
+            src={photoUrl}
+            alt="Foto da captura"
+            className="capture-image"
+          />
+        </section>
 
-      {captura.inferenceError ? (
-        <p style={{ color: "#a33", marginBottom: "1.25rem" }}>
-          Erro de inferência: {captura.inferenceError}
-        </p>
-      ) : (
-        <p style={{ color: "#666", marginBottom: "1.25rem", fontSize: "0.95rem" }}>
-          confiança {captura.confidence ?? "—"} · modelo{" "}
-          {captura.modelVersion ?? "—"}
-        </p>
-      )}
-
-      <figure style={{ margin: 0 }}>
-        <figcaption style={{ marginBottom: "0.5rem", fontWeight: 600 }}>
-          Foto
-        </figcaption>
-        {/* eslint-disable-next-line @next/next/no-img-element -- data URL from stored bytes */}
-        <img
-          src={photoUrl}
-          alt="Foto da captura"
-          style={{
-            width: "100%",
-            maxWidth: "36rem",
-            height: "auto",
-            display: "block",
-            background: "#eee",
-          }}
-        />
-      </figure>
-    </main>
+        <section className="card">
+          <h2 className="section-title">Detalhes</h2>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              borderBottom: "1px solid #173029",
+              padding: "12px 0",
+              fontSize: 12,
+            }}
+          >
+            <span className="muted">Severidade</span>
+            <StatusPill value={captura.classe} />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              borderBottom: "1px solid #173029",
+              padding: "12px 0",
+              fontSize: 12,
+            }}
+          >
+            <span className="muted">Altura</span>
+            <b>{formatAlturaCm(captura.alturaCm)}</b>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              borderBottom: "1px solid #173029",
+              padding: "12px 0",
+              fontSize: 12,
+            }}
+          >
+            <span className="muted">Confiança</span>
+            <b>{formatConfianca(captura.confidence)}</b>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              borderBottom: "1px solid #173029",
+              padding: "12px 0",
+              fontSize: 12,
+            }}
+          >
+            <span className="muted">Modelo</span>
+            <b>{captura.modelVersion ?? "—"}</b>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              borderBottom: "1px solid #173029",
+              padding: "12px 0",
+              fontSize: 12,
+            }}
+          >
+            <span className="muted">Sentido</span>
+            <b>{captura.sentido ?? "—"}</b>
+          </div>
+          {captura.inferenceError ? (
+            <div className="notice" style={{ marginTop: 14 }}>
+              Erro de inferência: {captura.inferenceError}
+            </div>
+          ) : null}
+        </section>
+      </div>
+    </>
   );
 }

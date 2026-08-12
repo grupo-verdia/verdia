@@ -90,42 +90,18 @@ export function PlanejamentoExcelToolbar({
   }
 
   return (
-    <section
-      aria-labelledby="excel-toolbar-heading"
-      style={{
-        marginBottom: "1.5rem",
-        padding: "0.85rem 0",
-        borderTop: "1px solid #ddd",
-        borderBottom: "1px solid #ddd",
-      }}
-    >
-      <h2
-        id="excel-toolbar-heading"
-        style={{ margin: "0 0 0.65rem", fontSize: "1.15rem" }}
-      >
+    <section className="card" aria-labelledby="excel-toolbar-heading" style={{ marginBottom: 16 }}>
+      <h2 id="excel-toolbar-heading" className="section-title">
         Excel
       </h2>
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "0.65rem",
-          alignItems: "center",
-        }}
-      >
-        <label style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-          <span style={{ color: "#444", fontSize: "0.95rem" }}>Rodovia</span>
+      <div className="toolbar">
+        <label className="muted" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span>Rodovia</span>
           <select
+            className="select"
             value={rodoviaId}
             disabled={busy || rodovias.length === 0}
             onChange={(event) => setRodoviaId(event.target.value)}
-            style={{
-              font: "inherit",
-              padding: "0.25rem 0.4rem",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              minWidth: "12rem",
-            }}
           >
             {rodovias.length === 0 ? (
               <option value="">Nenhuma rodovia</option>
@@ -139,44 +115,37 @@ export function PlanejamentoExcelToolbar({
           </select>
         </label>
 
-        <label style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-          <span style={{ color: "#444", fontSize: "0.95rem" }}>Importar</span>
+        <label className={`btn ${busy || !rodoviaId ? "disabled" : ""}`}>
+          Importar
           <input
             type="file"
             accept=".xlsx,.xls"
+            hidden
             disabled={busy || !rodoviaId}
             onChange={(event) => {
               void onImport(event.target.files);
               event.target.value = "";
             }}
-            style={{ font: "inherit", maxWidth: "16rem" }}
           />
         </label>
 
         <button
           type="button"
+          className="btn btn-primary"
           disabled={busy || !rodoviaId}
           onClick={onExport}
-          style={{
-            font: "inherit",
-            padding: "0.3rem 0.75rem",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            background: "#f5f5f5",
-            cursor: busy || !rodoviaId ? "not-allowed" : "pointer",
-          }}
         >
           Exportar
         </button>
       </div>
 
       {status ? (
-        <p style={{ margin: "0.5rem 0 0", color: "#246", fontSize: "0.9rem" }}>
+        <p className="muted" style={{ marginTop: 10 }}>
           {status}
         </p>
       ) : null}
       {error ? (
-        <p style={{ margin: "0.5rem 0 0", color: "#b42318", fontSize: "0.9rem" }}>
+        <p style={{ marginTop: 10, color: "var(--danger)", fontSize: 12 }}>
           {error}
         </p>
       ) : null}

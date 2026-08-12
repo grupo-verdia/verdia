@@ -32,48 +32,37 @@ export default function LoginPage() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        fontFamily: "var(--font-geist-sans), sans-serif",
-        padding: "1.5rem",
-      }}
-    >
-      <form
-        onSubmit={onSubmit}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.75rem",
-          width: "min(100%, 20rem)",
-        }}
+    <form className="card login-card" onSubmit={onSubmit}>
+      <div className="eyebrow">ACESSO</div>
+      <h1 className="page-title" style={{ fontSize: 28 }}>
+        verdia
+      </h1>
+      <p className="page-subtitle" style={{ marginBottom: 18 }}>
+        Entre com a senha compartilhada do demo.
+      </p>
+      <label
+        className="muted"
+        style={{ display: "grid", gap: 6, marginBottom: 12, fontSize: 12 }}
       >
-        <h1 style={{ margin: 0, fontSize: "1.5rem" }}>verdia</h1>
-        <p style={{ margin: 0, color: "#444" }}>
-          Entre com a senha compartilhada do demo.
+        Senha
+        <input
+          className="input"
+          type="password"
+          name="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+        />
+      </label>
+      {error ? (
+        <p role="alert" style={{ margin: "0 0 12px", color: "var(--danger)" }}>
+          {error}
         </p>
-        <label style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-          Senha
-          <input
-            type="password"
-            name="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-        </label>
-        {error ? (
-          <p role="alert" style={{ margin: 0, color: "#b00020" }}>
-            {error}
-          </p>
-        ) : null}
-        <button type="submit" disabled={pending}>
-          {pending ? "Entrando…" : "Entrar"}
-        </button>
-      </form>
-    </main>
+      ) : null}
+      <button className="btn btn-primary" type="submit" disabled={pending}>
+        {pending ? "Entrando…" : "Entrar"}
+      </button>
+    </form>
   );
 }
