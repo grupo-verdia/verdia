@@ -1,96 +1,30 @@
-import Link from "next/link";
-
+import { DashboardLive } from "@/components/dashboard-live";
+import { DataAutoRefresh } from "@/components/data-auto-refresh";
 import { loadDashboardCapturas } from "@/lib/dashboard";
+import { listMotivaRodovias } from "@/lib/rodovias";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const capturas = await loadDashboardCapturas();
+  const [capturas, rodovias] = await Promise.all([
+    loadDashboardCapturas(),
+    Promise.resolve(listMotivaRodovias()),
+  ]);
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        fontFamily: "var(--font-geist-sans), sans-serif",
-        padding: "1.5rem",
-        maxWidth: "48rem",
-        margin: "0 auto",
-      }}
-    >
-      <h1 style={{ margin: "0 0 0.35rem", fontSize: "2rem" }}>verdia</h1>
-      <p style={{ margin: "0 0 0.75rem", color: "#444" }}>
-        Dashboard de capturas — classe ordinal por foto geotagueada.
-      </p>
-      <p style={{ margin: "0 0 1.5rem", display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-        <Link href="/mapa" style={{ color: "#246", textDecoration: "underline" }}>
-          Mapa de trechos
-        </Link>
-        <Link
-          href="/planejamento"
-          style={{ color: "#246", textDecoration: "underline" }}
-        >
-          Planejamento
-        </Link>
-        <Link
-          href="/observabilidade"
-          style={{ color: "#246", textDecoration: "underline" }}
-        >
-          Observabilidade
-        </Link>
-      </p>
-
-      {capturas.length === 0 ? (
-        <p style={{ margin: 0, color: "#666" }}>
-          Nenhuma captura persistida ainda. Persista capturas via{" "}
-          <code>POST /api/capturas</code> (veja o README do web).
-        </p>
-      ) : (
-        <ul
-          style={{
-            listStyle: "none",
-            margin: 0,
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem",
-          }}
-        >
-          {capturas.map((captura) => (
-            <li
-              key={captura.id}
-              style={{
-                borderTop: "1px solid #ddd",
-                paddingTop: "0.75rem",
-              }}
-            >
-              <div style={{ fontWeight: 600 }}>
-                <Link
-                  href={`/capturas/${captura.id}`}
-                  style={{ color: "inherit", textDecoration: "underline" }}
-                >
-                  Classe: {captura.classe ?? "—"}
-                  {captura.inferenceError ? " · falha" : ""}
-                </Link>
-              </div>
-              <div style={{ color: "#444", fontSize: "0.95rem" }}>
-                GPS {captura.lat.toFixed(5)}, {captura.lon.toFixed(5)} ·{" "}
-                {new Date(captura.capturedAt).toLocaleString("pt-BR")}
-              </div>
-              {captura.inferenceError ? (
-                <div style={{ color: "#a33", fontSize: "0.85rem" }}>
-                  Erro de inferência: {captura.inferenceError}
-                </div>
-              ) : (
-                <div style={{ color: "#666", fontSize: "0.85rem" }}>
-                  trecho {captura.trechoId.slice(0, 8)}… · confiança{" "}
-                  {captura.confidence ?? "—"} · modelo{" "}
-                  {captura.modelVersion ?? "—"}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </main>
+    <>
+      <DataAutoRefresh />
+      <div className="page-head">
+        <div>
+          <div className="eyebrow">OPERAÇÃO</div>
+          <h1 className="page-title">Visão geral</h1>
+          <p className="page-subtitle">
+            Prioridades de vegetação à beira da rodovia a partir das capturas
+            persistidas e planilhas importadas.
+          </p>
+        </div>
+      </div>
+      <DashboardLive initialCapturas={capturas} initialRodovias={rodovias} />
+    </>
   );
 }

@@ -12,14 +12,11 @@ const MapaClient = nextDynamic(
     ssr: false,
     loading: () => (
       <div
+        className="mapa-host"
         style={{
-          width: "100%",
-          height: "min(70vh, 36rem)",
-          border: "1px solid #ccc",
-          background: "#e8e8e8",
           display: "grid",
           placeItems: "center",
-          color: "#666",
+          color: "var(--muted)",
         }}
       >
         Carregando mapa…

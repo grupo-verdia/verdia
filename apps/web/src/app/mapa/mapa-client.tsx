@@ -92,12 +92,7 @@ export function MapaClient({
   return (
     <div
       ref={containerRef}
-      style={{
-        width: "100%",
-        height: "min(70vh, 36rem)",
-        border: "1px solid #ccc",
-        background: "#e8e8e8",
-      }}
+      className="mapa-host"
       role="img"
       aria-label={
         Object.keys(planOrdemById).length > 0

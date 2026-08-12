@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { MapaLazy } from "@/app/mapa/mapa-lazy";
 import { PlanejamentoExcelToolbar } from "@/components/planejamento-excel-toolbar";
-import { SEVERIDADE_MARKER } from "@/lib/mapa";
+import { StatusPill } from "@/components/status-pill";
 import {
   formatAlturaCm,
   formatConfianca,
@@ -20,103 +20,64 @@ export default async function PlanejamentoPage() {
   );
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        fontFamily: "var(--font-geist-sans), sans-serif",
-        padding: "1.5rem",
-        maxWidth: "64rem",
-        margin: "0 auto",
-      }}
-    >
-      <p style={{ margin: "0 0 1rem" }}>
-        <Link href="/" style={{ color: "#246", textDecoration: "underline" }}>
-          ← Dashboard
-        </Link>
-      </p>
-
-      <h1 style={{ margin: "0 0 0.35rem", fontSize: "2rem" }}>
-        Planejamento heurístico
-      </h1>
-      <p style={{ margin: "0 0 1.5rem", color: "#444" }}>
-        Fila de manutenção por severidade (alta → média → baixa), depois
-        rodovia e KM — derivada das capturas persistidas, sem otimizador de
-        rotas.
-      </p>
+    <>
+      <div className="page-head">
+        <div>
+          <div className="eyebrow">MANUTENÇÃO</div>
+          <h1 className="page-title">Fila de prioridades</h1>
+          <p className="page-subtitle">
+            Ordenação por severidade (alta → média → baixa), depois rodovia e
+            KM — derivada das capturas persistidas.
+          </p>
+        </div>
+      </div>
 
       <PlanejamentoExcelToolbar rodovias={rodovias} />
 
       {plan.length === 0 ? (
-        <p style={{ margin: "0 0 1rem", color: "#666" }}>
-          Nenhum trecho no plano. Importe um Excel acima ou persista capturas via{" "}
-          <code>POST /api/capturas</code>.
-        </p>
+        <div className="card">
+          <div className="empty">
+            Nenhum trecho no plano. Importe um Excel acima, use{" "}
+            <Link href="/rodovias">Rodovias e planilhas</Link>, ou persista
+            capturas via <code>POST /api/capturas</code>.
+          </div>
+        </div>
       ) : (
         <>
-          <section
-            style={{ marginBottom: "1.5rem" }}
-            aria-labelledby="fila-heading"
-          >
-            <h2
-              id="fila-heading"
-              style={{ margin: "0 0 0.75rem", fontSize: "1.15rem" }}
-            >
+          <section className="card" aria-labelledby="fila-heading">
+            <h2 id="fila-heading" className="section-title">
               Fila por severidade
             </h2>
-            <div style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  fontSize: "0.95rem",
-                }}
-              >
+            <div className="table-wrap">
+              <table className="data-table">
                 <thead>
-                  <tr style={{ textAlign: "left", borderBottom: "2px solid #ccc" }}>
-                    <th style={{ padding: "0.4rem 0.5rem" }}>Ordem</th>
-                    <th style={{ padding: "0.4rem 0.5rem" }}>Rodovia</th>
-                    <th style={{ padding: "0.4rem 0.5rem" }}>KM</th>
-                    <th style={{ padding: "0.4rem 0.5rem" }}>Altura</th>
-                    <th style={{ padding: "0.4rem 0.5rem" }}>Severidade</th>
-                    <th style={{ padding: "0.4rem 0.5rem" }}>Confiança</th>
+                  <tr>
+                    <th>Ordem</th>
+                    <th>Rodovia</th>
+                    <th>KM</th>
+                    <th>Altura</th>
+                    <th>Severidade</th>
+                    <th>Confiança</th>
+                    <th />
                   </tr>
                 </thead>
                 <tbody>
                   {plan.map((trecho) => (
-                    <tr
-                      key={trecho.capturaId}
-                      style={{ borderBottom: "1px solid #eee" }}
-                    >
-                      <td style={{ padding: "0.45rem 0.5rem", fontWeight: 600 }}>
-                        {trecho.ordem}
+                    <tr key={trecho.capturaId}>
+                      <td>
+                        <b>#{trecho.ordem}</b>
                       </td>
-                      <td style={{ padding: "0.45rem 0.5rem" }}>
-                        {trecho.rodoviaCodigo ?? "—"}
+                      <td>{trecho.rodoviaCodigo ?? "—"}</td>
+                      <td>{trecho.km === null ? "—" : trecho.km}</td>
+                      <td>{formatAlturaCm(trecho.alturaCm)}</td>
+                      <td>
+                        <StatusPill value={trecho.severidade} />
                       </td>
-                      <td style={{ padding: "0.45rem 0.5rem" }}>
-                        {trecho.km === null ? "—" : trecho.km}
-                      </td>
-                      <td style={{ padding: "0.45rem 0.5rem" }}>
-                        {formatAlturaCm(trecho.alturaCm)}
-                      </td>
-                      <td style={{ padding: "0.45rem 0.5rem" }}>
-                        {trecho.severidade}
-                        <span
-                          aria-hidden
-                          style={{
-                            display: "inline-block",
-                            width: SEVERIDADE_MARKER[trecho.severidade].radius,
-                            height: SEVERIDADE_MARKER[trecho.severidade].radius,
-                            borderRadius: "50%",
-                            background:
-                              SEVERIDADE_MARKER[trecho.severidade].color,
-                            marginLeft: "0.45rem",
-                            verticalAlign: "middle",
-                          }}
-                        />
-                      </td>
-                      <td style={{ padding: "0.45rem 0.5rem" }}>
-                        {formatConfianca(trecho.confidence)}
+                      <td>{formatConfianca(trecho.confidence)}</td>
+                      <td>
+                        <Link className="btn" href={`/capturas/${trecho.capturaId}`}>
+                          Abrir
+                        </Link>
                       </td>
                     </tr>
                   ))}
@@ -125,20 +86,17 @@ export default async function PlanejamentoPage() {
             </div>
           </section>
 
-          <section aria-labelledby="mapa-plano-heading">
-            <h2
-              id="mapa-plano-heading"
-              style={{ margin: "0 0 0.5rem", fontSize: "1.15rem" }}
-            >
+          <section className="card" style={{ marginTop: 16 }} aria-labelledby="mapa-plano-heading">
+            <h2 id="mapa-plano-heading" className="section-title">
               Plano no mapa
             </h2>
-            <p style={{ margin: "0 0 0.75rem", color: "#666", fontSize: "0.9rem" }}>
+            <p className="muted" style={{ marginBottom: 12, fontSize: 12 }}>
               Trechos do plano atual destacados com anel e ordem na fila.
             </p>
             <MapaLazy trechos={plan} planOrdemById={planOrdemById} />
           </section>
         </>
       )}
-    </main>
+    </>
   );
 }
