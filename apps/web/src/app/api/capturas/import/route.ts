@@ -9,7 +9,7 @@ import {
   type CapturaRowError,
 } from "@/lib/excel/capturas-xlsx";
 import { getCapturaStore } from "@/lib/persistence";
-import { getRodoviaById } from "@/lib/rodovias";
+import { resolveRodoviaParam } from "@/lib/rodovias";
 
 export async function POST(request: NextRequest) {
   let form: FormData;
@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
   if (typeof rodoviaIdRaw !== "string" || rodoviaIdRaw.length === 0) {
     return NextResponse.json({ error: "rodoviaId is required" }, { status: 400 });
   }
-  if (rodoviaIdRaw !== "todas" && !getRodoviaById(rodoviaIdRaw)) {
+  const rodoviaId = resolveRodoviaParam(rodoviaIdRaw);
+  if (!rodoviaId) {
     return NextResponse.json({ error: "rodoviaId not found" }, { status: 400 });
   }
 
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const parsed = parseCapturasWorkbook(buffer, rodoviaIdRaw);
+  const parsed = parseCapturasWorkbook(buffer, rodoviaId);
   if (!parsed.ok) {
     return NextResponse.json(
       { imported: 0, received: 0, errors: parsed.errors },

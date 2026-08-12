@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { buildCapturasWorkbook } from "@/lib/excel/capturas-xlsx";
 import { getCapturaStore } from "@/lib/persistence";
-import { getRodoviaById } from "@/lib/rodovias";
+import { resolveRodoviaParam } from "@/lib/rodovias";
 
 export async function GET(request: NextRequest) {
   const rodoviaId = request.nextUrl.searchParams.get("rodoviaId");
@@ -10,15 +10,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "rodoviaId is required" }, { status: 400 });
   }
 
-  const exportAll = rodoviaId === "todas";
-  if (!exportAll && !getRodoviaById(rodoviaId)) {
+  const resolved = resolveRodoviaParam(rodoviaId);
+  if (!resolved) {
     return NextResponse.json({ error: "rodoviaId not found" }, { status: 400 });
   }
+
+  const exportAll = resolved === "todas";
 
   try {
     const store = getCapturaStore();
     const capturas = await store.listCapturas(
-      exportAll ? undefined : { rodoviaId },
+      exportAll ? undefined : { rodoviaId: resolved },
     );
     const rodovias = await store.listRodovias();
     const rodoviaCodigoById: Record<string, string> = {};
@@ -29,7 +31,7 @@ export async function GET(request: NextRequest) {
     const bytes = buildCapturasWorkbook(capturas, rodoviaCodigoById);
     const filename = exportAll
       ? "capturas-todas.xlsx"
-      : `capturas-${rodoviaId}.xlsx`;
+      : `capturas-${resolved}.xlsx`;
     return new NextResponse(Buffer.from(bytes), {
       status: 200,
       headers: {

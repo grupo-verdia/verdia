@@ -199,6 +199,46 @@ describe("capturas Excel import/export", () => {
     expect(body.error).toMatch(/rodoviaId/i);
   });
 
+  it("accepts Motiva codigo SP-330 as rodoviaId on import", async () => {
+    const bytes = buildWorkbook([
+      {
+        Latitude: -23.55,
+        Longitude: -46.63,
+        KM: 1,
+        "Altura (cm)": 12,
+        Confiança: 0.8,
+      },
+    ]);
+    const response = await postImport(bytes, "SP-330");
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      imported: number;
+      capturas: Array<{ rodoviaId: string | null }>;
+    };
+    expect(body.imported).toBe(1);
+    expect(body.capturas[0]?.rodoviaId).toBe("sp-330");
+  });
+
+  it("accepts SPI-102/330 codigo as rodoviaId on import", async () => {
+    const bytes = buildWorkbook([
+      {
+        Latitude: -23.4,
+        Longitude: -46.9,
+        KM: 2,
+        "Altura (cm)": 8,
+        Confiança: 0.9,
+      },
+    ]);
+    const response = await postImport(bytes, "SPI-102/330");
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      imported: number;
+      capturas: Array<{ rodoviaId: string | null }>;
+    };
+    expect(body.imported).toBe(1);
+    expect(body.capturas[0]?.rodoviaId).toBe("spi-102-330");
+  });
+
   it("imports template rows using the Rodovia column (incl. rodoviaId=todas)", async () => {
     const bytes = buildCapturasTemplate();
     const response = await postImport(bytes, "todas");

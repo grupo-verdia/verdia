@@ -28,9 +28,11 @@ async function postImport(file: File, rodoviaId: string): Promise<ImportResult> 
   const payload = (await response.json()) as ImportResult;
   if (!response.ok) {
     throw new Error(
-      payload.error ??
-        payload.errors?.[0]?.message ??
-        `Importação falhou (${response.status})`,
+      payload.error === "rodoviaId not found"
+        ? "Rodovia não encontrada. Escolha uma rodovia da lista."
+        : (payload.error ??
+            payload.errors?.[0]?.message ??
+            `Importação falhou (${response.status})`),
     );
   }
   return payload;

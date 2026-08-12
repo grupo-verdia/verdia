@@ -182,6 +182,9 @@ export function RodoviasClient({
 
 function translateImportError(message: string): string {
   const lower = message.toLowerCase();
+  if (lower.includes("rodoviaid") && lower.includes("not found")) {
+    return "Rodovia não encontrada. Deixe “Todas as rodovias” ou escolha uma da lista.";
+  }
   if (lower.includes("not a valid excel") || lower.includes("invalid workbook")) {
     return "Este arquivo não é um Excel válido. Baixe a planilha pelo botão nesta tela.";
   }
