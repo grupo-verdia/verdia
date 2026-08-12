@@ -183,4 +183,93 @@ describe("capturas product read surface", () => {
     expect(capturas[0]?.classe).toBeNull();
     expect(capturas[0]?.inferenceError).toBe("timeout talking to Inference API");
   });
+
+  it("derives classe from alturaCm when classe is omitted", async () => {
+    const response = await createCaptura(
+      new NextRequest("http://localhost:3000/api/capturas", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          lat: -23.55,
+          lon: -46.63,
+          capturedAt: "2026-07-20T19:00:00.000Z",
+          confidence: 0.8,
+          modelVersion: "stub-0.1",
+          imageBase64: Buffer.from("altura").toString("base64"),
+          contentType: "image/jpeg",
+          alturaCm: 35,
+        }),
+      }),
+    );
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as {
+      classe: string | null;
+      alturaCm: number | null;
+    };
+    expect(body.alturaCm).toBe(35);
+    expect(body.classe).toBe("alta");
+  });
+
+  it("keeps explicit classe when alturaCm would imply a different band", async () => {
+    const response = await createCaptura(
+      new NextRequest("http://localhost:3000/api/capturas", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          lat: -23.55,
+          lon: -46.63,
+          capturedAt: "2026-07-20T19:30:00.000Z",
+          classe: "baixa",
+          confidence: 0.8,
+          modelVersion: "stub-0.1",
+          imageBase64: Buffer.from("explicit").toString("base64"),
+          contentType: "image/jpeg",
+          alturaCm: 35,
+        }),
+      }),
+    );
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as {
+      classe: string | null;
+      alturaCm: number | null;
+    };
+    expect(body.alturaCm).toBe(35);
+    expect(body.classe).toBe("baixa");
+  });
+
+  it("round-trips optional planejamento fields on create response", async () => {
+    const response = await createCaptura(
+      new NextRequest("http://localhost:3000/api/capturas", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          lat: -23.55,
+          lon: -46.63,
+          capturedAt: "2026-07-20T20:00:00.000Z",
+          classe: "média",
+          confidence: 0.75,
+          modelVersion: "stub-0.1",
+          imageBase64: Buffer.from("optional").toString("base64"),
+          contentType: "image/jpeg",
+          rodoviaId: "sp-330",
+          km: 18.2,
+          sentido: "Norte",
+          alturaCm: 22,
+        }),
+      }),
+    );
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as {
+      rodoviaId: string | null;
+      km: number | null;
+      sentido: string | null;
+      alturaCm: number | null;
+    };
+    expect(body).toMatchObject({
+      rodoviaId: "sp-330",
+      km: 18.2,
+      sentido: "Norte",
+      alturaCm: 22,
+    });
+  });
 });

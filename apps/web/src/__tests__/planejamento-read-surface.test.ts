@@ -136,6 +136,86 @@ describe("planejamento product read surface", () => {
     );
   });
 
+  it("exposes Ordem/Rodovia codigo/KM/Altura/Severidade/Confiança from seeded fields", async () => {
+    await seedCaptura({
+      lat: -23.55,
+      lon: -46.63,
+      capturedAt: "2026-07-20T10:00:00.000Z",
+      confidence: 0.91,
+      modelVersion: "stub-0.1",
+      imageBase64: Buffer.from("plan-fields").toString("base64"),
+      contentType: "image/jpeg",
+      rodoviaId: "sp-330",
+      km: 42.5,
+      alturaCm: 35,
+    });
+
+    const plan = await loadPlanTrechos();
+
+    expect(plan).toHaveLength(1);
+    expect(plan[0]).toMatchObject({
+      ordem: 1,
+      rodoviaId: "sp-330",
+      rodoviaCodigo: "SP-330",
+      km: 42.5,
+      alturaCm: 35,
+      severidade: "alta",
+      confidence: 0.91,
+    });
+  });
+
+  it("within the same severidade, groups by rodovia before sorting by km", async () => {
+    const sp348Km5 = await seedCaptura({
+      lat: -23.1,
+      lon: -46.1,
+      capturedAt: "2026-07-20T10:00:00.000Z",
+      classe: "alta",
+      confidence: 0.9,
+      modelVersion: "stub-0.1",
+      imageBase64: Buffer.from("sp348-5").toString("base64"),
+      contentType: "image/jpeg",
+      rodoviaId: "sp-348",
+      km: 5,
+    });
+    const sp330Km40 = await seedCaptura({
+      lat: -23.2,
+      lon: -46.2,
+      capturedAt: "2026-07-20T11:00:00.000Z",
+      classe: "alta",
+      confidence: 0.9,
+      modelVersion: "stub-0.1",
+      imageBase64: Buffer.from("sp330-40").toString("base64"),
+      contentType: "image/jpeg",
+      rodoviaId: "sp-330",
+      km: 40,
+    });
+    const sp330Km10 = await seedCaptura({
+      lat: -23.3,
+      lon: -46.3,
+      capturedAt: "2026-07-20T12:00:00.000Z",
+      classe: "alta",
+      confidence: 0.9,
+      modelVersion: "stub-0.1",
+      imageBase64: Buffer.from("sp330-10").toString("base64"),
+      contentType: "image/jpeg",
+      rodoviaId: "sp-330",
+      km: 10,
+    });
+
+    const plan = await loadPlanTrechos();
+
+    expect(plan.map((t) => t.id)).toEqual([
+      sp330Km10.trechoId,
+      sp330Km40.trechoId,
+      sp348Km5.trechoId,
+    ]);
+    expect(plan.map((t) => ({ rodoviaId: t.rodoviaId, km: t.km }))).toEqual([
+      { rodoviaId: "sp-330", km: 10 },
+      { rodoviaId: "sp-330", km: 40 },
+      { rodoviaId: "sp-348", km: 5 },
+    ]);
+  });
+
   it("blocks unauthenticated access to /planejamento", async () => {
     const request = new NextRequest("http://localhost:3000/planejamento");
     const response = await proxy(request);

@@ -8,7 +8,12 @@ import {
   type Severidade,
   type Trecho,
 } from "@/lib/domain";
-import type { CapturaStore, CreateCapturaInput } from "@/lib/persistence/types";
+import type {
+  CapturaStore,
+  CreateCapturaInput,
+  ListCapturasFilter,
+} from "@/lib/persistence/types";
+import { listMotivaRodovias } from "@/lib/rodovias";
 
 type TrechoRow = {
   id: string;
@@ -27,12 +32,16 @@ type CapturaRow = {
   confidence: number | null;
   model_version: string | null;
   inference_error: string | null;
+  rodovia_id: string | null;
+  km: number | null;
+  sentido: string | null;
+  altura_cm: number | null;
 };
 
 const BUCKET = "capturas";
 
 const CAPTURA_SELECT =
-  "id, trecho_id, storage_key, lat, lon, captured_at, classe, confidence, model_version, inference_error";
+  "id, trecho_id, storage_key, lat, lon, captured_at, classe, confidence, model_version, inference_error, rodovia_id, km, sentido, altura_cm";
 
 function rowToCaptura(row: CapturaRow): Captura {
   return {
@@ -46,6 +55,10 @@ function rowToCaptura(row: CapturaRow): Captura {
     confidence: row.confidence,
     modelVersion: row.model_version,
     inferenceError: row.inference_error,
+    rodoviaId: row.rodovia_id,
+    km: row.km,
+    sentido: row.sentido,
+    alturaCm: row.altura_cm,
   };
 }
 
@@ -100,6 +113,10 @@ export function createSupabaseStore(options: {
           confidence: input.confidence,
           model_version: input.modelVersion,
           inference_error: input.inferenceError ?? null,
+          rodovia_id: input.rodoviaId ?? null,
+          km: input.km ?? null,
+          sentido: input.sentido ?? null,
+          altura_cm: input.alturaCm ?? null,
         })
         .select(CAPTURA_SELECT)
         .single();
@@ -112,11 +129,15 @@ export function createSupabaseStore(options: {
       return rowToCaptura(row as CapturaRow);
     },
 
-    async listCapturas(): Promise<Captura[]> {
-      const { data, error } = await client
+    async listCapturas(filter?: ListCapturasFilter): Promise<Captura[]> {
+      let query = client
         .from("capturas")
         .select(CAPTURA_SELECT)
         .order("captured_at", { ascending: false });
+      if (filter?.rodoviaId) {
+        query = query.eq("rodovia_id", filter.rodoviaId);
+      }
+      const { data, error } = await query;
       if (error) {
         throw new Error(`failed to list capturas: ${error.message}`);
       }
@@ -167,6 +188,11 @@ export function createSupabaseStore(options: {
         severidade: row.severidade,
         lengthMeters: row.length_meters,
       };
+    },
+
+    async listRodovias() {
+      // Catalog stays code-seeded until a rodovias table lands; remote ALTER-only for now.
+      return listMotivaRodovias();
     },
   };
 }

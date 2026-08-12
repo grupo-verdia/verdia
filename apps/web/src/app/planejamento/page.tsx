@@ -1,13 +1,20 @@
 import Link from "next/link";
 
 import { MapaLazy } from "@/app/mapa/mapa-lazy";
+import { PlanejamentoExcelToolbar } from "@/components/planejamento-excel-toolbar";
 import { SEVERIDADE_MARKER } from "@/lib/mapa";
-import { loadPlanTrechos } from "@/lib/planejamento";
+import {
+  formatAlturaCm,
+  formatConfianca,
+  loadPlanTrechos,
+} from "@/lib/planejamento";
+import { listMotivaRodovias } from "@/lib/rodovias";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlanejamentoPage() {
   const plan = await loadPlanTrechos();
+  const rodovias = listMotivaRodovias();
   const planOrdemById = Object.fromEntries(
     plan.map((trecho) => [trecho.id, trecho.ordem]),
   );
@@ -32,14 +39,17 @@ export default async function PlanejamentoPage() {
         Planejamento heurístico
       </h1>
       <p style={{ margin: "0 0 1.5rem", color: "#444" }}>
-        Fila de manutenção por severidade (alta → média → baixa), derivada da
-        classe das capturas persistidas — sem otimizador de rotas.
+        Fila de manutenção por severidade (alta → média → baixa), depois
+        rodovia e KM — derivada das capturas persistidas, sem otimizador de
+        rotas.
       </p>
+
+      <PlanejamentoExcelToolbar rodovias={rodovias} />
 
       {plan.length === 0 ? (
         <p style={{ margin: "0 0 1rem", color: "#666" }}>
-          Nenhum trecho no plano. Persista capturas via{" "}
-          <code>POST /api/capturas</code> ou pelo dashboard.
+          Nenhum trecho no plano. Importe um Excel acima ou persista capturas via{" "}
+          <code>POST /api/capturas</code>.
         </p>
       ) : (
         <>
@@ -53,70 +63,66 @@ export default async function PlanejamentoPage() {
             >
               Fila por severidade
             </h2>
-            <ol
-              style={{
-                listStyle: "none",
-                margin: 0,
-                padding: 0,
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.65rem",
-              }}
-            >
-              {plan.map((trecho) => (
-                <li
-                  key={trecho.id}
-                  style={{
-                    display: "flex",
-                    gap: "0.75rem",
-                    alignItems: "flex-start",
-                    borderTop: "1px solid #ddd",
-                    paddingTop: "0.65rem",
-                  }}
-                >
-                  <span
-                    style={{
-                      flexShrink: 0,
-                      width: "1.75rem",
-                      height: "1.75rem",
-                      borderRadius: "999px",
-                      background: "#111",
-                      color: "#fff",
-                      fontWeight: 700,
-                      fontSize: "0.85rem",
-                      display: "grid",
-                      placeItems: "center",
-                    }}
-                    aria-label={`Ordem ${trecho.ordem}`}
-                  >
-                    {trecho.ordem}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600 }}>
-                      Severidade: {trecho.severidade}
-                      <span
-                        aria-hidden
-                        style={{
-                          display: "inline-block",
-                          width: SEVERIDADE_MARKER[trecho.severidade].radius,
-                          height: SEVERIDADE_MARKER[trecho.severidade].radius,
-                          borderRadius: "50%",
-                          background:
-                            SEVERIDADE_MARKER[trecho.severidade].color,
-                          marginLeft: "0.5rem",
-                          verticalAlign: "middle",
-                        }}
-                      />
-                    </div>
-                    <div style={{ color: "#444", fontSize: "0.95rem" }}>
-                      Trecho {trecho.id.slice(0, 8)}… · {trecho.capturaCount}{" "}
-                      captura{trecho.capturaCount === 1 ? "" : "s"} · GPS{" "}
-                      {trecho.lat.toFixed(5)}, {trecho.lon.toFixed(5)}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: "0.95rem",
+                }}
+              >
+                <thead>
+                  <tr style={{ textAlign: "left", borderBottom: "2px solid #ccc" }}>
+                    <th style={{ padding: "0.4rem 0.5rem" }}>Ordem</th>
+                    <th style={{ padding: "0.4rem 0.5rem" }}>Rodovia</th>
+                    <th style={{ padding: "0.4rem 0.5rem" }}>KM</th>
+                    <th style={{ padding: "0.4rem 0.5rem" }}>Altura</th>
+                    <th style={{ padding: "0.4rem 0.5rem" }}>Severidade</th>
+                    <th style={{ padding: "0.4rem 0.5rem" }}>Confiança</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plan.map((trecho) => (
+                    <tr
+                      key={trecho.capturaId}
+                      style={{ borderBottom: "1px solid #eee" }}
+                    >
+                      <td style={{ padding: "0.45rem 0.5rem", fontWeight: 600 }}>
+                        {trecho.ordem}
+                      </td>
+                      <td style={{ padding: "0.45rem 0.5rem" }}>
+                        {trecho.rodoviaCodigo ?? "—"}
+                      </td>
+                      <td style={{ padding: "0.45rem 0.5rem" }}>
+                        {trecho.km === null ? "—" : trecho.km}
+                      </td>
+                      <td style={{ padding: "0.45rem 0.5rem" }}>
+                        {formatAlturaCm(trecho.alturaCm)}
+                      </td>
+                      <td style={{ padding: "0.45rem 0.5rem" }}>
+                        {trecho.severidade}
+                        <span
+                          aria-hidden
+                          style={{
+                            display: "inline-block",
+                            width: SEVERIDADE_MARKER[trecho.severidade].radius,
+                            height: SEVERIDADE_MARKER[trecho.severidade].radius,
+                            borderRadius: "50%",
+                            background:
+                              SEVERIDADE_MARKER[trecho.severidade].color,
+                            marginLeft: "0.45rem",
+                            verticalAlign: "middle",
+                          }}
+                        />
+                      </td>
+                      <td style={{ padding: "0.45rem 0.5rem" }}>
+                        {formatConfianca(trecho.confidence)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <section aria-labelledby="mapa-plano-heading">
