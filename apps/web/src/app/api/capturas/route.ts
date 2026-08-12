@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { isClasse, type Classe } from "@/lib/domain";
+import { classeFromAlturaCm, isClasse, type Classe } from "@/lib/domain";
 import { getCapturaStore } from "@/lib/persistence";
+import { getRodoviaById } from "@/lib/rodovias";
 
 type CreateBody = {
   lat?: unknown;
@@ -14,6 +15,10 @@ type CreateBody = {
   imageBase64?: unknown;
   contentType?: unknown;
   trechoId?: unknown;
+  rodoviaId?: unknown;
+  km?: unknown;
+  sentido?: unknown;
+  alturaCm?: unknown;
 };
 
 function parseCreateBody(body: unknown):
@@ -25,9 +30,44 @@ function parseCreateBody(body: unknown):
   return { ok: true, value: body as CreateBody };
 }
 
-export async function GET() {
+function parseOptionalNumber(
+  value: unknown,
+  field: string,
+): { ok: true; value: number | null | undefined } | { ok: false; error: string } {
+  if (value === undefined) {
+    return { ok: true, value: undefined };
+  }
+  if (value === null) {
+    return { ok: true, value: null };
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return { ok: true, value };
+  }
+  return { ok: false, error: `${field} must be a number or null` };
+}
+
+function parseOptionalString(
+  value: unknown,
+  field: string,
+): { ok: true; value: string | null | undefined } | { ok: false; error: string } {
+  if (value === undefined) {
+    return { ok: true, value: undefined };
+  }
+  if (value === null) {
+    return { ok: true, value: null };
+  }
+  if (typeof value === "string") {
+    return { ok: true, value };
+  }
+  return { ok: false, error: `${field} must be a string or null` };
+}
+
+export async function GET(request?: NextRequest) {
   try {
-    const capturas = await getCapturaStore().listCapturas();
+    const rodoviaId = request?.nextUrl.searchParams.get("rodoviaId");
+    const capturas = await getCapturaStore().listCapturas(
+      rodoviaId ? { rodoviaId } : undefined,
+    );
     return NextResponse.json({ capturas });
   } catch (error) {
     const message = error instanceof Error ? error.message : "list failed";
@@ -63,10 +103,12 @@ export async function POST(request: NextRequest) {
   }
 
   let classe: Classe | null;
+  let classeProvided = false;
   if (body.classe === null || body.classe === undefined) {
     classe = null;
   } else if (isClasse(body.classe)) {
     classe = body.classe;
+    classeProvided = true;
   } else {
     return NextResponse.json(
       { error: "classe must be baixa, média, alta, or null" },
@@ -117,6 +159,35 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const rodoviaIdParsed = parseOptionalString(body.rodoviaId, "rodoviaId");
+  if (!rodoviaIdParsed.ok) {
+    return NextResponse.json({ error: rodoviaIdParsed.error }, { status: 400 });
+  }
+  if (
+    typeof rodoviaIdParsed.value === "string" &&
+    rodoviaIdParsed.value.length > 0 &&
+    !getRodoviaById(rodoviaIdParsed.value)
+  ) {
+    return NextResponse.json({ error: "rodoviaId not found" }, { status: 400 });
+  }
+  const kmParsed = parseOptionalNumber(body.km, "km");
+  if (!kmParsed.ok) {
+    return NextResponse.json({ error: kmParsed.error }, { status: 400 });
+  }
+  const sentidoParsed = parseOptionalString(body.sentido, "sentido");
+  if (!sentidoParsed.ok) {
+    return NextResponse.json({ error: sentidoParsed.error }, { status: 400 });
+  }
+  const alturaCmParsed = parseOptionalNumber(body.alturaCm, "alturaCm");
+  if (!alturaCmParsed.ok) {
+    return NextResponse.json({ error: alturaCmParsed.error }, { status: 400 });
+  }
+
+  const alturaCm = alturaCmParsed.value;
+  if (!classeProvided && typeof alturaCm === "number") {
+    classe = classeFromAlturaCm(alturaCm);
+  }
+
   let imageBytes: Uint8Array;
   try {
     imageBytes = Uint8Array.from(Buffer.from(body.imageBase64, "base64"));
@@ -135,6 +206,10 @@ export async function POST(request: NextRequest) {
       inferenceError,
       imageBytes,
       contentType: body.contentType,
+      rodoviaId: rodoviaIdParsed.value,
+      km: kmParsed.value,
+      sentido: sentidoParsed.value,
+      alturaCm,
     });
     return NextResponse.json(captura, { status: 201 });
   } catch (error) {

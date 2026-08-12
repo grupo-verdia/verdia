@@ -6,7 +6,12 @@ import {
   type Captura,
   type Trecho,
 } from "@/lib/domain";
-import type { CapturaStore, CreateCapturaInput } from "@/lib/persistence/types";
+import type {
+  CapturaStore,
+  CreateCapturaInput,
+  ListCapturasFilter,
+} from "@/lib/persistence/types";
+import { listMotivaRodovias } from "@/lib/rodovias";
 
 export function createMemoryStore(): CapturaStore {
   const trechos = new Map<string, Trecho>();
@@ -37,13 +42,21 @@ export function createMemoryStore(): CapturaStore {
         confidence: input.confidence,
         modelVersion: input.modelVersion,
         inferenceError: input.inferenceError ?? null,
+        rodoviaId: input.rodoviaId ?? null,
+        km: input.km ?? null,
+        sentido: input.sentido ?? null,
+        alturaCm: input.alturaCm ?? null,
       };
       capturas.set(id, captura);
       return captura;
     },
 
-    async listCapturas(): Promise<Captura[]> {
-      return [...capturas.values()].sort((a, b) =>
+    async listCapturas(filter?: ListCapturasFilter): Promise<Captura[]> {
+      let rows = [...capturas.values()];
+      if (filter?.rodoviaId) {
+        rows = rows.filter((captura) => captura.rodoviaId === filter.rodoviaId);
+      }
+      return rows.sort((a, b) =>
         a.capturedAt < b.capturedAt ? 1 : a.capturedAt > b.capturedAt ? -1 : 0,
       );
     },
@@ -58,6 +71,10 @@ export function createMemoryStore(): CapturaStore {
 
     async getTrecho(id: string): Promise<Trecho | null> {
       return trechos.get(id) ?? null;
+    },
+
+    async listRodovias() {
+      return listMotivaRodovias();
     },
   };
 }

@@ -16,7 +16,36 @@ export type Captura = {
   modelVersion: string | null;
   /** Set when inference failed; captura is still persisted for visibility. */
   inferenceError: string | null;
+  /** Optional Motiva rodovia id (Excel / Planejamento). */
+  rodoviaId: string | null;
+  /** Optional roadside km marker from spreadsheet / ops. */
+  km: number | null;
+  /** Optional traffic direction label. */
+  sentido: string | null;
+  /** Estimated grass height in cm (Motiva bands: <10 / 10–30 / >30). */
+  alturaCm: number | null;
 };
+
+/** Motiva roadside grass bands (cm), mirrored from services/ai labels. */
+export const MOTIVA_BAIXA_MAX_EXCLUSIVE_CM = 10;
+export const MOTIVA_MEDIA_MAX_INCLUSIVE_CM = 30;
+
+/**
+ * Map estimated height to classe using Motiva bands:
+ * h < 10 → baixa; 10 ≤ h ≤ 30 → média; h > 30 → alta.
+ */
+export function classeFromAlturaCm(alturaCm: number | null): Classe | null {
+  if (alturaCm === null || Number.isNaN(alturaCm)) {
+    return null;
+  }
+  if (alturaCm < MOTIVA_BAIXA_MAX_EXCLUSIVE_CM) {
+    return "baixa";
+  }
+  if (alturaCm <= MOTIVA_MEDIA_MAX_INCLUSIVE_CM) {
+    return "média";
+  }
+  return "alta";
+}
 
 /** Motiva’s current manual-analysis constant for roadside stretch length. */
 export const DEFAULT_TRECHO_LENGTH_METERS = 500;

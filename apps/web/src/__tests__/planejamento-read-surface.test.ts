@@ -136,6 +136,33 @@ describe("planejamento product read surface", () => {
     );
   });
 
+  it("exposes Ordem/Rodovia codigo/KM/Altura/Severidade/Confiança from seeded fields", async () => {
+    await seedCaptura({
+      lat: -23.55,
+      lon: -46.63,
+      capturedAt: "2026-07-20T10:00:00.000Z",
+      confidence: 0.91,
+      modelVersion: "stub-0.1",
+      imageBase64: Buffer.from("plan-fields").toString("base64"),
+      contentType: "image/jpeg",
+      rodoviaId: "sp-330",
+      km: 42.5,
+      alturaCm: 35,
+    });
+
+    const plan = await loadPlanTrechos();
+
+    expect(plan).toHaveLength(1);
+    expect(plan[0]).toMatchObject({
+      ordem: 1,
+      rodoviaCodigo: "SP-330",
+      km: 42.5,
+      alturaCm: 35,
+      severidade: "alta",
+      confidence: 0.91,
+    });
+  });
+
   it("blocks unauthenticated access to /planejamento", async () => {
     const request = new NextRequest("http://localhost:3000/planejamento");
     const response = await proxy(request);
