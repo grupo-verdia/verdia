@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { OverrideForm } from "@/components/override-form";
 import { StatusPill } from "@/components/status-pill";
 import { loadCapturaDetail } from "@/lib/dashboard";
-import { formatAlturaCm, formatConfianca } from "@/lib/planejamento";
 import { getRodoviaById } from "@/lib/rodovias";
 
 export const dynamic = "force-dynamic";
@@ -11,25 +12,13 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
-function toDataUrl(bytes: Uint8Array, fallbackContentType: string): string {
-  const contentType = sniffImageContentType(bytes) ?? fallbackContentType;
-  return `data:${contentType};base64,${Buffer.from(bytes).toString("base64")}`;
-}
-
-function sniffImageContentType(bytes: Uint8Array): string | null {
-  if (
-    bytes.length >= 8 &&
-    bytes[0] === 0x89 &&
-    bytes[1] === 0x50 &&
-    bytes[2] === 0x4e &&
-    bytes[3] === 0x47
-  ) {
-    return "image/png";
-  }
-  if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xd8) {
-    return "image/jpeg";
-  }
-  return null;
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="kpi-label">{label}</div>
+      <div style={{ marginTop: 5, fontWeight: 650, fontSize: 13 }}>{value}</div>
+    </div>
+  );
 }
 
 export default async function CapturaDetailPage({ params }: PageProps) {
@@ -39,8 +28,7 @@ export default async function CapturaDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const { captura, photoBytes } = detail;
-  const photoUrl = toDataUrl(photoBytes, "application/octet-stream");
+  const { captura } = detail;
   const rodovia = captura.rodoviaId
     ? getRodoviaById(captura.rodoviaId)
     : null;
@@ -49,99 +37,88 @@ export default async function CapturaDetailPage({ params }: PageProps) {
     <>
       <div className="page-head">
         <div>
-          <div className="eyebrow">CAPTURA</div>
+          <div className="eyebrow">DETALHE DA CAPTURA</div>
           <h1 className="page-title">
-            {rodovia?.codigo ?? "Captura"} · KM{" "}
-            {captura.km?.toFixed(1) ?? "—"}
+            {rodovia?.codigo ?? "Rodovia"} · KM {captura.km?.toFixed(1) ?? "—"}
           </h1>
           <p className="page-subtitle">
-            GPS {captura.lat.toFixed(5)}, {captura.lon.toFixed(5)} ·{" "}
-            {new Date(captura.capturedAt).toLocaleString("pt-BR")}
+            {new Date(captura.capturedAt).toLocaleString("pt-BR")} ·{" "}
+            {captura.lat.toFixed(6)}, {captura.lon.toFixed(6)}
           </p>
         </div>
-        <StatusPill value={captura.classe} />
+        <Link className="btn" href="/rodovias">
+          ← Voltar aos dados
+        </Link>
       </div>
 
       <div className="grid detail-grid">
         <section className="card">
-          <h2 className="section-title">Foto</h2>
-          {/* eslint-disable-next-line @next/next/no-img-element -- data URL from stored bytes */}
-          <img
-            src={photoUrl}
-            alt="Foto da captura"
-            className="capture-image"
-          />
-        </section>
-
-        <section className="card">
-          <h2 className="section-title">Detalhes</h2>
+          <h2 className="section-title">Captura</h2>
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              borderBottom: "1px solid #173029",
-              padding: "12px 0",
-              fontSize: 12,
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 12,
+              marginBottom: 16,
             }}
           >
-            <span className="muted">Severidade</span>
-            <StatusPill value={captura.classe} />
+            <Info
+              label="Altura detectada"
+              value={
+                captura.alturaCm != null
+                  ? `${captura.alturaCm} cm`
+                  : "Não informada"
+              }
+            />
+            <Info
+              label="Sentido"
+              value={captura.sentido ?? "Não informado"}
+            />
+            <Info label="IA" value={captura.classe ?? "Sem classificação"} />
+            <Info
+              label="Confiança"
+              value={
+                captura.confidence != null
+                  ? `${Math.round(captura.confidence * 100)}%`
+                  : "—"
+              }
+            />
+            <Info label="Modelo" value={captura.modelVersion ?? "—"} />
+            <Info
+              label="Decisão final"
+              value={captura.classe ?? "Pendente"}
+            />
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              borderBottom: "1px solid #173029",
-              padding: "12px 0",
-              fontSize: 12,
-            }}
-          >
-            <span className="muted">Altura</span>
-            <b>{formatAlturaCm(captura.alturaCm)}</b>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              borderBottom: "1px solid #173029",
-              padding: "12px 0",
-              fontSize: 12,
-            }}
-          >
-            <span className="muted">Confiança</span>
-            <b>{formatConfianca(captura.confidence)}</b>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              borderBottom: "1px solid #173029",
-              padding: "12px 0",
-              fontSize: 12,
-            }}
-          >
-            <span className="muted">Modelo</span>
-            <b>{captura.modelVersion ?? "—"}</b>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              borderBottom: "1px solid #173029",
-              padding: "12px 0",
-              fontSize: 12,
-            }}
-          >
-            <span className="muted">Sentido</span>
-            <b>{captura.sentido ?? "—"}</b>
-          </div>
+          <StatusPill value={captura.classe} />
           {captura.inferenceError ? (
             <div className="notice" style={{ marginTop: 14 }}>
-              Erro de inferência: {captura.inferenceError}
+              Falha de inferência: {captura.inferenceError}
+            </div>
+          ) : null}
+          {captura.overrideMotivo ? (
+            <div className="notice" style={{ marginTop: 14 }}>
+              Override: {captura.overrideMotivo}
+              {captura.overrideAt
+                ? ` · ${new Date(captura.overrideAt).toLocaleString("pt-BR")}`
+                : ""}
             </div>
           ) : null}
         </section>
+
+        <section className="card">
+          <h2 className="section-title">Overwrite da IA</h2>
+          <p className="muted" style={{ fontSize: 12, lineHeight: 1.6 }}>
+            Use somente quando a análise humana identificar divergência. A
+            alteração fica registrada em auditoria.
+          </p>
+          <OverrideForm id={captura.id} current={captura.classe} />
+        </section>
       </div>
+
+      <p className="footer-note">
+        ID da captura:{" "}
+        <span style={{ fontFamily: "var(--font-mono)" }}>{captura.id}</span>
+      </p>
     </>
   );
 }

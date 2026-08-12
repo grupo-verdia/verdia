@@ -22,6 +22,11 @@ export type ListCapturasFilter = {
   rodoviaId?: string;
 };
 
+export type OverrideCapturaInput = {
+  classe: Classe;
+  motivo: string;
+};
+
 export type CapturaStore = {
   createCaptura(input: CreateCapturaInput): Promise<Captura>;
   listCapturas(filter?: ListCapturasFilter): Promise<Captura[]>;
@@ -29,4 +34,7 @@ export type CapturaStore = {
   getStoredBytes(storageKey: string): Promise<Uint8Array | null>;
   getTrecho(id: string): Promise<Trecho | null>;
   listRodovias(): Promise<Rodovia[]>;
+  overrideCaptura(id: string, input: OverrideCapturaInput): Promise<Captura>;
+  /** Clear capturas for one rodovia id, or all when `"todas"`. */
+  clearCapturas(rodoviaId: string): Promise<number>;
 };

@@ -19,8 +19,8 @@ export default async function RodoviasPage() {
           <div className="eyebrow">DADOS OPERACIONAIS</div>
           <h1 className="page-title">Rodovias & planilhas</h1>
           <p className="page-subtitle">
-            Visão tabular por rodovia, com importação e exportação Excel das
-            capturas persistidas.
+            Uma visão tabular por rodovia, com importação/exportação Excel e
+            correção humana das previsões.
           </p>
         </div>
       </div>

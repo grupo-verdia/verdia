@@ -39,3 +39,7 @@ supabase/.temp/
 *.swp
 .idea/
 .vscode/
+
+# Extracted reference zips / scratch
+.tmp-*/
+
