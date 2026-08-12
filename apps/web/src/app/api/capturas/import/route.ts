@@ -79,6 +79,13 @@ export async function POST(request: NextRequest) {
   const received = parsed.drafts.length + parsed.errors.length;
 
   for (const draft of parsed.drafts) {
+    if (!draft.input.rodoviaId || draft.input.rodoviaId === "todas") {
+      errors.push({
+        row: draft.row,
+        message: "Rodovia column is required",
+      });
+      continue;
+    }
     try {
       capturas.push(await store.createCaptura(draft.input));
     } catch (error) {

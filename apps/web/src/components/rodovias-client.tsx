@@ -44,17 +44,23 @@ function buildCards(
       );
     });
 
-  return filtered.map((c, index) => ({
-    id: c.id,
-    ordem: index + 1,
-    rodovia:
-      rodovias.find((r) => r.id === c.rodoviaId)?.codigo ?? c.rodoviaId ?? "—",
-    km: c.km != null ? c.km.toFixed(1) : "—",
-    altura: c.alturaCm != null ? `${c.alturaCm} cm` : "—",
-    severidade: (c.classe ?? "baixa") as Severidade,
-    confianca:
-      c.confidence != null ? `${Math.round(c.confidence * 100)}%` : "—",
-  }));
+  return filtered.map((c, index) => {
+    const codigo = rodovias.find((r) => r.id === c.rodoviaId)?.codigo;
+    const rodoviaLabel =
+      !c.rodoviaId || c.rodoviaId === "todas"
+        ? "—"
+        : (codigo ?? c.rodoviaId);
+    return {
+      id: c.id,
+      ordem: index + 1,
+      rodovia: rodoviaLabel,
+      km: c.km != null ? c.km.toFixed(1) : "—",
+      altura: c.alturaCm != null ? `${c.alturaCm} cm` : "—",
+      severidade: (c.classe ?? "baixa") as Severidade,
+      confianca:
+        c.confidence != null ? `${Math.round(c.confidence * 100)}%` : "—",
+    };
+  });
 }
 
 async function fetchCapturas(scope: string): Promise<Captura[]> {
