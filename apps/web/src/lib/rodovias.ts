@@ -101,3 +101,18 @@ export function listMotivaRodovias(): Rodovia[] {
 export function getRodoviaById(id: string): Rodovia | null {
   return MOTIVA_RODOVIAS.find((rodovia) => rodovia.id === id) ?? null;
 }
+
+/** Match catalog by codigo (e.g. SP-330) or id (e.g. sp-330), case-insensitive. */
+export function getRodoviaByCodigo(codigoOrId: string): Rodovia | null {
+  const needle = codigoOrId.trim().toLowerCase();
+  if (!needle) {
+    return null;
+  }
+  return (
+    MOTIVA_RODOVIAS.find(
+      (rodovia) =>
+        rodovia.codigo.toLowerCase() === needle ||
+        rodovia.id.toLowerCase() === needle,
+    ) ?? null
+  );
+}

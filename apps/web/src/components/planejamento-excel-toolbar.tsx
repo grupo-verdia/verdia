@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { isExcelFilename } from "@/lib/excel/excel-filename";
 import type { Rodovia } from "@/lib/rodovias";
 
 type PlanejamentoExcelToolbarProps = {
@@ -62,6 +63,11 @@ export function PlanejamentoExcelToolbar({
       setError("Selecione uma rodovia.");
       return;
     }
+    if (!isExcelFilename(file.name)) {
+      setError("Apenas arquivos Excel (.xlsx, .xls) são aceitos.");
+      setStatus(null);
+      return;
+    }
 
     setBusy(true);
     setError(null);
@@ -115,11 +121,21 @@ export function PlanejamentoExcelToolbar({
           </select>
         </label>
 
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            window.location.href = "/api/capturas/template";
+          }}
+        >
+          Baixar template
+        </button>
+
         <label className={`btn ${busy || !rodoviaId ? "disabled" : ""}`}>
           Importar
           <input
             type="file"
-            accept=".xlsx,.xls"
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
             hidden
             disabled={busy || !rodoviaId}
             onChange={(event) => {

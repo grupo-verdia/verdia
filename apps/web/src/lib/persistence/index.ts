@@ -10,14 +10,20 @@ export type SupabaseConfig = {
   secretKey: string;
 };
 
-let store: CapturaStore | null = null;
+/**
+ * Next.js can load this module twice (RSC vs Route Handlers). Keep one store on
+ * globalThis so Excel import writes are visible to Planejamento / Rodovias reads.
+ */
+const globalForCapturaStore = globalThis as typeof globalThis & {
+  __verdiaCapturaStore?: CapturaStore | null;
+};
 
 export function setCapturaStore(next: CapturaStore): void {
-  store = next;
+  globalForCapturaStore.__verdiaCapturaStore = next;
 }
 
 export function resetCapturaStore(): void {
-  store = null;
+  globalForCapturaStore.__verdiaCapturaStore = null;
 }
 
 /** Requires SUPABASE_URL + SUPABASE_SECRET_KEY (sb_secret_…). */
@@ -41,8 +47,8 @@ function createStoreFromEnv(): CapturaStore {
 }
 
 export function getCapturaStore(): CapturaStore {
-  if (!store) {
-    store = createStoreFromEnv();
+  if (!globalForCapturaStore.__verdiaCapturaStore) {
+    globalForCapturaStore.__verdiaCapturaStore = createStoreFromEnv();
   }
-  return store;
+  return globalForCapturaStore.__verdiaCapturaStore;
 }

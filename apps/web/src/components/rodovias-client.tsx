@@ -8,6 +8,7 @@ import {
 } from "@/components/rodovias-cards";
 import { RodoviasToolbar } from "@/components/rodovias-toolbar";
 import type { Captura, Severidade } from "@/lib/domain";
+import { isExcelFilename } from "@/lib/excel/excel-filename";
 import type { Rodovia } from "@/lib/rodovias";
 
 function buildCards(
@@ -54,27 +55,6 @@ function buildCards(
     confianca:
       c.confidence != null ? `${Math.round(c.confidence * 100)}%` : "—",
   }));
-}
-
-function exportAllCsv(cards: RodoviaCard[]) {
-  const header = ["Ordem", "Rodovia", "KM", "Altura", "Severidade", "Confiança"];
-  const lines = [
-    header.join(";"),
-    ...cards.map((c) =>
-      [c.ordem, c.rodovia, c.km, c.altura, c.severidade, c.confianca]
-        .map((cell) => `"${String(cell).replaceAll('"', '""')}"`)
-        .join(";"),
-    ),
-  ];
-  const blob = new Blob([`\uFEFF${lines.join("\n")}`], {
-    type: "text/csv;charset=utf-8;",
-  });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = "verdia-todas-rodovias.csv";
-  anchor.click();
-  URL.revokeObjectURL(url);
 }
 
 async function fetchCapturas(scope: string): Promise<Captura[]> {
@@ -161,10 +141,11 @@ export function RodoviasClient({
             fileRef,
             setBusy,
             setMessage,
-            refresh: () => refresh(selected),
+            refresh: async () => {
+              await refresh("todas");
+            },
           })
         }
-        onExportAll={() => exportAllCsv(cards)}
         onClear={() =>
           void runClear({
             selected,
@@ -190,7 +171,7 @@ export function RodoviasClient({
         cards={cards}
         emptyHint={
           selected === "todas"
-            ? "Nenhum registro. Importe uma planilha com a coluna Rodovia."
+            ? "Nenhum registro. Baixe o template Excel e importe (a coluna Rodovia define o corredor)."
             : "Nenhum registro para esta rodovia. Importe a planilha nela ou volte para “Todas as rodovias”."
         }
       />
@@ -209,6 +190,15 @@ async function runImport(args: {
 }) {
   const { file, selected, capturas, fileRef, setBusy, setMessage, refresh } =
     args;
+
+  if (!isExcelFilename(file.name)) {
+    setMessage("Apenas arquivos Excel (.xlsx, .xls) são aceitos.");
+    if (fileRef.current) {
+      fileRef.current.value = "";
+    }
+    return;
+  }
+
   const existentes =
     selected === "todas"
       ? capturas.length

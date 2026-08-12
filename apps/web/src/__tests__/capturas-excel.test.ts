@@ -4,8 +4,11 @@ import * as XLSX from "xlsx";
 
 import { GET as exportCapturas } from "@/app/api/capturas/export/route";
 import { POST as importCapturas } from "@/app/api/capturas/import/route";
+import { GET as templateCapturas } from "@/app/api/capturas/template/route";
 import { GET as listCapturas } from "@/app/api/capturas/route";
 import {
+  buildCapturasTemplate,
+  CAPTURAS_SHEET_COLUMNS,
   MAX_IMPORT_BYTES,
   MAX_IMPORT_ROWS,
 } from "@/lib/excel/capturas-xlsx";
@@ -29,12 +32,18 @@ function buildWorkbook(rows: Record<string, unknown>[]): Uint8Array {
   return Uint8Array.from(written);
 }
 
-async function postImport(fileBytes: Uint8Array, rodoviaId: string) {
+async function postImport(
+  fileBytes: Uint8Array,
+  rodoviaId: string,
+  filename = "capturas.xlsx",
+) {
   const form = new FormData();
   form.set(
     "file",
-    new File([Buffer.from(fileBytes)], "capturas.xlsx", {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    new File([Buffer.from(fileBytes)], filename, {
+      type: filename.endsWith(".csv")
+        ? "text/csv"
+        : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     }),
   );
   form.set("rodoviaId", rodoviaId);
@@ -190,6 +199,26 @@ describe("capturas Excel import/export", () => {
     expect(body.error).toMatch(/rodoviaId/i);
   });
 
+  it("imports template rows using the Rodovia column (incl. rodoviaId=todas)", async () => {
+    const bytes = buildCapturasTemplate();
+    const response = await postImport(bytes, "todas");
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      imported: number;
+      errors: unknown[];
+    };
+    expect(body.imported).toBeGreaterThanOrEqual(6);
+    expect(body.errors).toHaveLength(0);
+
+    const listResponse = await listCapturas();
+    const listed = (await listResponse.json()) as {
+      capturas: Array<{ rodoviaId: string | null }>;
+    };
+    const ids = new Set(listed.capturas.map((c) => c.rodoviaId));
+    expect(ids.has("sp-330")).toBe(true);
+    expect(ids.has("sp-348")).toBe(true);
+  });
+
   it("rejects oversized uploads before parsing", async () => {
     const oversized = new Uint8Array(MAX_IMPORT_BYTES + 1);
     const response = await postImport(oversized, "sp-330");
@@ -215,5 +244,90 @@ describe("capturas Excel import/export", () => {
     };
     expect(body.imported).toBe(0);
     expect(body.errors.some((error) => /rows/i.test(error.message))).toBe(true);
+  });
+
+  it("rejects non-Excel filenames on import", async () => {
+    const bytes = buildWorkbook([
+      {
+        Latitude: -23.55,
+        Longitude: -46.63,
+        KM: 1,
+        "Altura (cm)": 10,
+        Confiança: 0.5,
+      },
+    ]);
+    const response = await postImport(bytes, "sp-330", "capturas.csv");
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toMatch(/excel/i);
+  });
+
+  it("exports all capturas when rodoviaId=todas", async () => {
+    const first = buildWorkbook([
+      {
+        Latitude: -23.55,
+        Longitude: -46.63,
+        KM: 10,
+        "Altura (cm)": 12,
+        Confiança: 0.85,
+      },
+    ]);
+    const second = buildWorkbook([
+      {
+        Latitude: -23.4,
+        Longitude: -46.8,
+        KM: 20,
+        "Altura (cm)": 40,
+        Confiança: 0.9,
+      },
+    ]);
+    expect((await postImport(first, "sp-330")).status).toBe(200);
+    expect((await postImport(second, "sp-348")).status).toBe(200);
+
+    const exportResponse = await exportCapturas(
+      new NextRequest(
+        "http://localhost:3000/api/capturas/export?rodoviaId=todas",
+      ),
+    );
+    expect(exportResponse.status).toBe(200);
+    expect(exportResponse.headers.get("content-disposition")).toMatch(
+      /capturas-todas\.xlsx/i,
+    );
+    const contentType = exportResponse.headers.get("content-type") ?? "";
+    expect(
+      contentType.includes(
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      ),
+    ).toBe(true);
+
+    const exported = new Uint8Array(await exportResponse.arrayBuffer());
+    const workbook = XLSX.read(exported, { type: "array" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]!];
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet!);
+    expect(rows).toHaveLength(2);
+  });
+
+  it("serves a Motiva template workbook with expected headers", async () => {
+    const response = await templateCapturas();
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-disposition")).toMatch(
+      /verdia-capturas-template\.xlsx/i,
+    );
+
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    expect(bytes.byteLength).toBeGreaterThan(0);
+
+    const fromBuilder = buildCapturasTemplate();
+    expect(fromBuilder.byteLength).toBeGreaterThan(0);
+
+    const workbook = XLSX.read(bytes, { type: "array" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]!];
+    const headerRow = XLSX.utils.sheet_to_json<unknown[]>(sheet!, {
+      header: 1,
+    })[0] as unknown[];
+    expect(headerRow).toEqual([...CAPTURAS_SHEET_COLUMNS]);
+
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet!);
+    expect(rows.length).toBeGreaterThanOrEqual(1);
   });
 });

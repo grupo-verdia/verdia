@@ -9,13 +9,17 @@ export async function GET(request: NextRequest) {
   if (!rodoviaId) {
     return NextResponse.json({ error: "rodoviaId is required" }, { status: 400 });
   }
-  if (!getRodoviaById(rodoviaId)) {
+
+  const exportAll = rodoviaId === "todas";
+  if (!exportAll && !getRodoviaById(rodoviaId)) {
     return NextResponse.json({ error: "rodoviaId not found" }, { status: 400 });
   }
 
   try {
     const store = getCapturaStore();
-    const capturas = await store.listCapturas({ rodoviaId });
+    const capturas = await store.listCapturas(
+      exportAll ? undefined : { rodoviaId },
+    );
     const rodovias = await store.listRodovias();
     const rodoviaCodigoById: Record<string, string> = {};
     for (const rodovia of rodovias) {
@@ -23,7 +27,9 @@ export async function GET(request: NextRequest) {
     }
 
     const bytes = buildCapturasWorkbook(capturas, rodoviaCodigoById);
-    const filename = `capturas-${rodoviaId}.xlsx`;
+    const filename = exportAll
+      ? "capturas-todas.xlsx"
+      : `capturas-${rodoviaId}.xlsx`;
     return new NextResponse(Buffer.from(bytes), {
       status: 200,
       headers: {

@@ -1,7 +1,15 @@
 import * as XLSX from "xlsx";
 
-import { classeFromAlturaCm, type Captura, type Classe } from "@/lib/domain";
+import { classeFromAlturaCm, type Classe } from "@/lib/domain";
 import type { CreateCapturaInput } from "@/lib/persistence/types";
+import { getRodoviaByCodigo } from "@/lib/rodovias";
+
+export { isExcelFilename } from "@/lib/excel/excel-filename";
+export {
+  buildCapturasTemplate,
+  buildCapturasWorkbook,
+  CAPTURAS_SHEET_COLUMNS,
+} from "@/lib/excel/capturas-xlsx-write";
 
 /** Hard caps for POST /api/capturas/import (memory + storage safety). */
 export const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
@@ -138,14 +146,45 @@ function excelSerialToIso(serial: number): string | null {
   return date.toISOString();
 }
 
+function resolveRowRodoviaId(
+  row: SheetRow,
+  defaultRodoviaId: string,
+): { ok: true; rodoviaId: string } | { ok: false; message: string } {
+  const sheetRaw = get(row, "Rodovia", "Rodovia codigo", "Codigo");
+  if (sheetRaw !== undefined && sheetRaw !== null && String(sheetRaw).trim() !== "") {
+    const matched = getRodoviaByCodigo(String(sheetRaw));
+    if (!matched) {
+      return {
+        ok: false,
+        message: `unknown rodovia '${String(sheetRaw).trim()}'`,
+      };
+    }
+    return { ok: true, rodoviaId: matched.id };
+  }
+
+  if (defaultRodoviaId === "todas") {
+    return {
+      ok: false,
+      message: "Rodovia column is required when importing for todas",
+    };
+  }
+
+  return { ok: true, rodoviaId: defaultRodoviaId };
+}
+
 function draftFromRow(
   row: SheetRow,
-  rodoviaId: string,
+  defaultRodoviaId: string,
 ): { ok: true; draft: CreateCapturaInput } | { ok: false; message: string } {
   const lat = parseNumber(get(row, "Latitude", "Lat"));
   const lon = parseNumber(get(row, "Longitude", "Lon", "Lng"));
   if (lat === null || lon === null) {
     return { ok: false, message: "lat and lon are required" };
+  }
+
+  const rodoviaResolved = resolveRowRodoviaId(row, defaultRodoviaId);
+  if (!rodoviaResolved.ok) {
+    return rodoviaResolved;
   }
 
   const capturedRaw = get(row, "Data/hora", "Data Hora", "Data", "Timestamp");
@@ -199,7 +238,7 @@ function draftFromRow(
       inferenceError,
       imageBytes: PLACEHOLDER_PNG_BYTES,
       contentType: "image/png",
-      rodoviaId,
+      rodoviaId: rodoviaResolved.rodoviaId,
       km,
       sentido,
       alturaCm,
@@ -264,48 +303,4 @@ export function parseCapturasWorkbook(
   }
 
   return { ok: true, drafts, errors };
-}
-
-export function buildCapturasWorkbook(
-  capturas: Captura[],
-  rodoviaCodigoById: Readonly<Record<string, string>>,
-): Uint8Array {
-  const exportRows = capturas.map((captura) => {
-    const rodoviaCodigo =
-      captura.rodoviaId !== null
-        ? (rodoviaCodigoById[captura.rodoviaId] ?? captura.rodoviaId)
-        : null;
-    return {
-      Latitude: captura.lat,
-      Longitude: captura.lon,
-      "Data/hora": captura.capturedAt,
-      KM: captura.km,
-      Sentido: captura.sentido,
-      "Altura (cm)": captura.alturaCm,
-      "IA - classe": captura.classe,
-      "IA - confiança": captura.confidence,
-      Modelo: captura.modelVersion,
-      "Erro inferência": captura.inferenceError,
-      Rodovia: rodoviaCodigo,
-    };
-  });
-
-  const sheet = XLSX.utils.json_to_sheet(exportRows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, sheet, "Capturas");
-  // SheetJS may return number[], Uint8Array, or ArrayBuffer depending on runtime.
-  const written: unknown = XLSX.write(workbook, {
-    type: "array",
-    bookType: "xlsx",
-  });
-  if (written instanceof Uint8Array) {
-    return written;
-  }
-  if (written instanceof ArrayBuffer) {
-    return new Uint8Array(written);
-  }
-  if (Array.isArray(written)) {
-    return Uint8Array.from(written as number[]);
-  }
-  throw new Error("unexpected xlsx write output");
 }
