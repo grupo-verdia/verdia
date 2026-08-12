@@ -3,6 +3,10 @@ import * as XLSX from "xlsx";
 import { classeFromAlturaCm, type Captura, type Classe } from "@/lib/domain";
 import type { CreateCapturaInput } from "@/lib/persistence/types";
 
+/** Hard caps for POST /api/capturas/import (memory + storage safety). */
+export const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
+export const MAX_IMPORT_ROWS = 1000;
+
 /** Minimal 1×1 transparent PNG when Excel rows have no image. */
 export const PLACEHOLDER_PNG_BYTES = Uint8Array.from(
   Buffer.from(
@@ -229,6 +233,18 @@ export function parseCapturasWorkbook(
     defval: null,
     raw: true,
   });
+
+  if (rows.length > MAX_IMPORT_ROWS) {
+    return {
+      ok: false,
+      errors: [
+        {
+          row: 0,
+          message: `workbook exceeds ${MAX_IMPORT_ROWS} data rows`,
+        },
+      ],
+    };
+  }
 
   const drafts: CapturaImportDraft[] = [];
   const errors: CapturaRowError[] = [];

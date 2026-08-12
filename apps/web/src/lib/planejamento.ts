@@ -3,12 +3,13 @@ import type { MapTrecho } from "@/lib/mapa";
 import { getCapturaStore } from "@/lib/persistence";
 import { getRodoviaById } from "@/lib/rodovias";
 
-/** Trecho in the heuristic maintenance queue (ordered by severidade, then km). */
+/** Trecho in the heuristic maintenance queue (severidade → rodovia → km). */
 export type PlanTrecho = MapTrecho & {
   /** 1-based position in the plan (alta first). */
   ordem: number;
   /** Same as `id` — captura’s trecho (1:1 with captura in current product). */
   trechoId: string;
+  rodoviaId: string | null;
   rodoviaCodigo: string | null;
   rodoviaNome: string | null;
   km: number | null;
@@ -23,6 +24,19 @@ const SEVERIDADE_PLAN_RANK: Record<Severidade, number> = {
   média: 1,
   baixa: 0,
 };
+
+function compareNullsLastString(a: string | null, b: string | null): number {
+  if (a === null && b === null) {
+    return 0;
+  }
+  if (a === null) {
+    return 1;
+  }
+  if (b === null) {
+    return -1;
+  }
+  return a.localeCompare(b);
+}
 
 function compareKmNullsLast(a: number | null, b: number | null): number {
   if (a === null && b === null) {
@@ -39,7 +53,8 @@ function compareKmNullsLast(a: number | null, b: number | null): number {
 
 /**
  * Product read surface: heuristic plan — one row per captura (1:1 trecho),
- * ordered by severidade (alta → média → baixa), then km ascending (nulls last).
+ * ordered by severidade (alta → média → baixa), then rodovia, then km
+ * ascending within that corridor (nulls last).
  */
 export async function loadPlanTrechos(): Promise<PlanTrecho[]> {
   const capturas = await getCapturaStore().listCapturas();
@@ -56,6 +71,7 @@ export async function loadPlanTrechos(): Promise<PlanTrecho[]> {
       lon: captura.lon,
       severidade: severidadeFromClasse(captura.classe),
       capturaCount: 1,
+      rodoviaId: captura.rodoviaId,
       rodoviaCodigo: rodovia?.codigo ?? null,
       rodoviaNome: rodovia?.nome ?? null,
       km: captura.km,
@@ -70,6 +86,10 @@ export async function loadPlanTrechos(): Promise<PlanTrecho[]> {
       SEVERIDADE_PLAN_RANK[b.severidade] - SEVERIDADE_PLAN_RANK[a.severidade];
     if (rankDiff !== 0) {
       return rankDiff;
+    }
+    const rodoviaDiff = compareNullsLastString(a.rodoviaId, b.rodoviaId);
+    if (rodoviaDiff !== 0) {
+      return rodoviaDiff;
     }
     const kmDiff = compareKmNullsLast(a.km, b.km);
     if (kmDiff !== 0) {

@@ -5,6 +5,10 @@ import * as XLSX from "xlsx";
 import { GET as exportCapturas } from "@/app/api/capturas/export/route";
 import { POST as importCapturas } from "@/app/api/capturas/import/route";
 import { GET as listCapturas } from "@/app/api/capturas/route";
+import {
+  MAX_IMPORT_BYTES,
+  MAX_IMPORT_ROWS,
+} from "@/lib/excel/capturas-xlsx";
 import { createMemoryStore, setCapturaStore } from "@/lib/persistence";
 
 function buildWorkbook(rows: Record<string, unknown>[]): Uint8Array {
@@ -184,5 +188,32 @@ describe("capturas Excel import/export", () => {
     expect(response.status).toBe(400);
     const body = (await response.json()) as { error: string };
     expect(body.error).toMatch(/rodoviaId/i);
+  });
+
+  it("rejects oversized uploads before parsing", async () => {
+    const oversized = new Uint8Array(MAX_IMPORT_BYTES + 1);
+    const response = await postImport(oversized, "sp-330");
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toMatch(/exceeds/i);
+  });
+
+  it("rejects workbooks with too many data rows", async () => {
+    const rows = Array.from({ length: MAX_IMPORT_ROWS + 1 }, (_, index) => ({
+      Latitude: -23.55,
+      Longitude: -46.63,
+      KM: index,
+      "Altura (cm)": 10,
+      Confiança: 0.5,
+    }));
+    const bytes = buildWorkbook(rows);
+    const response = await postImport(bytes, "sp-330");
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as {
+      imported: number;
+      errors: Array<{ message: string }>;
+    };
+    expect(body.imported).toBe(0);
+    expect(body.errors.some((error) => /rows/i.test(error.message))).toBe(true);
   });
 });

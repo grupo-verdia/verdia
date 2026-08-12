@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { parseCapturasWorkbook, type CapturaRowError } from "@/lib/excel/capturas-xlsx";
+import {
+  MAX_IMPORT_BYTES,
+  parseCapturasWorkbook,
+  type CapturaRowError,
+} from "@/lib/excel/capturas-xlsx";
 import { getCapturaStore } from "@/lib/persistence";
 import { getRodoviaById } from "@/lib/rodovias";
 
@@ -25,7 +29,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "file is required" }, { status: 400 });
   }
 
+  if (file.size > MAX_IMPORT_BYTES) {
+    return NextResponse.json(
+      {
+        error: `file exceeds ${MAX_IMPORT_BYTES} bytes`,
+      },
+      { status: 400 },
+    );
+  }
+
   const buffer = await file.arrayBuffer();
+  if (buffer.byteLength > MAX_IMPORT_BYTES) {
+    return NextResponse.json(
+      {
+        error: `file exceeds ${MAX_IMPORT_BYTES} bytes`,
+      },
+      { status: 400 },
+    );
+  }
+
   const parsed = parseCapturasWorkbook(buffer, rodoviaIdRaw);
   if (!parsed.ok) {
     return NextResponse.json(

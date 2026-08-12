@@ -39,8 +39,9 @@ export default async function PlanejamentoPage() {
         Planejamento heurístico
       </h1>
       <p style={{ margin: "0 0 1.5rem", color: "#444" }}>
-        Fila de manutenção por severidade (alta → média → baixa), depois KM —
-        derivada das capturas persistidas, sem otimizador de rotas.
+        Fila de manutenção por severidade (alta → média → baixa), depois
+        rodovia e KM — derivada das capturas persistidas, sem otimizador de
+        rotas.
       </p>
 
       <PlanejamentoExcelToolbar rodovias={rodovias} />
