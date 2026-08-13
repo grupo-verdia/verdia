@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { classeFromAlturaCm, isClasse, type Classe } from "@/lib/domain";
 import { getCapturaStore } from "@/lib/persistence";
-import { getRodoviaById } from "@/lib/rodovias";
+import { resolveRodoviaParam } from "@/lib/rodovias";
 
 type CreateBody = {
   lat?: unknown;
@@ -64,10 +64,16 @@ function parseOptionalString(
 
 export async function GET(request?: NextRequest) {
   try {
-    const rodoviaId = request?.nextUrl.searchParams.get("rodoviaId");
-    const capturas = await getCapturaStore().listCapturas(
-      rodoviaId ? { rodoviaId } : undefined,
-    );
+    const raw = request?.nextUrl.searchParams.get("rodoviaId");
+    const store = getCapturaStore();
+    if (!raw || raw.toLowerCase() === "todas") {
+      return NextResponse.json({ capturas: await store.listCapturas() });
+    }
+    const resolved = resolveRodoviaParam(raw);
+    const capturas =
+      resolved && resolved !== "todas"
+        ? await store.listCapturas({ rodoviaId: resolved })
+        : [];
     return NextResponse.json({ capturas });
   } catch (error) {
     const message = error instanceof Error ? error.message : "list failed";
@@ -163,12 +169,13 @@ export async function POST(request: NextRequest) {
   if (!rodoviaIdParsed.ok) {
     return NextResponse.json({ error: rodoviaIdParsed.error }, { status: 400 });
   }
-  if (
-    typeof rodoviaIdParsed.value === "string" &&
-    rodoviaIdParsed.value.length > 0 &&
-    !getRodoviaById(rodoviaIdParsed.value)
-  ) {
-    return NextResponse.json({ error: "rodoviaId not found" }, { status: 400 });
+  let rodoviaId = rodoviaIdParsed.value;
+  if (typeof rodoviaId === "string" && rodoviaId.length > 0) {
+    const resolved = resolveRodoviaParam(rodoviaId);
+    if (!resolved || resolved === "todas") {
+      return NextResponse.json({ error: "rodoviaId not found" }, { status: 400 });
+    }
+    rodoviaId = resolved;
   }
   const kmParsed = parseOptionalNumber(body.km, "km");
   if (!kmParsed.ok) {
@@ -206,7 +213,7 @@ export async function POST(request: NextRequest) {
       inferenceError,
       imageBytes,
       contentType: body.contentType,
-      rodoviaId: rodoviaIdParsed.value,
+      rodoviaId,
       km: kmParsed.value,
       sentido: sentidoParsed.value,
       alturaCm,
@@ -220,8 +227,9 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const rodoviaId = request.nextUrl.searchParams.get("rodoviaId") ?? "todas";
-    if (rodoviaId !== "todas" && !getRodoviaById(rodoviaId)) {
+    const raw = request.nextUrl.searchParams.get("rodoviaId") ?? "todas";
+    const rodoviaId = resolveRodoviaParam(raw);
+    if (!rodoviaId) {
       return NextResponse.json({ error: "rodoviaId not found" }, { status: 400 });
     }
     const removed = await getCapturaStore().clearCapturas(rodoviaId);

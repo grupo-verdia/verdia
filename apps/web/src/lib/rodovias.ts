@@ -102,17 +102,36 @@ export function getRodoviaById(id: string): Rodovia | null {
   return MOTIVA_RODOVIAS.find((rodovia) => rodovia.id === id) ?? null;
 }
 
+function normalizeRodoviaKey(value: string): string {
+  return value.trim().toLowerCase().replace(/[/_\s]+/g, "-");
+}
+
 /** Match catalog by codigo (e.g. SP-330) or id (e.g. sp-330), case-insensitive. */
 export function getRodoviaByCodigo(codigoOrId: string): Rodovia | null {
-  const needle = codigoOrId.trim().toLowerCase();
+  const needle = normalizeRodoviaKey(codigoOrId);
   if (!needle) {
     return null;
   }
   return (
     MOTIVA_RODOVIAS.find(
       (rodovia) =>
-        rodovia.codigo.toLowerCase() === needle ||
-        rodovia.id.toLowerCase() === needle,
+        normalizeRodoviaKey(rodovia.codigo) === needle ||
+        normalizeRodoviaKey(rodovia.id) === needle,
     ) ?? null
   );
+}
+
+/**
+ * API query/form value → catalog id, or `"todas"`.
+ * Accepts id (`sp-330`) or codigo (`SP-330`).
+ */
+export function resolveRodoviaParam(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (trimmed.toLowerCase() === "todas") {
+    return "todas";
+  }
+  return getRodoviaByCodigo(trimmed)?.id ?? null;
 }

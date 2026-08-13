@@ -6,6 +6,10 @@ import {
   type Captura,
   type Trecho,
 } from "@/lib/domain";
+import {
+  buildCapturasTemplate,
+  parseCapturasWorkbook,
+} from "@/lib/excel/capturas-xlsx";
 import type {
   CapturaStore,
   CreateCapturaInput,
@@ -14,12 +18,22 @@ import type {
 } from "@/lib/persistence/types";
 import { listMotivaRodovias } from "@/lib/rodovias";
 
-export function createMemoryStore(): CapturaStore {
+function seedDemoExcel(store: CapturaStore): void {
+  const parsed = parseCapturasWorkbook(buildCapturasTemplate(), "todas");
+  if (!parsed.ok) {
+    return;
+  }
+  for (const draft of parsed.drafts) {
+    void store.createCaptura(draft.input);
+  }
+}
+
+export function createMemoryStore(options?: { seedDemo?: boolean }): CapturaStore {
   const trechos = new Map<string, Trecho>();
   const capturas = new Map<string, Captura>();
   const objects = new Map<string, Uint8Array>();
 
-  return {
+  const store: CapturaStore = {
     async createCaptura(input: CreateCapturaInput): Promise<Captura> {
       const trechoId = randomUUID();
       trechos.set(trechoId, {
@@ -56,7 +70,7 @@ export function createMemoryStore(): CapturaStore {
 
     async listCapturas(filter?: ListCapturasFilter): Promise<Captura[]> {
       let rows = [...capturas.values()];
-      if (filter?.rodoviaId) {
+      if (filter?.rodoviaId && filter.rodoviaId !== "todas") {
         rows = rows.filter((captura) => captura.rodoviaId === filter.rodoviaId);
       }
       return rows.sort((a, b) =>
@@ -117,4 +131,9 @@ export function createMemoryStore(): CapturaStore {
       return toRemove.length;
     },
   };
+
+  if (options?.seedDemo) {
+    seedDemoExcel(store);
+  }
+  return store;
 }

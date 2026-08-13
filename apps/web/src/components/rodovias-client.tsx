@@ -44,17 +44,23 @@ function buildCards(
       );
     });
 
-  return filtered.map((c, index) => ({
-    id: c.id,
-    ordem: index + 1,
-    rodovia:
-      rodovias.find((r) => r.id === c.rodoviaId)?.codigo ?? c.rodoviaId ?? "—",
-    km: c.km != null ? c.km.toFixed(1) : "—",
-    altura: c.alturaCm != null ? `${c.alturaCm} cm` : "—",
-    severidade: (c.classe ?? "baixa") as Severidade,
-    confianca:
-      c.confidence != null ? `${Math.round(c.confidence * 100)}%` : "—",
-  }));
+  return filtered.map((c, index) => {
+    const codigo = rodovias.find((r) => r.id === c.rodoviaId)?.codigo;
+    const rodoviaLabel =
+      !c.rodoviaId || c.rodoviaId === "todas"
+        ? "—"
+        : (codigo ?? c.rodoviaId);
+    return {
+      id: c.id,
+      ordem: index + 1,
+      rodovia: rodoviaLabel,
+      km: c.km != null ? c.km.toFixed(1) : "—",
+      altura: c.alturaCm != null ? `${c.alturaCm} cm` : "—",
+      severidade: (c.classe ?? "baixa") as Severidade,
+      confianca:
+        c.confidence != null ? `${Math.round(c.confidence * 100)}%` : "—",
+    };
+  });
 }
 
 async function fetchCapturas(scope: string): Promise<Captura[]> {
@@ -141,6 +147,7 @@ export function RodoviasClient({
             fileRef,
             setBusy,
             setMessage,
+            setCapturas,
             refresh: async () => {
               await refresh("todas");
             },
@@ -171,12 +178,47 @@ export function RodoviasClient({
         cards={cards}
         emptyHint={
           selected === "todas"
-            ? "Nenhum registro. Baixe o template Excel e importe (a coluna Rodovia define o corredor)."
+            ? "Nenhum registro. Clique em “Baixar planilha de teste” e depois em Importar Excel."
             : "Nenhum registro para esta rodovia. Importe a planilha nela ou volte para “Todas as rodovias”."
         }
       />
     </>
   );
+}
+
+function translateImportError(message: string): string {
+  const lower = message.toLowerCase();
+  if (lower.includes("rodoviaid") && lower.includes("not found")) {
+    return "Rodovia não encontrada. Deixe “Todas as rodovias” ou escolha uma da lista.";
+  }
+  if (lower.includes("not a valid excel") || lower.includes("invalid workbook")) {
+    return "Este arquivo não é um Excel válido. Baixe a planilha pelo botão nesta tela.";
+  }
+  if (lower.includes("only excel")) {
+    return "Apenas arquivos Excel (.xlsx, .xls) são aceitos.";
+  }
+  if (lower.includes("lat") && lower.includes("lon")) {
+    return "Falta Latitude e Longitude. Baixe a planilha de teste nesta tela e importe ela.";
+  }
+  return message;
+}
+
+function importResultMessage(data: {
+  error?: string;
+  imported?: number;
+  errors?: Array<{ message?: string }>;
+}): string {
+  const imported = data.imported ?? 0;
+  const failed = data.errors?.length ?? 0;
+  const first = data.errors?.[0]?.message;
+  if (imported === 0) {
+    return first
+      ? `Nenhuma linha importada. ${translateImportError(first)}`
+      : translateImportError(data.error ?? "Nenhuma linha importada.");
+  }
+  return `${imported} registros importados${
+    failed ? ` · ${failed} linhas com erro` : ""
+  }.`;
 }
 
 async function runImport(args: {
@@ -186,10 +228,19 @@ async function runImport(args: {
   fileRef: React.RefObject<HTMLInputElement | null>;
   setBusy: (v: boolean) => void;
   setMessage: (v: string | null) => void;
+  setCapturas: React.Dispatch<React.SetStateAction<Captura[]>>;
   refresh: () => Promise<void>;
 }) {
-  const { file, selected, capturas, fileRef, setBusy, setMessage, refresh } =
-    args;
+  const {
+    file,
+    selected,
+    capturas,
+    fileRef,
+    setBusy,
+    setMessage,
+    setCapturas,
+    refresh,
+  } = args;
 
   if (!isExcelFilename(file.name)) {
     setMessage("Apenas arquivos Excel (.xlsx, .xls) são aceitos.");
@@ -205,12 +256,15 @@ async function runImport(args: {
       : capturas.filter((c) => c.rodoviaId === selected).length;
   if (existentes > 0) {
     const ok = window.confirm(
-      `Já existem ${existentes} registro(s) carregado(s).\n\n` +
-        `Importar de novo pode DUPLICAR a mesma base.\n\n` +
-        `Deseja continuar mesmo assim?\n` +
-        `(Recomendado: Cancelar e usar "Limpar" antes.)`,
+      `Já existem ${existentes} registro(s) na tela.\n\n` +
+        `Importar agora soma essas linhas às que já estão aqui.\n\n` +
+        `Quer continuar?\n` +
+        `Para testar só esta planilha: Cancelar, clique em Limpar, depois importe de novo.`,
     );
     if (!ok) {
+      setMessage(
+        "Importação cancelada. Clique em Limpar e importe de novo para ver só esta planilha.",
+      );
       if (fileRef.current) {
         fileRef.current.value = "";
       }
@@ -222,7 +276,8 @@ async function runImport(args: {
   try {
     const fd = new FormData();
     fd.append("file", file);
-    fd.append("rodoviaId", selected);
+    // Spreadsheet Rodovia column assigns each row; do not send the view filter.
+    fd.append("rodoviaId", "todas");
     const response = await fetch("/api/capturas/import", {
       method: "POST",
       body: fd,
@@ -231,18 +286,22 @@ async function runImport(args: {
     const data = (await response.json()) as {
       error?: string;
       imported?: number;
-      errors?: unknown[];
+      errors?: Array<{ message?: string }>;
+      capturas?: Captura[];
     };
     if (!response.ok) {
-      throw new Error(data.error ?? "Falha ao importar.");
+      throw new Error(importResultMessage(data));
     }
     await refresh();
-    const failed = data.errors?.length ?? 0;
-    setMessage(
-      `${data.imported ?? 0} registros importados${
-        failed ? ` · ${failed} linhas com erro` : ""
-      }.`,
-    );
+    const importedRows = data.capturas ?? [];
+    if (importedRows.length > 0) {
+      setCapturas((prev) => {
+        const ids = new Set(prev.map((row) => row.id));
+        const extra = importedRows.filter((row) => !ids.has(row.id));
+        return extra.length > 0 ? [...prev, ...extra] : prev;
+      });
+    }
+    setMessage(importResultMessage(data));
     if (fileRef.current) {
       fileRef.current.value = "";
     }

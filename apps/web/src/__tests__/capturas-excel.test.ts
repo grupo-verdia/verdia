@@ -182,21 +182,66 @@ describe("capturas Excel import/export", () => {
     );
   });
 
-  it("rejects unknown rodoviaId with 400", async () => {
+  it("uses the sheet Rodovia column when form rodoviaId is unknown", async () => {
     const bytes = buildWorkbook([
       {
         Latitude: -23.55,
         Longitude: -46.63,
         KM: 1,
-        "Altura (cm)": 10,
-        Confiança: 0.5,
+        "Altura (cm)": 12,
+        Confiança: 0.8,
+        Rodovia: "SP-348",
       },
     ]);
 
     const response = await postImport(bytes, "not-a-rodovia");
-    expect(response.status).toBe(400);
-    const body = (await response.json()) as { error: string };
-    expect(body.error).toMatch(/rodoviaId/i);
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      imported: number;
+      capturas: Array<{ rodoviaId: string | null }>;
+    };
+    expect(body.imported).toBe(1);
+    expect(body.capturas[0]?.rodoviaId).toBe("sp-348");
+  });
+
+  it("accepts Motiva codigo SP-330 as rodoviaId on import", async () => {
+    const bytes = buildWorkbook([
+      {
+        Latitude: -23.55,
+        Longitude: -46.63,
+        KM: 1,
+        "Altura (cm)": 12,
+        Confiança: 0.8,
+      },
+    ]);
+    const response = await postImport(bytes, "SP-330");
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      imported: number;
+      capturas: Array<{ rodoviaId: string | null }>;
+    };
+    expect(body.imported).toBe(1);
+    expect(body.capturas[0]?.rodoviaId).toBe("sp-330");
+  });
+
+  it("accepts SPI-102/330 codigo as rodoviaId on import", async () => {
+    const bytes = buildWorkbook([
+      {
+        Latitude: -23.4,
+        Longitude: -46.9,
+        KM: 2,
+        "Altura (cm)": 8,
+        Confiança: 0.9,
+      },
+    ]);
+    const response = await postImport(bytes, "SPI-102/330");
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      imported: number;
+      capturas: Array<{ rodoviaId: string | null }>;
+    };
+    expect(body.imported).toBe(1);
+    expect(body.capturas[0]?.rodoviaId).toBe("spi-102-330");
   });
 
   it("imports template rows using the Rodovia column (incl. rodoviaId=todas)", async () => {
@@ -206,9 +251,12 @@ describe("capturas Excel import/export", () => {
     const body = (await response.json()) as {
       imported: number;
       errors: unknown[];
+      capturas?: Array<{ rodoviaId: string | null }>;
     };
     expect(body.imported).toBeGreaterThanOrEqual(6);
     expect(body.errors).toHaveLength(0);
+    expect(Array.isArray(body.capturas)).toBe(true);
+    expect(body.capturas?.length).toBe(body.imported);
 
     const listResponse = await listCapturas();
     const listed = (await listResponse.json()) as {
@@ -329,5 +377,60 @@ describe("capturas Excel import/export", () => {
 
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet!);
     expect(rows.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("seeds Motiva template rows into the memory store for the demo", async () => {
+    const store = createMemoryStore({ seedDemo: true });
+    const rows = await store.listCapturas();
+    expect(rows.length).toBeGreaterThanOrEqual(6);
+    const ids = new Set(rows.map((row) => row.rodoviaId));
+    expect(ids.has("sp-330")).toBe(true);
+    expect(ids.has("sp-348")).toBe(true);
+  });
+
+  it("lists all capturas when rodoviaId=todas", async () => {
+    const bytes = buildCapturasTemplate();
+    expect((await postImport(bytes, "todas")).status).toBe(200);
+
+    const response = await listCapturas(
+      new NextRequest("http://localhost:3000/api/capturas?rodoviaId=todas"),
+    );
+    expect(response.status).toBe(200);
+    const listed = (await response.json()) as {
+      capturas: Array<{ rodoviaId: string | null }>;
+    };
+    expect(listed.capturas.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("rejects HTML saved with an .xlsx filename", async () => {
+    const html = new TextEncoder().encode("<!DOCTYPE html><html><body>not excel</body></html>");
+    const response = await postImport(html, "todas", "verdia-teste-rodovias.xlsx");
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toMatch(/valid Excel/i);
+  });
+
+  it("returns created capturas in the import payload", async () => {
+    const bytes = buildWorkbook([
+      {
+        Latitude: -23.55,
+        Longitude: -46.63,
+        KM: 11.1,
+        "Altura (cm)": 41,
+        Confiança: 0.9,
+        Rodovia: "SP-330",
+      },
+    ]);
+    const response = await postImport(bytes, "todas");
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      imported: number;
+      capturas: Array<{ id: string; km: number | null; rodoviaId: string | null }>;
+    };
+    expect(body.imported).toBe(1);
+    expect(body.capturas).toHaveLength(1);
+    expect(body.capturas[0]?.km).toBe(11.1);
+    expect(body.capturas[0]?.rodoviaId).toBe("sp-330");
+    expect(body.capturas[0]?.id).toBeTruthy();
   });
 });

@@ -4,7 +4,7 @@ import { classeFromAlturaCm, type Classe } from "@/lib/domain";
 import type { CreateCapturaInput } from "@/lib/persistence/types";
 import { getRodoviaByCodigo } from "@/lib/rodovias";
 
-export { isExcelFilename } from "@/lib/excel/excel-filename";
+export { isExcelBuffer, isExcelFilename } from "@/lib/excel/excel-filename";
 export {
   buildCapturasTemplate,
   buildCapturasWorkbook,

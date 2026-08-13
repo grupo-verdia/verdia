@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import type { Captura } from "@/lib/domain";
 import {
+  isExcelBuffer,
   isExcelFilename,
   MAX_IMPORT_BYTES,
   parseCapturasWorkbook,
   type CapturaRowError,
 } from "@/lib/excel/capturas-xlsx";
 import { getCapturaStore } from "@/lib/persistence";
-import { getRodoviaById } from "@/lib/rodovias";
+import { resolveRodoviaParam } from "@/lib/rodovias";
 
 export async function POST(request: NextRequest) {
   let form: FormData;
@@ -18,12 +20,11 @@ export async function POST(request: NextRequest) {
   }
 
   const rodoviaIdRaw = form.get("rodoviaId");
-  if (typeof rodoviaIdRaw !== "string" || rodoviaIdRaw.length === 0) {
-    return NextResponse.json({ error: "rodoviaId is required" }, { status: 400 });
-  }
-  if (rodoviaIdRaw !== "todas" && !getRodoviaById(rodoviaIdRaw)) {
-    return NextResponse.json({ error: "rodoviaId not found" }, { status: 400 });
-  }
+  const raw =
+    typeof rodoviaIdRaw === "string" && rodoviaIdRaw.trim().length > 0
+      ? rodoviaIdRaw
+      : "todas";
+  const rodoviaId = resolveRodoviaParam(raw) ?? "todas";
 
   const file = form.get("file");
   if (!(file instanceof File)) {
@@ -56,7 +57,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const parsed = parseCapturasWorkbook(buffer, rodoviaIdRaw);
+  const bytes = new Uint8Array(buffer);
+  if (!isExcelBuffer(bytes)) {
+    return NextResponse.json(
+      { error: "file is not a valid Excel workbook" },
+      { status: 400 },
+    );
+  }
+
+  const parsed = parseCapturasWorkbook(buffer, rodoviaId);
   if (!parsed.ok) {
     return NextResponse.json(
       { imported: 0, received: 0, errors: parsed.errors },
@@ -66,18 +75,29 @@ export async function POST(request: NextRequest) {
 
   const store = getCapturaStore();
   const errors: CapturaRowError[] = [...parsed.errors];
-  let imported = 0;
+  const capturas: Captura[] = [];
   const received = parsed.drafts.length + parsed.errors.length;
 
   for (const draft of parsed.drafts) {
+    if (!draft.input.rodoviaId || draft.input.rodoviaId === "todas") {
+      errors.push({
+        row: draft.row,
+        message: "Rodovia column is required",
+      });
+      continue;
+    }
     try {
-      await store.createCaptura(draft.input);
-      imported += 1;
+      capturas.push(await store.createCaptura(draft.input));
     } catch (error) {
       const message = error instanceof Error ? error.message : "create failed";
       errors.push({ row: draft.row, message });
     }
   }
 
-  return NextResponse.json({ imported, received, errors });
+  return NextResponse.json({
+    imported: capturas.length,
+    received,
+    errors,
+    capturas,
+  });
 }

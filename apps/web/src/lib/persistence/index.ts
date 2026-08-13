@@ -43,7 +43,7 @@ function createStoreFromEnv(): CapturaStore {
   if (config) {
     return createSupabaseStore(config);
   }
-  return createMemoryStore();
+  return createMemoryStore({ seedDemo: true });
 }
 
 export function getCapturaStore(): CapturaStore {

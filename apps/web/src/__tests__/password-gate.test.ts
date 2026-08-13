@@ -38,4 +38,14 @@ describe("password gate (product read surface)", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();
   });
+
+  it("allows the test spreadsheet without a session", async () => {
+    const request = new NextRequest(
+      "http://localhost:3000/verdia-teste-rodovias.xlsx",
+    );
+    const response = await proxy(request);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
 });
