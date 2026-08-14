@@ -53,8 +53,9 @@ Use these terms consistently in code, tests, and docs.
   (alta first).
 - **Nova captura** — web-app flow to upload one or more geotagged photos (multi-select);
   each valid file becomes a **captura** (infer → persist → show on dashboard/map). Ingest
-  is browser-only (no CLI). Uploads without valid GPS are rejected per file. Classification
-  Classifies via Inference HTTP (`VLM_INFERENCE_URL`) or local stub when unset.
+  is browser-only (no CLI). Prefer EXIF GPS; when missing, the operator can enter
+  latitude/longitude manually. Classifies via Inference HTTP (`VLM_INFERENCE_URL`)
+  or local stub when unset.
 
 ## Fronts (all in scope)
 
