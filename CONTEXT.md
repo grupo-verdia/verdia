@@ -54,14 +54,14 @@ Use these terms consistently in code, tests, and docs.
 - **Nova captura** — web-app flow to upload one or more geotagged photos (multi-select);
   each valid file becomes a **captura** (infer → persist → show on dashboard/map). Ingest
   is browser-only (no CLI). Uploads without valid GPS are rejected per file. Classification
-  uses a local stub until the Inference HTTP API is wired.
+  Classifies via Inference HTTP (`VLM_INFERENCE_URL`) or local stub when unset.
 
 ## Fronts (all in scope)
 
 1. **Classifier path (current):** hosted VLM prototype (`services/ai` module + CLI +
    notebook). Plan: `docs/plans/2026-08-05-vlm-prototype.md`.
-2. **Inference API** — deferred (wire the VLM into a service later if needed).
-3. **Nova captura** (web upload → classify stub → persist). Inference HTTP later.
+2. **Inference API** — lean HTTP in `services/ai` (`POST /v1/classify`).
+3. **Nova captura** (web upload → classify → persist).
 4. **Dashboard** (results).
 5. **Geospatial map** of trechos.
 6. **Observability (lean):** basic counters + model accuracy.
@@ -81,8 +81,8 @@ detection, real route optimization, Supabase Auth.
 - `apps/web` — **Next.js (TypeScript)**: dashboard, map, planning, observability, and
   API routes. Access gated by a **single shared password**.
 - `services/ai` — **Python**: VLM grass classifier prototype (module + CLI + notebook).
-  HTTP Inference API deferred.
-- **Nova captura** (in `apps/web`) — geotagged upload + classify stub; Inference HTTP later.
+  Lean Inference HTTP (`python -m verdia_ai serve`).
+- **Nova captura** (in `apps/web`) — geotagged upload → Inference HTTP / stub → persist.
 - **Data:** **Supabase** (Postgres for metadata/predictions; Storage for images).
 - **Deploy:** web on **Vercel**, data on **Supabase**.
 

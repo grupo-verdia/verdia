@@ -8,7 +8,7 @@ Monorepo layout:
 | Path | Role |
 |------|------|
 | `apps/web` | Next.js (TypeScript) product + BFF, shared-password gate |
-| `services/ai` | Python VLM grass classifier prototype (CLI + notebook; HTTP deferred) |
+| `services/ai` | Python VLM grass classifier + Inference HTTP |
 
 Domain glossary: [`CONTEXT.md`](./CONTEXT.md). Standing decisions / plans: [`docs/plans/`](./docs/plans/).
 
@@ -20,15 +20,28 @@ Domain glossary: [`CONTEXT.md`](./CONTEXT.md). Standing decisions / plans: [`doc
 
 ## Run locally
 
-### 1. AI VLM prototype (`services/ai`)
+### 1. AI VLM + Inference API (`services/ai`)
 
 ```bash
 cd services/ai
 uv sync
+# Inference HTTP for the web app (fake mode needs no Google key)
+VLM_FAKE=1 uv run python -m verdia_ai serve
+```
+
+In another terminal, point the web BFF at it (`apps/web/.env.local`):
+
+```bash
+VLM_INFERENCE_URL=http://127.0.0.1:8000
+```
+
+Live VLM: set `GOOGLE_API_KEY` and omit `VLM_FAKE`. CLI folder classify still works:
+
+```bash
 VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary
 ```
 
-HTTP Inference API serve is **deferred**. Details: [`services/ai/README.md`](./services/ai/README.md).
+Details: [`services/ai/README.md`](./services/ai/README.md).
 
 Tests:
 

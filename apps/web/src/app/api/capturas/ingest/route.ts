@@ -39,7 +39,7 @@ function parseOptionalNumber(
 }
 
 /**
- * Nova captura ingest: geotagged photo → classify (stub / future VLM) → persist.
+ * Nova captura ingest: geotagged photo → VLM classify → persist.
  * Feeds dashboard KPIs, ocorrências, mapa, e rodovias via the captura store.
  */
 export async function POST(request: NextRequest) {
@@ -115,7 +115,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "imageBase64 is invalid" }, { status: 400 });
   }
 
-  const verdict = await classifyForIngest(filename);
+  const verdict = await classifyForIngest({
+    filename,
+    imageBytes,
+    contentType: body.contentType,
+  });
 
   try {
     const captura = await getCapturaStore().createCaptura({

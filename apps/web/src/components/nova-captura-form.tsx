@@ -196,8 +196,9 @@ export function NovaCapturaForm({ rodovias }: { rodovias: Rodovia[] }) {
           </label>
         </div>
         <p className="footer-note" style={{ marginTop: 12, marginBottom: 0 }}>
-          Sem GPS válido o arquivo é rejeitado. Classificação usa stub local até
-          a Inference API conectar.
+          Sem GPS válido o arquivo é rejeitado. Com a IA ligada
+          (`VLM_INFERENCE_URL`), a classificação vem do modelo; sem ela, usa
+          stub local.
         </p>
       </section>
 
