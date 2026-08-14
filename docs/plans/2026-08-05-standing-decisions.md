@@ -5,15 +5,15 @@ Durable notes go in `docs/plans/YYYY-MM-DD-…`.
 ## Stack
 
 - `apps/web` — Next.js (TypeScript) BFF + UI; access gated by a **shared password** (`DEMO_PASSWORD`). Real auth later.
-- `services/ai` — Python VLM prototype (`verdia_ai`); HTTP Inference API deferred.
+- `services/ai` — Python VLM (`verdia_ai`) + lean Inference HTTP (`python -m verdia_ai serve`).
 - **Data:** Supabase (Postgres metadata/predictions; Storage for images). Lat/lon columns; no PostGIS for MVP.
 
 ## Ingest
 
 - **Nova captura** is the only photo ingest path (browser multi-select geotagged upload). No CLI ingest / sample-route replay.
 - Missing/invalid GPS rejects that file. One captura → one trecho (default **500 m**).
-- Route: `POST /api/capturas/ingest` (classify stub → captura store). Excel import remains for spreadsheet ops.
-- Classification stub until Inference HTTP (`VLM_INFERENCE_URL` reserved). Plan: `docs/plans/2026-08-14-nova-captura.md`.
+- Route: `POST /api/capturas/ingest` → Inference HTTP (`VLM_INFERENCE_URL`) or stub → captura store. Excel import remains for spreadsheet ops.
+- Plan: `docs/plans/2026-08-14-nova-captura.md`.
 
 ## Deploy
 

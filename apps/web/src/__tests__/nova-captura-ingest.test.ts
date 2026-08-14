@@ -2,11 +2,14 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { POST as ingestCaptura } from "@/app/api/capturas/ingest/route";
 import { loadDashboardCapturas } from "@/lib/dashboard";
-import { classifyImageStub } from "@/lib/ingest/classify";
+import {
+  classifyForIngest,
+  classifyImageStub,
+} from "@/lib/ingest/classify";
 import { readGeotagFromImage } from "@/lib/ingest/exif-gps";
 import {
   createMemoryStore,
@@ -38,6 +41,60 @@ describe("classifyImageStub", () => {
   });
 });
 
+describe("classifyForIngest HTTP", () => {
+  const originalFetch = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    delete process.env.VLM_INFERENCE_URL;
+    vi.restoreAllMocks();
+  });
+
+  it("calls Inference API when VLM_INFERENCE_URL is set", async () => {
+    process.env.VLM_INFERENCE_URL = "http://ai.test:8000";
+    globalThis.fetch = vi.fn(async () =>
+      Response.json({
+        classe: "baixa",
+        altura_cm: 5.5,
+        confidence: 0.82,
+        model_version: "gemma-test",
+        fake: false,
+        vegetacao_visivel: true,
+        justificativa: "ok",
+      }),
+    ) as typeof fetch;
+
+    const result = await classifyForIngest({
+      filename: "campo.jpg",
+      imageBytes: new Uint8Array([1, 2, 3]),
+      contentType: "image/jpeg",
+    });
+    expect(result.classe).toBe("baixa");
+    expect(result.alturaCm).toBe(5.5);
+    expect(result.modelVersion).toBe("gemma-test");
+    expect(result.fake).toBe(false);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "http://ai.test:8000/v1/classify",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("records inferenceError when Inference API fails", async () => {
+    process.env.VLM_INFERENCE_URL = "http://ai.test:8000";
+    globalThis.fetch = vi.fn(async () =>
+      Response.json({ detail: "GOOGLE_API_KEY is required" }, { status: 502 }),
+    ) as typeof fetch;
+
+    const result = await classifyForIngest({
+      filename: "campo.jpg",
+      imageBytes: new Uint8Array([1]),
+      contentType: "image/jpeg",
+    });
+    expect(result.classe).toBeNull();
+    expect(result.inferenceError).toContain("GOOGLE_API_KEY");
+  });
+});
+
 describe("readGeotagFromImage", () => {
   it("reads lat/lon from a geotagged JPEG fixture", async () => {
     const bytes = readFileSync(
@@ -59,6 +116,7 @@ describe("readGeotagFromImage", () => {
 describe("POST /api/capturas/ingest", () => {
   beforeEach(() => {
     setCapturaStore(createMemoryStore());
+    delete process.env.VLM_INFERENCE_URL;
   });
 
   it("classifies, persists, and feeds dashboard indices", async () => {

@@ -1,8 +1,8 @@
-# verdia AI: VLM prototype
+# verdia AI: VLM + Inference API
 
 Hosted Gemma VLM estimates roadside grass height; code maps Motiva cm bands to
-`baixa` | `média` | `alta` (or `null` when height is N/A). Module + CLI + notebook.
-HTTP Inference API is deferred.
+`baixa` | `média` | `alta` (or `null` when height is N/A). Module + CLI + notebook
++ lean HTTP API for Nova captura.
 
 ## Local
 
@@ -13,15 +13,37 @@ uv sync
 Needs `GOOGLE_API_KEY` for live Google AI Studio calls; optional `VLM_MODEL`,
 `VLM_BASE_URL`. Offline stub: `VLM_FAKE=1` or `--fake`.
 
-```bash
-# Fake / CI-safe
-VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary
+### Inference HTTP (for `apps/web`)
 
-# Live (default model: gemma-4-26b-a4b-it)
+```bash
+# Fake / CI-safe (no Google key)
+VLM_FAKE=1 uv run python -m verdia_ai serve
+
+# Live
+export GOOGLE_API_KEY=...
+uv run python -m verdia_ai serve
+```
+
+Listens on `http://127.0.0.1:8000`. Health: `GET /health`. Classify:
+`POST /v1/classify` with `{ image_base64, content_type, filename? }`.
+
+In `apps/web/.env.local` set:
+
+```bash
+VLM_INFERENCE_URL=http://127.0.0.1:8000
+```
+
+### CLI folder classify
+
+```bash
+VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary
 export GOOGLE_API_KEY=...
 uv run python -m verdia_ai.classify path/to/photos
+```
 
-# Notebook (loads .env; VLM_FAKE=1 for stub)
+### Notebook
+
+```bash
 uv sync --group dev
 uv run jupyter notebook notebooks/demo_vlm_grass.ipynb
 ```
