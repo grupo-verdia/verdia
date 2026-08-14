@@ -7,6 +7,7 @@ import { Brand } from "@/components/brand";
 
 const items = [
   { label: "Visão geral", href: "/", icon: "⌂" },
+  { label: "Nova captura", href: "/nova-captura", icon: "+" },
   { label: "Mapa operacional", href: "/mapa", icon: "⌖" },
   { label: "Rodovias e planilhas", href: "/rodovias", icon: "▤" },
   { label: "Planejamento", href: "/planejamento", icon: "✓" },

@@ -53,15 +53,15 @@ Use these terms consistently in code, tests, and docs.
   (alta first).
 - **Nova captura** — web-app flow to upload one or more geotagged photos (multi-select);
   each valid file becomes a **captura** (infer → persist → show on dashboard/map). Ingest
-  is browser-only (no CLI). Uploads without valid GPS are rejected per file. **App↔AI
-  HTTP integrate is deferred this week** (VLM prototype only).
+  is browser-only (no CLI). Uploads without valid GPS are rejected per file. Classification
+  uses a local stub until the Inference HTTP API is wired.
 
 ## Fronts (all in scope)
 
 1. **Classifier path (current):** hosted VLM prototype (`services/ai` module + CLI +
    notebook). Plan: `docs/plans/2026-08-05-vlm-prototype.md`.
 2. **Inference API** — deferred (wire the VLM into a service later if needed).
-3. **Nova captura** (web upload → API) — deferred until AI path lands.
+3. **Nova captura** (web upload → classify stub → persist). Inference HTTP later.
 4. **Dashboard** (results).
 5. **Geospatial map** of trechos.
 6. **Observability (lean):** basic counters + model accuracy.
@@ -82,7 +82,7 @@ detection, real route optimization, Supabase Auth.
   API routes. Access gated by a **single shared password**.
 - `services/ai` — **Python**: VLM grass classifier prototype (module + CLI + notebook).
   HTTP Inference API deferred.
-- **Nova captura** (in `apps/web`) — deferred until AI HTTP lands.
+- **Nova captura** (in `apps/web`) — geotagged upload + classify stub; Inference HTTP later.
 - **Data:** **Supabase** (Postgres for metadata/predictions; Storage for images).
 - **Deploy:** web on **Vercel**, data on **Supabase**.
 

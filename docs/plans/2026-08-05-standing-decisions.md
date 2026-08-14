@@ -10,8 +10,10 @@ Durable notes go in `docs/plans/YYYY-MM-DD-…`.
 
 ## Ingest
 
-- **Nova captura** is the only ingest path (browser multi-select geotagged upload). No CLI ingest / sample-route replay.
+- **Nova captura** is the only photo ingest path (browser multi-select geotagged upload). No CLI ingest / sample-route replay.
 - Missing/invalid GPS rejects that file. One captura → one trecho (default **500 m**).
+- Route: `POST /api/capturas/ingest` (classify stub → captura store). Excel import remains for spreadsheet ops.
+- Classification stub until Inference HTTP (`VLM_INFERENCE_URL` reserved). Plan: `docs/plans/2026-08-14-nova-captura.md`.
 
 ## Deploy
 
