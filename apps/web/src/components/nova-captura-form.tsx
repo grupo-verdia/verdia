@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   NovaCapturaResults,
+  type CapturaReport,
   type FileOutcome,
 } from "@/components/nova-captura-results";
 import type { Captura } from "@/lib/domain";
@@ -17,6 +18,17 @@ type IngestMeta = {
   sentido: string;
   lat: string;
   lon: string;
+};
+
+type IngestResponse = {
+  error?: string;
+  captura?: Captura;
+  classification?: {
+    fake?: boolean;
+    modelVersion?: string;
+    justificativa?: string | null;
+    inferenceError?: string | null;
+  };
 };
 
 function fileToBase64(file: File): Promise<string> {
@@ -36,7 +48,21 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-async function ingestOne(file: File, meta: IngestMeta): Promise<FileOutcome> {
+function reportFromResponse(data: IngestResponse): CapturaReport {
+  const c = data.classification;
+  return {
+    justificativa: c?.justificativa ?? null,
+    fake: c?.fake === true,
+    modelVersion: c?.modelVersion ?? "—",
+    inferenceError: c?.inferenceError ?? null,
+  };
+}
+
+async function ingestOne(
+  file: File,
+  meta: IngestMeta,
+  previewUrl: string,
+): Promise<FileOutcome> {
   const key = `${file.name}-${file.size}-${file.lastModified}`;
   const exif = await readGeotagFromImage(file);
   const geotag = resolveGeotag(exif, { lat: meta.lat, lon: meta.lon });
@@ -46,6 +72,7 @@ async function ingestOne(file: File, meta: IngestMeta): Promise<FileOutcome> {
       name: file.name,
       status: "rejected",
       message: geotag.error,
+      previewUrl,
     };
   }
 
@@ -64,7 +91,13 @@ async function ingestOne(file: File, meta: IngestMeta): Promise<FileOutcome> {
   if (meta.km.trim() !== "") {
     const km = Number(meta.km);
     if (!Number.isFinite(km)) {
-      return { key, name: file.name, status: "error", message: "KM inválido." };
+      return {
+        key,
+        name: file.name,
+        status: "error",
+        message: "KM inválido.",
+        previewUrl,
+      };
     }
     body.km = km;
   }
@@ -77,23 +110,29 @@ async function ingestOne(file: File, meta: IngestMeta): Promise<FileOutcome> {
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
   });
-  const data = (await response.json()) as {
-    error?: string;
-    captura?: Captura;
-  };
+  const data = (await response.json()) as IngestResponse;
   if (!response.ok || !data.captura) {
     return {
       key,
       name: file.name,
       status: "error",
       message: data.error ?? "Falha ao registrar a captura.",
+      previewUrl,
     };
   }
-  return { key, name: file.name, status: "ok", captura: data.captura };
+  return {
+    key,
+    name: file.name,
+    status: "ok",
+    captura: data.captura,
+    previewUrl,
+    report: reportFromResponse(data),
+  };
 }
 
 export function NovaCapturaForm({ rodovias }: { rodovias: Rodovia[] }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewUrlsRef = useRef<string[]>([]);
   const [rodoviaId, setRodoviaId] = useState("");
   const [km, setKm] = useState("");
   const [sentido, setSentido] = useState("");
@@ -102,18 +141,33 @@ export function NovaCapturaForm({ rodovias }: { rodovias: Rodovia[] }) {
   const [busy, setBusy] = useState(false);
   const [outcomes, setOutcomes] = useState<FileOutcome[]>([]);
 
+  useEffect(() => {
+    return () => {
+      for (const url of previewUrlsRef.current) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, []);
+
   async function onSubmit(files: FileList | null) {
     if (!files?.length || busy) {
       return;
     }
+    for (const url of previewUrlsRef.current) {
+      URL.revokeObjectURL(url);
+    }
+    previewUrlsRef.current = [];
+
     setBusy(true);
     setOutcomes([]);
     const list = Array.from(files);
     const meta = { rodoviaId, km, sentido, lat, lon };
     const next: FileOutcome[] = [];
     for (const file of list) {
+      const previewUrl = URL.createObjectURL(file);
+      previewUrlsRef.current.push(previewUrl);
       try {
-        next.push(await ingestOne(file, meta));
+        next.push(await ingestOne(file, meta, previewUrl));
       } catch (error) {
         next.push({
           key: `${file.name}-${file.size}-${file.lastModified}`,
@@ -121,6 +175,7 @@ export function NovaCapturaForm({ rodovias }: { rodovias: Rodovia[] }) {
           status: "error",
           message:
             error instanceof Error ? error.message : "Erro inesperado.",
+          previewUrl,
         });
       }
       setOutcomes([...next]);
@@ -140,8 +195,8 @@ export function NovaCapturaForm({ rodovias }: { rodovias: Rodovia[] }) {
         <h2 className="section-title">Enviar fotos georreferenciadas</h2>
         <p className="muted" style={{ fontSize: 12, lineHeight: 1.6, marginTop: 0 }}>
           Selecione uma ou mais imagens. O GPS do EXIF é usado quando existir;
-          se faltar, informe latitude e longitude abaixo. A IA classifica a
-          altura da grama e atualiza os índices do painel.
+          se faltar, informe latitude e longitude abaixo. Após o envio, o
+          relatório mostra a imagem, o que a IA disse e a prioridade.
         </p>
         <div className="toolbar" style={{ marginTop: 14, flexWrap: "wrap", gap: 10 }}>
           <select
@@ -203,8 +258,6 @@ export function NovaCapturaForm({ rodovias }: { rodovias: Rodovia[] }) {
         </div>
         <p className="footer-note" style={{ marginTop: 12, marginBottom: 0 }}>
           EXIF tem prioridade. Manual só entra quando o metadado não traz GPS.
-          Com a IA ligada (`VLM_INFERENCE_URL`), a classificação vem do modelo;
-          sem ela, usa stub local.
         </p>
       </section>
       {outcomes.length > 0 ? <NovaCapturaResults outcomes={outcomes} /> : null}
