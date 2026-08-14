@@ -1,26 +1,23 @@
 "use client";
 
-import Link from "next/link";
 import { useRef, useState } from "react";
 
-import { StatusPill } from "@/components/status-pill";
-import type { Captura, Classe } from "@/lib/domain";
+import {
+  NovaCapturaResults,
+  type FileOutcome,
+} from "@/components/nova-captura-results";
+import type { Captura } from "@/lib/domain";
 import { readGeotagFromImage } from "@/lib/ingest/exif-gps";
+import { resolveGeotag } from "@/lib/ingest/resolve-geotag";
 import type { Rodovia } from "@/lib/rodovias";
 
-type FileOutcome =
-  | {
-      key: string;
-      name: string;
-      status: "ok";
-      captura: Captura;
-    }
-  | {
-      key: string;
-      name: string;
-      status: "rejected" | "error";
-      message: string;
-    };
+type IngestMeta = {
+  rodoviaId: string;
+  km: string;
+  sentido: string;
+  lat: string;
+  lon: string;
+};
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -39,26 +36,24 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-async function ingestOne(
-  file: File,
-  meta: { rodoviaId: string; km: string; sentido: string },
-): Promise<FileOutcome> {
+async function ingestOne(file: File, meta: IngestMeta): Promise<FileOutcome> {
   const key = `${file.name}-${file.size}-${file.lastModified}`;
-  const geotag = await readGeotagFromImage(file);
-  if (!geotag) {
+  const exif = await readGeotagFromImage(file);
+  const geotag = resolveGeotag(exif, { lat: meta.lat, lon: meta.lon });
+  if (!geotag.ok) {
     return {
       key,
       name: file.name,
       status: "rejected",
-      message: "Sem GPS válido no EXIF — arquivo ignorado.",
+      message: geotag.error,
     };
   }
 
   const imageBase64 = await fileToBase64(file);
   const body: Record<string, unknown> = {
-    lat: geotag.lat,
-    lon: geotag.lon,
-    capturedAt: geotag.capturedAt,
+    lat: geotag.value.lat,
+    lon: geotag.value.lon,
+    capturedAt: geotag.value.capturedAt,
     imageBase64,
     contentType: file.type || "image/jpeg",
     filename: file.name,
@@ -69,12 +64,7 @@ async function ingestOne(
   if (meta.km.trim() !== "") {
     const km = Number(meta.km);
     if (!Number.isFinite(km)) {
-      return {
-        key,
-        name: file.name,
-        status: "error",
-        message: "KM inválido.",
-      };
+      return { key, name: file.name, status: "error", message: "KM inválido." };
     }
     body.km = km;
   }
@@ -107,6 +97,8 @@ export function NovaCapturaForm({ rodovias }: { rodovias: Rodovia[] }) {
   const [rodoviaId, setRodoviaId] = useState("");
   const [km, setKm] = useState("");
   const [sentido, setSentido] = useState("");
+  const [lat, setLat] = useState("");
+  const [lon, setLon] = useState("");
   const [busy, setBusy] = useState(false);
   const [outcomes, setOutcomes] = useState<FileOutcome[]>([]);
 
@@ -117,10 +109,11 @@ export function NovaCapturaForm({ rodovias }: { rodovias: Rodovia[] }) {
     setBusy(true);
     setOutcomes([]);
     const list = Array.from(files);
+    const meta = { rodoviaId, km, sentido, lat, lon };
     const next: FileOutcome[] = [];
     for (const file of list) {
       try {
-        next.push(await ingestOne(file, { rodoviaId, km, sentido }));
+        next.push(await ingestOne(file, meta));
       } catch (error) {
         next.push({
           key: `${file.name}-${file.size}-${file.lastModified}`,
@@ -141,17 +134,14 @@ export function NovaCapturaForm({ rodovias }: { rodovias: Rodovia[] }) {
     }
   }
 
-  const okCount = outcomes.filter((o) => o.status === "ok").length;
-  const failCount = outcomes.length - okCount;
-
   return (
     <>
       <section className="card" style={{ marginBottom: 16 }}>
         <h2 className="section-title">Enviar fotos georreferenciadas</h2>
         <p className="muted" style={{ fontSize: 12, lineHeight: 1.6, marginTop: 0 }}>
-          Selecione uma ou mais imagens com GPS no EXIF. A IA classifica a altura
-          da grama (baixa / média / alta); cada arquivo válido vira uma captura e
-          atualiza os índices do painel.
+          Selecione uma ou mais imagens. O GPS do EXIF é usado quando existir;
+          se faltar, informe latitude e longitude abaixo. A IA classifica a
+          altura da grama e atualiza os índices do painel.
         </p>
         <div className="toolbar" style={{ marginTop: 14, flexWrap: "wrap", gap: 10 }}>
           <select
@@ -182,6 +172,22 @@ export function NovaCapturaForm({ rodovias }: { rodovias: Rodovia[] }) {
             onChange={(e) => setSentido(e.target.value)}
             aria-label="Sentido"
           />
+          <input
+            className="input"
+            placeholder="Latitude (se sem GPS)"
+            value={lat}
+            onChange={(e) => setLat(e.target.value)}
+            inputMode="decimal"
+            aria-label="Latitude manual"
+          />
+          <input
+            className="input"
+            placeholder="Longitude (se sem GPS)"
+            value={lon}
+            onChange={(e) => setLon(e.target.value)}
+            inputMode="decimal"
+            aria-label="Longitude manual"
+          />
           <label className={`btn btn-primary ${busy ? "disabled" : ""}`}>
             {busy ? "Processando…" : "Selecionar imagens"}
             <input
@@ -196,62 +202,12 @@ export function NovaCapturaForm({ rodovias }: { rodovias: Rodovia[] }) {
           </label>
         </div>
         <p className="footer-note" style={{ marginTop: 12, marginBottom: 0 }}>
-          Sem GPS válido o arquivo é rejeitado. Com a IA ligada
-          (`VLM_INFERENCE_URL`), a classificação vem do modelo; sem ela, usa
-          stub local.
+          EXIF tem prioridade. Manual só entra quando o metadado não traz GPS.
+          Com a IA ligada (`VLM_INFERENCE_URL`), a classificação vem do modelo;
+          sem ela, usa stub local.
         </p>
       </section>
-
-      {outcomes.length > 0 ? (
-        <section className="card">
-          <h2 className="section-title">Resultado do envio</h2>
-          <p className="muted" style={{ fontSize: 12, marginTop: 0 }}>
-            {okCount} registrada{okCount === 1 ? "" : "s"}
-            {failCount > 0 ? ` · ${failCount} falha${failCount === 1 ? "" : "s"}` : ""}
-          </p>
-          <div className="alert-list">
-            {outcomes.map((o) =>
-              o.status === "ok" ? (
-                <Link className="alert" href={`/capturas/${o.captura.id}`} key={o.key}>
-                  <span className="alert-dot" style={{ background: "var(--ok)" }} />
-                  <div className="alert-main">
-                    <div className="alert-title">{o.name}</div>
-                    <div className="alert-meta">
-                      {o.captura.alturaCm ?? "—"} cm · GPS{" "}
-                      {o.captura.lat.toFixed(5)}, {o.captura.lon.toFixed(5)}
-                    </div>
-                  </div>
-                  <StatusPill value={o.captura.classe as Classe | null} />
-                </Link>
-              ) : (
-                <div className="alert" key={o.key}>
-                  <span
-                    className="alert-dot"
-                    style={{ background: "var(--danger)" }}
-                  />
-                  <div className="alert-main">
-                    <div className="alert-title">{o.name}</div>
-                    <div className="alert-meta">{o.message}</div>
-                  </div>
-                </div>
-              ),
-            )}
-          </div>
-          {okCount > 0 ? (
-            <div className="toolbar" style={{ marginTop: 14 }}>
-              <Link className="btn btn-primary" href="/">
-                Ver no painel
-              </Link>
-              <Link className="btn" href="/rodovias">
-                Ver em rodovias
-              </Link>
-              <Link className="btn" href="/mapa">
-                Abrir mapa
-              </Link>
-            </div>
-          ) : null}
-        </section>
-      ) : null}
+      {outcomes.length > 0 ? <NovaCapturaResults outcomes={outcomes} /> : null}
     </>
   );
 }
