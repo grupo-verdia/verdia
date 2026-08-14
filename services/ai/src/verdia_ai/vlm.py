@@ -47,10 +47,11 @@ class VlmResponse(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    altura_estimada_cm: AlturaEstimadaCm | None
+    # Ordem alterada: Força a IA a gerar o raciocínio (justificativa) ANTES dos números.
     vegetacao_visivel: bool
-    confianca_declarada: float = Field(ge=0.0, le=1.0)
     justificativa: str = Field(min_length=1)
+    altura_estimada_cm: AlturaEstimadaCm | None
+    confianca_declarada: float = Field(ge=0.0, le=1.0)
 
     @field_validator("justificativa", mode="before")
     @classmethod
@@ -66,10 +67,10 @@ class VlmVerdict(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     classe: Classe | None
-    altura_estimada_cm: AlturaEstimadaCm | None
     vegetacao_visivel: bool
-    confianca_declarada: float = Field(ge=0.0, le=1.0)
     justificativa: str = Field(min_length=1)
+    altura_estimada_cm: AlturaEstimadaCm | None
+    confianca_declarada: float = Field(ge=0.0, le=1.0)
     model: str
     fake: bool = False
 
@@ -130,7 +131,7 @@ def classify_image(
     model: str | None = None,
     api_key: str | None = None,
     base_url: str | None = None,
-    temperature: float = 0.0,
+    temperature: float = 0.2,  # Respiro na criatividade visual
     fake: bool | None = None,
 ) -> VlmVerdict:
     """Estimate roadside grass height and map to baixa|média|alta|null."""
@@ -140,6 +141,9 @@ def classify_image(
         mime_type=mime_type,
         source_name=source_name,
     )
+
+    # 🔴 DESATIVAÇÃO DO MOCK: Garante que o modelo vai SEMPRE processar a imagem.
+    fake = False
 
     if fake is None:
         fake = use_fake_mode()
@@ -277,14 +281,25 @@ def _generate_once(
         response_mime_type="application/json",
         response_json_schema=RESPONSE_JSON_SCHEMA,
     )
+
+    # Injeção Direta (Zero-Shot) baseada nas regras de geometria/contraste do prompt
+    contents_list = [
+        types.Content(
+            role="user",
+            parts=[
+                # CORREÇÃO AQUI: Passando o argumento com keyword 'text='
+                types.Part.from_text(text=USER_PROMPT),
+                types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+            ]
+        )
+    ]
+
     response = client.models.generate_content(
         model=model,
-        contents=[
-            types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-            USER_PROMPT,
-        ],
+        contents=contents_list,
         config=config,
     )
+    
     text = (response.text or "").strip()
     if not text:
         raise VlmError("empty model response")
