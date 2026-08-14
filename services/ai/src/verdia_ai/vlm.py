@@ -126,6 +126,7 @@ def classify_image(
     image: Path | str | bytes,
     *,
     mime_type: str | None = None,
+    source_name: str | None = None,
     model: str | None = None,
     api_key: str | None = None,
     base_url: str | None = None,
@@ -134,12 +135,16 @@ def classify_image(
 ) -> VlmVerdict:
     """Estimate roadside grass height and map to baixa|média|alta|null."""
     resolved_model = resolve_model(model)
-    image_bytes, resolved_mime, source_name = _load_image(image, mime_type=mime_type)
+    image_bytes, resolved_mime, resolved_name = _load_image(
+        image,
+        mime_type=mime_type,
+        source_name=source_name,
+    )
 
     if fake is None:
         fake = use_fake_mode()
     if fake:
-        return _fake_verdict(resolved_model, source_name=source_name)
+        return _fake_verdict(resolved_model, source_name=resolved_name)
 
     key = (
         api_key if api_key is not None else os.environ.get("GOOGLE_API_KEY") or ""
@@ -290,19 +295,21 @@ def _load_image(
     image: Path | str | bytes,
     *,
     mime_type: str | None,
+    source_name: str | None = None,
 ) -> tuple[bytes, str, str]:
     if isinstance(image, bytes):
         resolved = mime_type or "image/jpeg"
-        return image, resolved, "bytes"
+        return image, resolved, source_name or "bytes"
 
     path = Path(image)
     if not path.is_file():
         raise VlmError(f"image not found: {path}")
     data = path.read_bytes()
+    name = source_name or path.name
     if mime_type:
-        return data, mime_type, path.name
+        return data, mime_type, name
     guessed, _ = mimetypes.guess_type(path.name)
-    return data, guessed or "image/jpeg", path.name
+    return data, guessed or "image/jpeg", name
 
 
 def _is_image_path(path: Path) -> bool:

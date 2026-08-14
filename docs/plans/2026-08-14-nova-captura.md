@@ -6,10 +6,12 @@ Browser multi-select geotagged upload as the photo ingest path.
 
 1. **Nova captura** tab → select images (optional rodovia / KM / sentido).
 2. Client reads EXIF GPS; files without valid lat/lon are rejected.
-3. `POST /api/capturas/ingest` classifies (stub mirroring `services/ai` fake heuristics) and persists via the captura store.
+3. `POST /api/capturas/ingest` classifies via Inference HTTP (or stub) and persists.
 4. Dashboard KPIs, ocorrências, mapa e rodovias refresh from the same store (`verdia:data-refresh`).
 
 ## AI
 
-- Stub until Inference HTTP lands. Reserved env: `VLM_INFERENCE_URL`.
-- Filename hints (`alta` / `media` / `baixa` / `na`) drive Motiva height bands in stub mode.
+- `services/ai`: `uv run python -m verdia_ai serve` → `POST /v1/classify`.
+- Web: `VLM_INFERENCE_URL=http://127.0.0.1:8000` in `.env.local`.
+- Unset URL → local filename stub. HTTP failure → captura still saved with `inferenceError`.
+- Live VLM needs `GOOGLE_API_KEY`; offline: `VLM_FAKE=1` on the AI process.

@@ -3,8 +3,8 @@
 Create the Vercel and Supabase projects, set env vars, then push — later commits
 auto-deploy the web app.
 
-**Status (2026-08):** shareable Motiva demo is web + data. AI is a local VLM
-prototype (CLI / notebook); HTTP Inference API for live ingest is not shipped yet.
+**Status (2026-08):** shareable Motiva demo is web + data. AI Inference HTTP runs
+locally (`services/ai`) and is wired to Nova captura via `VLM_INFERENCE_URL`.
 
 ## Stack
 
@@ -12,7 +12,7 @@ prototype (CLI / notebook); HTTP Inference API for live ingest is not shipped ye
 |-------|------|--------|
 | Web (`apps/web`) | **Vercel** | Root Directory = `apps/web`; password gate via `DEMO_PASSWORD` |
 | Data | **Hosted Supabase** | Postgres + Storage; apply migrations in order |
-| AI (`services/ai`) | Local | VLM CLI / notebook; HTTP API later if needed |
+| AI (`services/ai`) | Local | `python -m verdia_ai serve`; web uses `VLM_INFERENCE_URL` |
 
 Public URL uses the provider default (`*.vercel.app`). No custom domain.
 
@@ -40,7 +40,7 @@ Public URL uses the provider default (`*.vercel.app`). No custom domain.
    |------|--------|
    | `DEMO_PASSWORD` | Shared demo password |
    | `SUPABASE_URL` | From Supabase |
-   | `SUPABASE_SECRET_KEY` | From Supabase secret key `sb_secret_…` (server-only; never expose to the browser) |
+   | `VLM_INFERENCE_URL` | Optional; URL of local/remote Inference API (`http://…:8000`) |
 
 5. Deploy. Note the URL, e.g. `https://verdia-….vercel.app`.
 
@@ -53,7 +53,7 @@ via BFF or Supabase if needed.
 
 ## 4. Local development
 
-- AI: VLM CLI / notebook (`services/ai/README.md`).
+- AI: Inference HTTP + CLI (`services/ai/README.md`).
 - Web: see root [`README.md`](../README.md) and [`apps/web/.env.example`](../apps/web/.env.example).
 
 ## Env cheat sheet
@@ -63,4 +63,6 @@ via BFF or Supabase if needed.
 | `DEMO_PASSWORD` | Vercel + local web |
 | `SUPABASE_URL` | Vercel (+ local if not using in-memory) |
 | `SUPABASE_SECRET_KEY` | Vercel (+ local) |
+| `VLM_INFERENCE_URL` | Local/Vercel web → AI `serve` URL |
 | `GOOGLE_API_KEY` | Local AI VLM live calls (`services/ai`) |
+| `VLM_FAKE` | Local AI offline stub (`1`) |

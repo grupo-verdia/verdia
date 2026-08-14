@@ -1,1 +1,1 @@
-"""verdia ML — VLM grass classifier prototype (HTTP API deferred)."""
+"""verdia ML — VLM grass classifier + lean Inference HTTP API."""

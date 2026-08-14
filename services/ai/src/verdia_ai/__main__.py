@@ -1,20 +1,30 @@
-"""Package entry — HTTP serve is deferred; use the classify CLI."""
+"""Package entry — serve Inference API or print help."""
 
 from __future__ import annotations
 
 import sys
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    if args and args[0] == "serve":
+        from verdia_ai.api import main as serve_main
+
+        serve_main()
+        return 0
+
     print(
-        "HTTP Inference API is deferred.\n"
-        "Classify photos with:\n"
-        "  uv run python -m verdia_ai.classify path/to/photos\n"
-        "  VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary",
+        "verdia AI\n"
+        "  Serve Inference API:\n"
+        "    uv run python -m verdia_ai serve\n"
+        "    VLM_FAKE=1 uv run python -m verdia_ai serve\n"
+        "  Classify folder (CLI):\n"
+        "    uv run python -m verdia_ai.classify path/to/photos\n"
+        "    VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary",
         file=sys.stderr,
     )
-    raise SystemExit(2)
+    return 2
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
