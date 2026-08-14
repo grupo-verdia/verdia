@@ -11,6 +11,7 @@ import {
   classifyImageStub,
 } from "@/lib/ingest/classify";
 import { readGeotagFromImage } from "@/lib/ingest/exif-gps";
+import { resolveGeotag } from "@/lib/ingest/resolve-geotag";
 import {
   createMemoryStore,
   setCapturaStore,
@@ -92,6 +93,39 @@ describe("classifyForIngest HTTP", () => {
     });
     expect(result.classe).toBeNull();
     expect(result.inferenceError).toContain("GOOGLE_API_KEY");
+  });
+});
+
+describe("resolveGeotag", () => {
+  it("prefers EXIF over manual values", () => {
+    const resolved = resolveGeotag(
+      { lat: -23.5, lon: -46.6, capturedAt: "2026-08-14T12:00:00.000Z" },
+      { lat: "1", lon: "2" },
+    );
+    expect(resolved.ok).toBe(true);
+    if (resolved.ok) {
+      expect(resolved.value.lat).toBe(-23.5);
+      expect(resolved.value.lon).toBe(-46.6);
+    }
+  });
+
+  it("uses manual lat/lon when EXIF is missing", () => {
+    const resolved = resolveGeotag(null, { lat: "-23,55", lon: "-46.63" });
+    expect(resolved.ok).toBe(true);
+    if (resolved.ok) {
+      expect(resolved.value.lat).toBeCloseTo(-23.55, 5);
+      expect(resolved.value.lon).toBeCloseTo(-46.63, 5);
+    }
+  });
+
+  it("rejects when EXIF and manual are both missing", () => {
+    const resolved = resolveGeotag(null, { lat: "", lon: "" });
+    expect(resolved.ok).toBe(false);
+  });
+
+  it("rejects out-of-range manual coordinates", () => {
+    const resolved = resolveGeotag(null, { lat: "99", lon: "0" });
+    expect(resolved.ok).toBe(false);
   });
 });
 
