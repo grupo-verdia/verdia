@@ -11,9 +11,9 @@ const PRIORITY_LABEL = {
 } as const;
 
 const PRIORITY_STYLE = {
-  alta: { bg: "#fef2f2", color: "#b42318", border: "#b42318" },
-  média: { bg: "#fff7ed", color: "#c47a12", border: "#c47a12" },
-  baixa: { bg: "#f0fdf4", color: "#2f6b3a", border: "#2f6b3a" },
+  alta: { bg: "#eebbbb", color: "#b42318", border: "#b42318" },
+  média: { bg: "#eed8b3", color: "#c47a12", border: "#c47a12" },
+  baixa: { bg: "#d2e293", color: "#2f6b3a", border: "#2f6b3a" },
 } as const;
 
 export type RodoviaCard = {
