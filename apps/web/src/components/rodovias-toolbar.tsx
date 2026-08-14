@@ -114,6 +114,12 @@ export function RodoviasToolbar({
         <button
           type="button"
           className="btn"
+          style={{
+            color: "#eb1f1f7c",
+            backgroundColor: "#091411",
+            fontSize: "0.75rem",
+            fontWeight: 700,
+          }}
           disabled={busy || cardsEmpty}
           onClick={onClear}
         >
