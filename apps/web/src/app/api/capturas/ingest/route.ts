@@ -143,6 +143,11 @@ export async function POST(request: NextRequest) {
         classification: {
           fake: verdict.fake,
           modelVersion: verdict.modelVersion,
+          justificativa: verdict.justificativa,
+          classe: verdict.classe,
+          alturaCm: verdict.alturaCm,
+          confidence: verdict.confidence,
+          inferenceError: verdict.inferenceError,
         },
       },
       { status: 201 },

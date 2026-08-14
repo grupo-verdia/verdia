@@ -8,6 +8,8 @@ export type ClassifyResult = {
   modelVersion: string;
   inferenceError: string | null;
   fake: boolean;
+  /** Short AI rationale shown on the upload report. */
+  justificativa: string | null;
 };
 
 export type ClassifyImageInput = {
@@ -17,6 +19,23 @@ export type ClassifyImageInput = {
 };
 
 const STUB_MODEL = "stub-vlm-0.1";
+
+function stubJustificativa(classe: Classe | null): string {
+  switch (classe) {
+    case "alta":
+      return "Vegetação alta na margem da rodovia; prioridade de intervenção elevada.";
+    case "média":
+      return "Altura intermediária da grama; acompanhar o ciclo de manutenção.";
+    case "baixa":
+      return "Vegetação baixa, dentro do controle operacional.";
+    case null:
+      return "Faixa lateral sem vegetação visível ou não classificável.";
+    default: {
+      const _exhaustive: never = classe;
+      return _exhaustive;
+    }
+  }
+}
 
 /**
  * Offline stub mirroring `services/ai` fake filename heuristics.
@@ -34,6 +53,7 @@ export function classifyImageStub(filename: string): ClassifyResult {
       modelVersion: STUB_MODEL,
       inferenceError: null,
       fake: true,
+      justificativa: stubJustificativa(null),
     };
   }
 
@@ -59,13 +79,15 @@ export function classifyImageStub(filename: string): ClassifyResult {
   }
 
   const alturaCm = (minCm + maxCm) / 2;
+  const classe = classeFromAlturaCm(alturaCm);
   return {
-    classe: classeFromAlturaCm(alturaCm),
+    classe,
     alturaCm,
     confidence,
     modelVersion: STUB_MODEL,
     inferenceError: null,
     fake: true,
+    justificativa: stubJustificativa(classe),
   };
 }
 
@@ -75,6 +97,7 @@ type VlmHttpBody = {
   confidence?: unknown;
   model_version?: unknown;
   fake?: unknown;
+  justificativa?: unknown;
   detail?: unknown;
 };
 
@@ -103,6 +126,10 @@ function parseHttpVerdict(body: VlmHttpBody): ClassifyResult {
   if (alturaCm === undefined) {
     throw new Error("invalid altura_cm from inference API");
   }
+  const justificativa =
+    typeof body.justificativa === "string" && body.justificativa.trim()
+      ? body.justificativa.trim()
+      : stubJustificativa(classe);
   return {
     classe,
     alturaCm,
@@ -110,6 +137,7 @@ function parseHttpVerdict(body: VlmHttpBody): ClassifyResult {
     modelVersion: body.model_version,
     inferenceError: null,
     fake: body.fake === true,
+    justificativa,
   };
 }
 
@@ -167,6 +195,7 @@ export async function classifyForIngest(
       modelVersion: "inference-error",
       inferenceError: message,
       fake: false,
+      justificativa: null,
     };
   }
 }

@@ -7,7 +7,8 @@ Browser multi-select geotagged upload as the photo ingest path.
 1. **Nova captura** tab → select images (optional rodovia / KM / sentido / lat·lon manual).
 2. Client reads EXIF GPS when present; otherwise uses manual latitude/longitude.
 3. `POST /api/capturas/ingest` classifies via Inference HTTP (or stub) and persists.
-4. Dashboard KPIs, ocorrências, mapa e rodovias refresh from the same store (`verdia:data-refresh`).
+4. UI keeps the image on screen and shows a report: AI phrase, classe, and priority.
+5. Dashboard KPIs, ocorrências, mapa e rodovias refresh from the same store (`verdia:data-refresh`).
 
 ## AI
 

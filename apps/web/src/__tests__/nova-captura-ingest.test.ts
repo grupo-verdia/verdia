@@ -40,6 +40,12 @@ describe("classifyImageStub", () => {
     expect(classifyImageStub("bordo_na.jpg").classe).toBeNull();
     expect(classifyImageStub("sem_hint.jpg").classe).toBe("média");
   });
+
+  it("includes a short justificativa for the upload report", () => {
+    const alta = classifyImageStub("bordo_alta.jpg");
+    expect(alta.justificativa).toMatch(/prioridade/i);
+    expect(classifyImageStub("bordo_na.jpg").justificativa).toMatch(/vegetação/i);
+  });
 });
 
 describe("classifyForIngest HTTP", () => {
@@ -170,13 +176,14 @@ describe("POST /api/capturas/ingest", () => {
         rodoviaId: string | null;
         km: number | null;
       };
-      classification: { fake: boolean };
+      classification: { fake: boolean; justificativa: string | null };
     };
     expect(body.captura.classe).toBe("alta");
     expect(body.captura.alturaCm).toBe(50);
     expect(body.captura.rodoviaId).toBe("sp-330");
     expect(body.captura.km).toBe(12.5);
     expect(body.classification.fake).toBe(true);
+    expect(body.classification.justificativa).toMatch(/prioridade/i);
 
     const dashboard = await loadDashboardCapturas();
     expect(dashboard).toHaveLength(1);
