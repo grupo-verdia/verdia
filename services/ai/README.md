@@ -1,9 +1,15 @@
 # verdia AI: VLM + Inference API
 
-Hosted Gemma VLM estimates roadside grass height; code maps Motiva cm bands to
-`baixa` | `média` | `alta` (or `null` when height is N/A). Module + CLI + notebook
-+ optional local HTTP API. On Vercel, Nova captura calls Google AI Studio with
-`GOOGLE_API_KEY` on the web app.
+Estimates roadside grass height in cm. Code maps Motiva bands to
+`baixa` | `média` | `alta` (`null` when the strip is not visible or has no
+grass): below 10 cm, 10-30 cm, above 30 cm.
+
+This package is the VLM module, CLI, notebook, and optional local HTTP.
+On Vercel (and typical local Nova captura), the **web app** calls Google AI
+Studio with `GOOGLE_API_KEY`. Use this server only when that key is unset on
+the web process.
+
+Domain: [`CONTEXT.md`](../../CONTEXT.md). Web ingest: [`apps/web/README.md`](../../apps/web/README.md).
 
 ## Local
 
@@ -15,9 +21,6 @@ Needs `GOOGLE_API_KEY` for live Google AI Studio calls; optional `VLM_MODEL`,
 `VLM_BASE_URL`. Offline stub: `VLM_FAKE=1` or `--fake`.
 
 ### Inference HTTP (optional local)
-
-The web app classifies with `GOOGLE_API_KEY` when set. Use this server only if
-that key is **unset** on the web process:
 
 ```bash
 # Fake / CI-safe (no Google key)
@@ -36,6 +39,8 @@ In `apps/web/.env.local` set:
 ```bash
 VLM_INFERENCE_URL=http://127.0.0.1:8000
 ```
+
+Do not set `VLM_INFERENCE_URL` on Vercel.
 
 ### CLI folder classify
 

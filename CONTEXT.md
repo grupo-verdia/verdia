@@ -3,9 +3,9 @@
 verdia classifies roadside grass height from a geotagged photo so Motiva can
 prioritize mowing. Today that judgment is done by eye ("olhômetro").
 
-This is an academic prototype. We do not have Motiva's real data. Photos are
-generic geotagged laterals. We do not assume a 360º camera. The app runs
-end-to-end: upload → classify → persist → dashboard / map / planejamento.
+We do not have Motiva's real data. Photos are generic geotagged laterals. We
+do not assume a 360º camera. The app runs end-to-end: upload → classify →
+persist → dashboard / map / planejamento.
 
 ## Motiva
 

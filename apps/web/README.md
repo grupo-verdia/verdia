@@ -1,7 +1,26 @@
 # verdia web (`apps/web`)
 
-Next.js (TypeScript) product surface: dashboard, map, planning, observability,
-gated by a single shared password.
+Operator app for Motiva roadside vegetation. Portuguese UI, shared
+`DEMO_PASSWORD`. A geotagged photo becomes a captura, gets a classe, and shows
+up on the dashboard, map, and planejamento.
+
+Domain terms: [`CONTEXT.md`](../../CONTEXT.md). Repo runbook:
+[`README.md`](../../README.md).
+
+## Screens
+
+| Route | Label |
+|------|--------|
+| `/` | Visão geral |
+| `/nova-captura` | Nova captura (upload de fotos) |
+| `/mapa` | Mapa (marcadores por classe, sem PostGIS) |
+| `/rodovias` | Rodovias e planilhas (Excel + correção da classe) |
+| `/planejamento` | Planejamento (severidade, depois rodovia, depois km) |
+| `/observabilidade` | Observabilidade |
+
+Nova captura prefers EXIF GPS; if missing, the operator can type latitude and
+longitude. **Rodovias e planilhas** is also how you import/export Excel and
+override a classe.
 
 ## Local
 
@@ -12,17 +31,11 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). The BFF requires Supabase
-env vars. Apply migrations, then use **Nova captura** or **Rodovias e planilhas**
-to add data.
+env vars. Apply migrations, then add data via **Nova captura** or **Rodovias e
+planilhas**.
 
-Nova captura uses Google AI Studio when `GOOGLE_API_KEY` is set in `.env.local`.
-Without it, classification falls back to the local Python URL or a filename stub.
-
-### Mapa de trechos
-
-Password-gated [`/mapa`](http://localhost:3000/mapa) plots each captura (no
-PostGIS). Markers are colored by classe. [`/planejamento`](http://localhost:3000/planejamento)
-is the maintenance queue (severidade, then rodovia, then KM) with ordem on the map.
+Classification: `GOOGLE_API_KEY` (Google AI Studio) → else `VLM_INFERENCE_URL`
+(local Python) → else a filename stub. Failed inference still saves the captura.
 
 ### Supabase
 
@@ -36,4 +49,5 @@ npm test
 npm run typecheck
 ```
 
-See the [repo README](../../README.md) for running the ML service alongside this app.
+The running app needs Supabase. Tests inject an in-memory store. To run the
+Python classifier beside this app, see the [repo README](../../README.md).

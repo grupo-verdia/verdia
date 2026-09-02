@@ -1,16 +1,40 @@
 # verdia
 
-Academic Motiva prototype: geotagged roadside photos → vegetation classe (`baixa` <
-`média` < `alta`) → maintenance priority for **trechos**.
+verdia classifies roadside grass height from a geotagged photo so Motiva can
+prioritize mowing. Today that work is done by eye ("olhômetro").
 
-Monorepo layout:
+[Motiva](https://www.motiva.com.br/) (formerly Grupo CCR) runs highway, rail, and
+airport concessions. verdia is only for vegetação na margem de rodovias:
+classe → severidade → planejamento.
+
+We do not have Motiva's real data. Photos are generic geotagged laterals.
+We do not assume a 360 camera.
+
+Flow: upload or Excel import → classify → persist → dashboard / map /
+planejamento. Glossary: [`CONTEXT.md`](./CONTEXT.md). Deploy:
+[`docs/DEPLOY.md`](./docs/DEPLOY.md).
+
+## Product
+
+A **captura** is one geotagged, timestamped photo. No GPS, no captura (EXIF, or
+the operator types lat/lon). Each captura defines one **trecho** of 500 m.
+
+**Classe** is an ordered height scale from Motiva bands: below 10 cm `baixa`,
+10-30 cm `média`, above 30 cm `alta`. Null only when the roadside strip is not
+visible or has no grass. **Severidade** follows classe (`alta` first).
+
+Screens (UI in Portuguese): **Visão geral**, **Nova captura**, **Mapa**,
+**Rodovias e planilhas** (Excel + correção da classe), **Planejamento**,
+**Observabilidade**.
+
+Not built: video + GPS sync, drift detection, route optimization, Supabase Auth.
+
+## Layout
 
 | Path | Role |
 |------|------|
-| `apps/web` | Next.js (TypeScript) product + BFF, shared-password gate |
-| `services/ai` | Python VLM grass classifier + Inference HTTP |
-
-Domain glossary: [`CONTEXT.md`](./CONTEXT.md). Deploy: [`docs/DEPLOY.md`](./docs/DEPLOY.md).
+| `apps/web` | Next.js (TypeScript) app + BFF, shared-password gate |
+| `services/ai` | Python VLM grass classifier + optional Inference HTTP |
 
 ## Prerequisites
 
@@ -64,10 +88,10 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Unauthenticated requests are
-redirected to `/login`; the shared `DEMO_PASSWORD` unlocks the app. The home
-dashboard lists persisted **capturas** from Supabase (apply `supabase/migrations/`
-first). Without those env vars the app does not start a store.
+Open [http://localhost:3000](http://localhost:3000). Unauthenticated requests go
+to `/login`; the shared `DEMO_PASSWORD` unlocks the app. The home dashboard lists
+persisted **capturas** from Supabase (apply `supabase/migrations/` first).
+Without those env vars the app does not start a store.
 
 Tests / typecheck:
 
