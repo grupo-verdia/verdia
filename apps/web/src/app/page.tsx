@@ -35,11 +35,6 @@ export default async function Home() {
         </div>
       </div>
       <DashboardLive initialCapturas={capturas} initialRodovias={rodovias} />
-      <p className="footer-note">
-        Os limites de altura exibidos no protótipo são parâmetros de demonstração
-        e devem ser substituídos pelos critérios operacionais definidos pela
-        Motiva.
-      </p>
     </>
   );
 }

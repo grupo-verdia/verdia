@@ -38,7 +38,7 @@ export default function LoginPage() {
         verdia
       </h1>
       <p className="page-subtitle" style={{ marginBottom: 18 }}>
-        Entre com a senha compartilhada do demo.
+        Entre com a senha compartilhada.
       </p>
       <label
         className="muted"

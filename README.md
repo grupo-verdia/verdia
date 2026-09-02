@@ -16,6 +16,7 @@ Domain glossary: [`CONTEXT.md`](./CONTEXT.md). Deploy: [`docs/DEPLOY.md`](./docs
 
 - Node.js 22+ and npm
 - Python 3.12+ and [uv](https://docs.astral.sh/uv/)
+- Supabase (hosted or `supabase start`) for the web app
 
 ## Run locally
 
@@ -58,15 +59,15 @@ uv run pytest
 
 ```bash
 cd apps/web
-cp .env.example .env.local   # set DEMO_PASSWORD
+cp .env.example .env.local   # set DEMO_PASSWORD, SUPABASE_URL, SUPABASE_SECRET_KEY
 npm install
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Unauthenticated requests are
 redirected to `/login`; the shared `DEMO_PASSWORD` unlocks the app. The home
-dashboard lists persisted **capturas** (in-memory by default; set Supabase env
-vars after applying `supabase/migrations/`).
+dashboard lists persisted **capturas** from Supabase (apply `supabase/migrations/`
+first). Without those env vars the app does not start a store.
 
 Tests / typecheck:
 

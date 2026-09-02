@@ -4,7 +4,8 @@ verdia classifies roadside grass height from a geotagged photo so Motiva can
 prioritize mowing. Today that judgment is done by eye ("olhômetro").
 
 This is an academic prototype. We do not have Motiva's real data. Photos are
-generic geotagged laterals. We do not assume a 360º camera.
+generic geotagged laterals. We do not assume a 360º camera. The app runs
+end-to-end: upload → classify → persist → dashboard / map / planejamento.
 
 ## Motiva
 
@@ -45,7 +46,8 @@ Use these terms in code, tests, and docs.
 3. Nova captura (web upload → classify → persist).
 4. Dashboard.
 5. Map of trechos.
-6. Observability: counters + model accuracy.
+6. Observability: counters from persisted capturas (volume, confiança, falhas,
+   overrides).
 7. Planning: trechos ordered by severidade, highlighted on the map.
 
 Not built: video frames + GPS sync, drift detection, route optimization, Supabase Auth.
@@ -62,5 +64,6 @@ VLM estimates roadside grass height. Code maps Motiva cm bands to
 - `services/ai` — Python VLM (module + CLI + notebook). Optional Inference HTTP
   (`python -m verdia_ai serve`).
 - Nova captura classifies via Google AI Studio, or local Python HTTP / stub.
-- Data: Supabase (Postgres + Storage).
+- Data: Supabase (Postgres + Storage). Required for the running web app
+  (memory store is tests-only).
 - Deploy: web on Vercel, data on Supabase. Runbook: `docs/DEPLOY.md`.

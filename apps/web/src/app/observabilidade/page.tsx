@@ -28,44 +28,6 @@ export default async function ObservabilidadePage() {
         initialCapturas={capturas}
         initialRodovias={rodovias}
       />
-      <div className="card" style={{ marginTop: 16 }}>
-        <h2 className="section-title">Pipeline operacional</h2>
-        <div className="alert-list">
-          <div className="alert">
-            <b style={{ fontFamily: "var(--font-mono)", color: "#e9ff3b" }}>
-              01
-            </b>
-            <div className="alert-main">
-              <div className="alert-title">Captura</div>
-              <div className="alert-meta">
-                Imagem/vídeo + GPS + timestamp + sentido + quilômetro.
-              </div>
-            </div>
-          </div>
-          <div className="alert">
-            <b style={{ fontFamily: "var(--font-mono)", color: "#e9ff3b" }}>
-              02
-            </b>
-            <div className="alert-main">
-              <div className="alert-title">Inferência</div>
-              <div className="alert-meta">
-                Modelo estima altura e classifica severidade.
-              </div>
-            </div>
-          </div>
-          <div className="alert">
-            <b style={{ fontFamily: "var(--font-mono)", color: "#e9ff3b" }}>
-              03
-            </b>
-            <div className="alert-main">
-              <div className="alert-title">Validação</div>
-              <div className="alert-meta">
-                Baixa confiança ou exceção entra para revisão humana.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   );
 }

@@ -19,32 +19,6 @@ export type LoadMapTrechosOptions = {
   severidade?: Severidade;
 };
 
-/** Marker colors by severidade — alta is visually emphatic for demos. */
-export const SEVERIDADE_MARKER: Record<
-  Severidade,
-  { color: string; radius: number; label: string }
-> = {
-  baixa: { color: "#2f6b3a", radius: 10, label: "baixa" },
-  média: { color: "#c47a12", radius: 12, label: "média" },
-  alta: { color: "#b42318", radius: 16, label: "alta" },
-};
-
-export function parseSeveridadeFilter(
-  value: string | undefined,
-): Severidade | undefined {
-  switch (value) {
-    case "baixa":
-    case "média":
-    case "alta":
-      return value;
-    case undefined:
-    case "":
-      return undefined;
-    default:
-      return undefined;
-  }
-}
-
 type TrechoPositionAggregate = {
   latSum: number;
   lonSum: number;

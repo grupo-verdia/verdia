@@ -6,10 +6,6 @@ import {
   type Captura,
   type Trecho,
 } from "@/lib/domain";
-import {
-  buildCapturasTemplate,
-  parseCapturasWorkbook,
-} from "@/lib/excel/capturas-xlsx";
 import type {
   CapturaStore,
   CreateCapturaInput,
@@ -18,17 +14,7 @@ import type {
 } from "@/lib/persistence/types";
 import { listMotivaRodovias } from "@/lib/rodovias";
 
-function seedDemoExcel(store: CapturaStore): void {
-  const parsed = parseCapturasWorkbook(buildCapturasTemplate(), "todas");
-  if (!parsed.ok) {
-    return;
-  }
-  for (const draft of parsed.drafts) {
-    void store.createCaptura(draft.input);
-  }
-}
-
-export function createMemoryStore(options?: { seedDemo?: boolean }): CapturaStore {
+export function createMemoryStore(): CapturaStore {
   const trechos = new Map<string, Trecho>();
   const capturas = new Map<string, Captura>();
   const objects = new Map<string, Uint8Array>();
@@ -132,8 +118,5 @@ export function createMemoryStore(options?: { seedDemo?: boolean }): CapturaStor
     },
   };
 
-  if (options?.seedDemo) {
-    seedDemoExcel(store);
-  }
   return store;
 }
