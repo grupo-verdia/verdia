@@ -14,6 +14,9 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000). Without Supabase env vars,
 the BFF uses an **in-memory** store (fine for local demos; data resets on restart).
 
+Nova captura uses Google AI Studio when `GOOGLE_API_KEY` is set in `.env.local`.
+Without it, classification falls back to the local Python URL or a filename stub.
+
 ### Persist capturas (seed via BFF)
 
 After logging in (cookie required for browser calls; curl can hit the API directly

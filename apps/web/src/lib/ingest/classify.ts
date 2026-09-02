@@ -1,6 +1,7 @@
 import { classeFromAlturaCm, isClasse, type Classe } from "@/lib/domain";
+import { classifyViaGoogle } from "@/lib/ingest/classify-google";
 
-/** Result of vegetation classification (VLM HTTP or local stub). */
+/** Result of vegetation classification (Google, Python HTTP, or stub). */
 export type ClassifyResult = {
   classe: Classe | null;
   alturaCm: number | null;
@@ -39,7 +40,7 @@ function stubJustificativa(classe: Classe | null): string {
 
 /**
  * Offline stub mirroring `services/ai` fake filename heuristics.
- * Used when `VLM_INFERENCE_URL` is unset (local UI without AI process).
+ * Used when Google and `VLM_INFERENCE_URL` are both unset.
  */
 export function classifyImageStub(filename: string): ClassifyResult {
   const stem = filename.replace(/\.[^.]+$/, "").toLowerCase();
@@ -171,14 +172,37 @@ async function classifyViaHttp(
   return parseHttpVerdict(body);
 }
 
+function failedClassification(message: string): ClassifyResult {
+  return {
+    classe: null,
+    alturaCm: null,
+    confidence: 0,
+    modelVersion: "inference-error",
+    inferenceError: message,
+    fake: false,
+    justificativa: null,
+  };
+}
+
 /**
  * Classify one image for Nova captura.
- * Prefers `VLM_INFERENCE_URL` (services/ai HTTP). Falls back to stub when unset.
- * On HTTP failure, returns null classe + inferenceError so the captura still persists.
+ * Prefers Google AI Studio (`GOOGLE_API_KEY`) so Vercel can classify without
+ * a Python host. Else `VLM_INFERENCE_URL`. Else filename stub.
+ * On live-call failure, captura still persists with inferenceError.
  */
 export async function classifyForIngest(
   input: ClassifyImageInput,
 ): Promise<ClassifyResult> {
+  const apiKey = process.env.GOOGLE_API_KEY?.trim();
+  if (apiKey) {
+    try {
+      return await classifyViaGoogle(input, apiKey);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "inference request failed";
+      return failedClassification(message);
+    }
+  }
   const inferenceUrl = process.env.VLM_INFERENCE_URL?.trim();
   if (!inferenceUrl) {
     return classifyImageStub(input.filename);
@@ -188,14 +212,6 @@ export async function classifyForIngest(
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "inference request failed";
-    return {
-      classe: null,
-      alturaCm: null,
-      confidence: 0,
-      modelVersion: "inference-error",
-      inferenceError: message,
-      fake: false,
-      justificativa: null,
-    };
+    return failedClassification(message);
   }
 }

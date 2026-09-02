@@ -25,17 +25,22 @@ Domain glossary: [`CONTEXT.md`](./CONTEXT.md). Standing decisions / plans: [`doc
 ```bash
 cd services/ai
 uv sync
-# Inference HTTP for the web app (fake mode needs no Google key)
+# Optional: Inference HTTP for the web app when GOOGLE_API_KEY is unset
 VLM_FAKE=1 uv run python -m verdia_ai serve
 ```
 
-In another terminal, point the web BFF at it (`apps/web/.env.local`):
+For the live classifier in the web app (Vercel and local Nova captura), set
+`GOOGLE_API_KEY` in `apps/web/.env.local` (and on Vercel). Same key as
+`services/ai/.env`.
+
+To use the local Python server instead, omit `GOOGLE_API_KEY` on the web
+process and point at it:
 
 ```bash
 VLM_INFERENCE_URL=http://127.0.0.1:8000
 ```
 
-Live VLM: set `GOOGLE_API_KEY` and omit `VLM_FAKE`. CLI folder classify still works:
+Python CLI folder classify still works:
 
 ```bash
 VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary

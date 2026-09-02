@@ -54,8 +54,8 @@ Use these terms consistently in code, tests, and docs.
 - **Nova captura** — web-app flow to upload one or more geotagged photos (multi-select);
   each valid file becomes a **captura** (infer → persist → show on dashboard/map). Ingest
   is browser-only (no CLI). Prefer EXIF GPS; when missing, the operator can enter
-  latitude/longitude manually. Classifies via Inference HTTP (`VLM_INFERENCE_URL`)
-  or local stub when unset.
+  latitude/longitude manually. Classifies via Google AI Studio (`GOOGLE_API_KEY`)
+  on Vercel; local Python Inference HTTP (`VLM_INFERENCE_URL`) or stub otherwise.
 
 ## Fronts (all in scope)
 
@@ -83,7 +83,8 @@ detection, real route optimization, Supabase Auth.
   API routes. Access gated by a **single shared password**.
 - `services/ai` — **Python**: VLM grass classifier prototype (module + CLI + notebook).
   Lean Inference HTTP (`python -m verdia_ai serve`).
-- **Nova captura** (in `apps/web`) — geotagged upload → Inference HTTP / stub → persist.
+- **Nova captura** (in `apps/web`) — geotagged upload → Google AI Studio (or local
+  Python HTTP / stub) → persist.
 - **Data:** **Supabase** (Postgres for metadata/predictions; Storage for images).
 - **Deploy:** web on **Vercel**, data on **Supabase**.
 

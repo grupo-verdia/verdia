@@ -12,7 +12,9 @@ Durable notes go in `docs/plans/YYYY-MM-DD-…`.
 
 - **Nova captura** is the only photo ingest path (browser multi-select geotagged upload). No CLI ingest / sample-route replay.
 - Missing/invalid GPS rejects that file unless the operator enters manual lat/lon. One captura → one trecho (default **500 m**).
-- Route: `POST /api/capturas/ingest` → Inference HTTP (`VLM_INFERENCE_URL`) or stub → captura store. Excel import remains for spreadsheet ops.
+- Route: `POST /api/capturas/ingest` → Google (`GOOGLE_API_KEY`) or Inference HTTP
+  (`VLM_INFERENCE_URL`) or stub → captura store. Excel import remains for spreadsheet ops.
+- Live Vercel classify: `docs/plans/2026-09-02-vercel-google-classify.md`.
 - Plan: `docs/plans/2026-08-14-nova-captura.md`.
 
 ## Deploy

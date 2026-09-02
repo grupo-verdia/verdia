@@ -4,6 +4,9 @@ import { classifyForIngest } from "@/lib/ingest/classify";
 import { getCapturaStore } from "@/lib/persistence";
 import { resolveRodoviaParam } from "@/lib/rodovias";
 
+/** Google VLM can exceed the default serverless budget (Hobby still caps lower). */
+export const maxDuration = 60;
+
 type IngestBody = {
   lat?: unknown;
   lon?: unknown;
