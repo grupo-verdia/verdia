@@ -47,7 +47,6 @@ class VlmResponse(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    # Ordem alterada: Força a IA a gerar o raciocínio (justificativa) ANTES dos números.
     vegetacao_visivel: bool
     justificativa: str = Field(min_length=1)
     altura_estimada_cm: AlturaEstimadaCm | None
@@ -131,7 +130,7 @@ def classify_image(
     model: str | None = None,
     api_key: str | None = None,
     base_url: str | None = None,
-    temperature: float = 0.2,  # Respiro na criatividade visual
+    temperature: float = 0.2,
     fake: bool | None = None,
 ) -> VlmVerdict:
     """Estimate roadside grass height and map to baixa|média|alta|null."""
@@ -141,9 +140,6 @@ def classify_image(
         mime_type=mime_type,
         source_name=source_name,
     )
-
-    # 🔴 DESATIVAÇÃO DO MOCK: Garante que o modelo vai SEMPRE processar a imagem.
-    fake = False
 
     if fake is None:
         fake = use_fake_mode()
@@ -282,15 +278,13 @@ def _generate_once(
         response_json_schema=RESPONSE_JSON_SCHEMA,
     )
 
-    # Injeção Direta (Zero-Shot) baseada nas regras de geometria/contraste do prompt
     contents_list = [
         types.Content(
             role="user",
             parts=[
-                # CORREÇÃO AQUI: Passando o argumento com keyword 'text='
                 types.Part.from_text(text=USER_PROMPT),
                 types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-            ]
+            ],
         )
     ]
 
@@ -299,7 +293,7 @@ def _generate_once(
         contents=contents_list,
         config=config,
     )
-    
+
     text = (response.text or "").strip()
     if not text:
         raise VlmError("empty model response")

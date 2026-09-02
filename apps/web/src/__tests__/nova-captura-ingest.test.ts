@@ -54,6 +54,7 @@ describe("classifyForIngest HTTP", () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
     delete process.env.VLM_INFERENCE_URL;
+    delete process.env.GOOGLE_API_KEY;
     vi.restoreAllMocks();
   });
 
@@ -157,6 +158,7 @@ describe("POST /api/capturas/ingest", () => {
   beforeEach(() => {
     setCapturaStore(createMemoryStore());
     delete process.env.VLM_INFERENCE_URL;
+    delete process.env.GOOGLE_API_KEY;
   });
 
   it("classifies, persists, and feeds dashboard indices", async () => {

@@ -1,6 +1,6 @@
 # verdia
 
-Academic Motiva demo: geotagged roadside photos → vegetation classe (`baixa` <
+Academic Motiva prototype: geotagged roadside photos → vegetation classe (`baixa` <
 `média` < `alta`) → maintenance priority for **trechos**.
 
 Monorepo layout:
@@ -10,8 +10,7 @@ Monorepo layout:
 | `apps/web` | Next.js (TypeScript) product + BFF, shared-password gate |
 | `services/ai` | Python VLM grass classifier + Inference HTTP |
 
-Domain glossary: [`CONTEXT.md`](./CONTEXT.md). Standing decisions / plans: [`docs/plans/`](./docs/plans/).
-
+Domain glossary: [`CONTEXT.md`](./CONTEXT.md). Deploy: [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
 ## Prerequisites
 
@@ -25,17 +24,22 @@ Domain glossary: [`CONTEXT.md`](./CONTEXT.md). Standing decisions / plans: [`doc
 ```bash
 cd services/ai
 uv sync
-# Inference HTTP for the web app (fake mode needs no Google key)
+# Optional: Inference HTTP for the web app when GOOGLE_API_KEY is unset
 VLM_FAKE=1 uv run python -m verdia_ai serve
 ```
 
-In another terminal, point the web BFF at it (`apps/web/.env.local`):
+For the live classifier in the web app (Vercel and local Nova captura), set
+`GOOGLE_API_KEY` in `apps/web/.env.local` (and on Vercel). Same key as
+`services/ai/.env`. Do not set `VLM_INFERENCE_URL` on Vercel.
+
+To use the local Python server instead, omit `GOOGLE_API_KEY` on the web
+process and point at it:
 
 ```bash
 VLM_INFERENCE_URL=http://127.0.0.1:8000
 ```
 
-Live VLM: set `GOOGLE_API_KEY` and omit `VLM_FAKE`. CLI folder classify still works:
+Python CLI folder classify still works:
 
 ```bash
 VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary
@@ -72,7 +76,7 @@ npm test
 npm run typecheck
 ```
 
-## Fully live deploy
+## Deploy
 
-Shareable Motiva demo stack (Vercel + hosted Supabase). See
-[`docs/DEPLOY.md`](./docs/DEPLOY.md).
+Vercel + hosted Supabase. Nova captura on Vercel classifies with `GOOGLE_API_KEY`.
+See [`docs/DEPLOY.md`](./docs/DEPLOY.md).

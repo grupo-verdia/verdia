@@ -1,10 +1,10 @@
 # Fully live deploy (Vercel + Supabase)
 
-Create the Vercel and Supabase projects, set env vars, then push — later commits
+Create the Vercel and Supabase projects, set env vars, then push. Later commits
 auto-deploy the web app.
 
-**Status (2026-08):** shareable Motiva demo is web + data. AI Inference HTTP runs
-locally (`services/ai`) and is wired to Nova captura via `VLM_INFERENCE_URL`.
+On Vercel, Nova captura calls Google with `GOOGLE_API_KEY`. Do not set
+`VLM_INFERENCE_URL` on Vercel. Python `serve` stays local (CLI / notebook).
 
 ## Stack
 
@@ -12,11 +12,11 @@ locally (`services/ai`) and is wired to Nova captura via `VLM_INFERENCE_URL`.
 |-------|------|--------|
 | Web (`apps/web`) | **Vercel** | Root Directory = `apps/web`; password gate via `DEMO_PASSWORD` |
 | Data | **Hosted Supabase** | Postgres + Storage; apply migrations in order |
-| AI (`services/ai`) | Local | `python -m verdia_ai serve`; web uses `VLM_INFERENCE_URL` |
+| AI | **Google AI Studio** | Nova captura calls Google from the Vercel ingest route |
 
 Public URL uses the provider default (`*.vercel.app`). No custom domain.
 
-## 1. Supabase (data plane)
+## 1. Supabase
 
 1. Create a Supabase project.
 2. In the SQL editor (or CLI), apply migrations in order from [`supabase/migrations/`](../supabase/migrations/):
@@ -38,18 +38,18 @@ Public URL uses the provider default (`*.vercel.app`). No custom domain.
 
    | Name | Value |
    |------|--------|
-   | `DEMO_PASSWORD` | Shared demo password |
+   | `DEMO_PASSWORD` | Shared password |
    | `SUPABASE_URL` | From Supabase |
-   | `VLM_INFERENCE_URL` | Optional; URL of local/remote Inference API (`http://…:8000`) |
+   | `SUPABASE_SECRET_KEY` | From Supabase |
+   | `GOOGLE_API_KEY` | Google AI Studio key (Nova captura live classify) |
 
 5. Deploy. Note the URL, e.g. `https://verdia-….vercel.app`.
 
 Auto-deploy: later pushes to the connected branch redeploy the web app.
 
-## 3. Live demo notes
+## 3. Access
 
-Presenters can use the Vercel URL + `DEMO_PASSWORD` for the web UI. Seed capturas
-via BFF or Supabase if needed.
+Use the Vercel URL + `DEMO_PASSWORD`. Seed capturas via BFF or Supabase if needed.
 
 ## 4. Local development
 
@@ -63,6 +63,6 @@ via BFF or Supabase if needed.
 | `DEMO_PASSWORD` | Vercel + local web |
 | `SUPABASE_URL` | Vercel (+ local if not using in-memory) |
 | `SUPABASE_SECRET_KEY` | Vercel (+ local) |
-| `VLM_INFERENCE_URL` | Local/Vercel web → AI `serve` URL |
-| `GOOGLE_API_KEY` | Local AI VLM live calls (`services/ai`) |
-| `VLM_FAKE` | Local AI offline stub (`1`) |
+| `VLM_INFERENCE_URL` | Local web only → Python `serve` (ignored if `GOOGLE_API_KEY` is set) |
+| `GOOGLE_API_KEY` | Vercel + local web (Nova captura); also local Python VLM |
+| `VLM_FAKE` | Local Python offline stub (`1`) |

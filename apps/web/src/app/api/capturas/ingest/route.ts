@@ -4,6 +4,9 @@ import { classifyForIngest } from "@/lib/ingest/classify";
 import { getCapturaStore } from "@/lib/persistence";
 import { resolveRodoviaParam } from "@/lib/rodovias";
 
+/** Google VLM can exceed the default serverless budget (Hobby still caps lower). */
+export const maxDuration = 60;
+
 type IngestBody = {
   lat?: unknown;
   lon?: unknown;
@@ -38,10 +41,7 @@ function parseOptionalNumber(
   return { ok: false, error: `${field} must be a number or null` };
 }
 
-/**
- * Nova captura ingest: geotagged photo → VLM classify → persist.
- * Feeds dashboard KPIs, ocorrências, mapa, e rodovias via the captura store.
- */
+/** Geotagged photo → VLM classify → persist. */
 export async function POST(request: NextRequest) {
   let raw: unknown;
   try {

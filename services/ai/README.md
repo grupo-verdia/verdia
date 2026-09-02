@@ -2,7 +2,8 @@
 
 Hosted Gemma VLM estimates roadside grass height; code maps Motiva cm bands to
 `baixa` | `média` | `alta` (or `null` when height is N/A). Module + CLI + notebook
-+ lean HTTP API for Nova captura.
++ optional local HTTP API. On Vercel, Nova captura calls Google AI Studio with
+`GOOGLE_API_KEY` on the web app.
 
 ## Local
 
@@ -13,7 +14,10 @@ uv sync
 Needs `GOOGLE_API_KEY` for live Google AI Studio calls; optional `VLM_MODEL`,
 `VLM_BASE_URL`. Offline stub: `VLM_FAKE=1` or `--fake`.
 
-### Inference HTTP (for `apps/web`)
+### Inference HTTP (optional local)
+
+The web app classifies with `GOOGLE_API_KEY` when set. Use this server only if
+that key is **unset** on the web process:
 
 ```bash
 # Fake / CI-safe (no Google key)

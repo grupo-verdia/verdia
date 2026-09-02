@@ -1,92 +1,66 @@
 # verdia — Context
 
-verdia turns roadside vegetation photos into maintenance intelligence for **Motiva**.
-Instead of judging when a stretch needs mowing by the human "olhômetro" (eyeballing),
-verdia classifies the state of the vegetation at the edge of a highway from a geotagged
-photo and helps **prioritize maintenance**.
+verdia classifies roadside grass height from a geotagged photo so Motiva can
+prioritize mowing. Today that judgment is done by eye ("olhômetro").
 
-This repository is an **academic prototype / demo**. We have **no access to Motiva's
-real data**, so we design for the real scenario but drive the demo with **public
-datasets**. The image source is treated as **generic** (one geotagged lateral photo at
-a time) — we do not assume a 360º camera.
+This is an academic prototype. We do not have Motiva's real data. Photos are
+generic geotagged laterals. We do not assume a 360º camera.
 
-## Motiva (customer context)
+## Motiva
 
-- **Website:** [https://www.motiva.com.br/](https://www.motiva.com.br/)
-- **About:** [Sobre a Motiva](https://www.motiva.com.br/motiva/sobre-a-motiva/)
-- **Who:** Motiva Infraestrutura de Mobilidade S.A. (formerly **Grupo CCR**). Brazil’s
-  largest mobility-infrastructure company; publicly listed (B3: MOTV3). Purpose:
-  *melhorar a vida das pessoas através da mobilidade*.
-- **Businesses:** concessions in **rodovias**, urban rail (trens / metrôs / VLT), and
-  aeroportos. ~37 concessions across 13 Brazilian states; ~5.000 km of administered
-  highways carrying 2M+ vehicles/day.
-- **Why verdia cares:** Motiva’s **Rodovias** platform owns roadside vegetation
-  maintenance along concession stretches. verdia is scoped to that highway maintenance
-  problem (classe → severidade → planning), not to rail or airports.
+[Motiva Infraestrutura de Mobilidade S.A.](https://www.motiva.com.br/)
+(formerly Grupo CCR) runs highway, rail, and airport concessions.
+verdia is only for roadside vegetation on rodovias: classe → severidade → planning.
 
-## The problem (from the field work)
-
-- **Rework:** low data volume and lack of intelligent planning.
-- **High cost:** excessive spending on crew logistics.
-- **No standardization:** analysis depends on the human "olhômetro".
-
-verdia targets: cost optimization, technical standardization, operational efficiency.
+[Sobre a Motiva](https://www.motiva.com.br/motiva/sobre-a-motiva/)
 
 ## Glossary
 
-Use these terms consistently in code, tests, and docs.
+Use these terms in code, tests, and docs.
 
-- **Trecho** — a stretch/segment of highway with a maintenance **severidade**. In the
-  product, each **captura** defines exactly one trecho (1:1): the photo stands for a
-  length of roadside at its GPS point. Default length is **500 m** (Motiva’s current
-  manual-analysis constant); the value may become configurable later.
-- **Altura da grama / classe** — the ordinal vegetation-height class of a trecho:
-  **baixa < média < alta**, mapped from estimated height (Motiva bands):
+- **Trecho** — a stretch of highway with a maintenance **severidade**. Each
+  **captura** defines exactly one trecho (1:1): the photo stands for a length of
+  roadside at its GPS point. Default length is **500 m** (Motiva’s current
+  manual-analysis constant).
+- **Altura da grama / classe** — ordinal vegetation-height class:
+  **baixa < média < alta**, from estimated height (Motiva bands):
   **h < 10 cm → baixa**, **10–30 cm → média**, **h > 30 cm → alta**.
-  **classe is null** (N/A) only when the roadside strip is not visible or has no grass;
-  the model should still estimate height under uncertainty (lower confidence), not omit it.
-  This is an *ordered* scale, not three unrelated labels.
-- **Captura** — a single geotagged, timestamped roadside photo (as if taken by a
-  vehicle-mounted camera driving a stretch). Without valid GPS, it is not a captura.
-  One captura creates one trecho.
-- **Severidade** — maintenance priority of a trecho, driven primarily by its classe
+  **classe is null** only when the roadside strip is not visible or has no grass.
+  Under uncertainty the model still estimates height (lower confidence).
+  This is an ordered scale, not three unrelated labels.
+- **Captura** — a single geotagged, timestamped roadside photo. Without valid GPS,
+  it is not a captura. One captura creates one trecho.
+- **Severidade** — maintenance priority of a trecho, driven primarily by classe
   (alta first).
-- **Nova captura** — web-app flow to upload one or more geotagged photos (multi-select);
-  each valid file becomes a **captura** (infer → persist → show on dashboard/map). Ingest
-  is browser-only (no CLI). Prefer EXIF GPS; when missing, the operator can enter
-  latitude/longitude manually. Classifies via Inference HTTP (`VLM_INFERENCE_URL`)
-  or local stub when unset.
+- **Nova captura** — web upload of one or more geotagged photos (multi-select).
+  Each valid file becomes a captura (infer → persist → dashboard/map).
+  Browser only (no CLI). Prefer EXIF GPS; if missing, the operator can enter
+  latitude/longitude. Classifies with Google AI Studio (`GOOGLE_API_KEY`) on
+  Vercel; otherwise local Python Inference HTTP (`VLM_INFERENCE_URL`) or a stub.
 
 ## Fronts (all in scope)
 
-1. **Classifier path (current):** hosted VLM prototype (`services/ai` module + CLI +
-   notebook). Plan: `docs/plans/2026-08-05-vlm-prototype.md`.
-2. **Inference API** — lean HTTP in `services/ai` (`POST /v1/classify`).
-3. **Nova captura** (web upload → classify → persist).
-4. **Dashboard** (results).
-5. **Geospatial map** of trechos.
-6. **Observability (lean):** basic counters + model accuracy.
-7. **Heuristic planning:** trechos ordered by severidade, highlighted on the map.
+1. Hosted VLM (`services/ai` module + CLI + notebook).
+2. Inference HTTP in `services/ai` (`POST /v1/classify`), optional local.
+3. Nova captura (web upload → classify → persist).
+4. Dashboard.
+5. Map of trechos.
+6. Observability: counters + model accuracy.
+7. Planning: trechos ordered by severidade, highlighted on the map.
 
-Future vision (documented, not built now): video frame extraction + GPS sync, drift
-detection, real route optimization, Supabase Auth.
+Not built: video frames + GPS sync, drift detection, route optimization, Supabase Auth.
 
 ## Data & modeling
 
-- **Current:** VLM estimates roadside grass height; code maps Motiva cm bands to
-  `baixa` | `média` | `alta` (or `null` for N/A).
-- Narrative stays fixed; concrete labels adapt to available public data.
+VLM estimates roadside grass height. Code maps Motiva cm bands to
+`baixa` | `média` | `alta` (or `null` for N/A).
 
 ## Architecture & stack (monorepo)
 
-- `apps/web` — **Next.js (TypeScript)**: dashboard, map, planning, observability, and
-  API routes. Access gated by a **single shared password**.
-- `services/ai` — **Python**: VLM grass classifier prototype (module + CLI + notebook).
-  Lean Inference HTTP (`python -m verdia_ai serve`).
-- **Nova captura** (in `apps/web`) — geotagged upload → Inference HTTP / stub → persist.
-- **Data:** **Supabase** (Postgres for metadata/predictions; Storage for images).
-- **Deploy:** web on **Vercel**, data on **Supabase**.
-
-## Decisions
-
-Standing stack / ingest / CI notes: `docs/plans/2026-08-05-standing-decisions.md`.
+- `apps/web` — Next.js (TypeScript): dashboard, map, planning, observability, API
+  routes. Access gated by a single shared password.
+- `services/ai` — Python VLM (module + CLI + notebook). Optional Inference HTTP
+  (`python -m verdia_ai serve`).
+- Nova captura classifies via Google AI Studio, or local Python HTTP / stub.
+- Data: Supabase (Postgres + Storage).
+- Deploy: web on Vercel, data on Supabase. Runbook: `docs/DEPLOY.md`.
