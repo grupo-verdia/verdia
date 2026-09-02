@@ -31,7 +31,7 @@ export default async function PlanejamentoPage() {
           <h1 className="page-title">Fila de prioridades</h1>
           <p className="page-subtitle">
             Ordenação por severidade (alta → média → baixa), depois rodovia e
-            KM — derivada das capturas persistidas.
+            KM, a partir das capturas persistidas.
           </p>
         </div>
       </div>

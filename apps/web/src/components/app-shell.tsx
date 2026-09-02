@@ -8,7 +8,6 @@ type AppShellProps = {
   children: React.ReactNode;
 };
 
-/** Operational shell; nav hidden on login. */
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const hideNav = pathname === "/login";

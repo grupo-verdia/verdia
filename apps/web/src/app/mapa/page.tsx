@@ -16,8 +16,7 @@ export default async function MapaPage() {
       <DataAutoRefresh />
       <div className="page-head">
         <div>
-          <div className="eyebrow">GEOPROCESSAMENTO</div>
-          <h1 className="page-title">Mapa operacional</h1>
+          <h1 className="page-title">Mapa</h1>
           <p className="page-subtitle">
             Localização de cada captura, severidade detectada e referência de
             quilômetro.

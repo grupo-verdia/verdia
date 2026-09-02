@@ -150,8 +150,8 @@ export function MapaOperacionalClient({
       role="img"
       aria-label={
         inPlan
-          ? "Mapa operacional de capturas com plano destacado"
-          : "Mapa operacional de capturas"
+          ? "Mapa de capturas com plano destacado"
+          : "Mapa de capturas"
       }
     />
   );

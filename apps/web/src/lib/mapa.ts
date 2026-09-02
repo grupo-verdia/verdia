@@ -26,7 +26,7 @@ type TrechoPositionAggregate = {
   classes: Array<Classe | null>;
 };
 
-/** Product read surface: trechos for the password-gated geospatial map. */
+/** Trechos for the map, positioned from captura lat/lon averages. */
 export async function loadMapTrechos(
   options: LoadMapTrechosOptions = {},
 ): Promise<MapTrecho[]> {

@@ -16,11 +16,9 @@ export default async function ObservabilidadePage() {
       <DataAutoRefresh />
       <div className="page-head">
         <div>
-          <div className="eyebrow">MODEL OPS · QUALIDADE DE DADOS</div>
           <h1 className="page-title">Observabilidade</h1>
           <p className="page-subtitle">
-            Acompanhe volume, confiança, falhas de inferência e intervenção
-            humana.
+            Volume, confiança, falhas de inferência e correções manuais.
           </p>
         </div>
       </div>

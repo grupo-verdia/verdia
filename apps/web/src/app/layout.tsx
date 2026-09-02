@@ -16,8 +16,8 @@ const mono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "verdia × MOTIVA",
-  description: "Monitoramento inteligente da vegetação nas rodovias Motiva.",
+  title: "verdia · Motiva",
+  description: "Monitoramento da vegetação nas rodovias Motiva.",
 };
 
 export default function RootLayout({

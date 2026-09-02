@@ -16,11 +16,10 @@ export default async function RodoviasPage() {
       <DataAutoRefresh />
       <div className="page-head">
         <div>
-          <div className="eyebrow">DADOS OPERACIONAIS</div>
-          <h1 className="page-title">Rodovias & planilhas</h1>
+          <h1 className="page-title">Rodovias e planilhas</h1>
           <p className="page-subtitle">
-            Uma visão tabular por rodovia, com importação/exportação Excel e
-            correção humana das previsões.
+            Tabela por rodovia, com importação e exportação Excel e correção
+            das previsões.
           </p>
         </div>
       </div>

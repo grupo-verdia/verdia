@@ -18,11 +18,9 @@ export default async function Home() {
       <DataAutoRefresh />
       <div className="page-head">
         <div>
-          <div className="eyebrow">CENTRO DE OPERAÇÕES · MOTIVA</div>
           <h1 className="page-title">Monitoramento de vegetação</h1>
           <p className="page-subtitle">
-            Visão operacional das capturas realizadas pelo veículo, classificação
-            da IA e prioridades de manutenção.
+            Capturas classificadas e prioridade de manutenção.
           </p>
         </div>
         <div className="toolbar">

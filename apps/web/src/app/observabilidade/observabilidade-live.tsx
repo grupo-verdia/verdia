@@ -41,12 +41,12 @@ export function ObservabilidadeLive({
         <Metric
           title="Confiança média"
           value={avg != null ? `${Math.round(avg * 100)}%` : "—"}
-          sub="score da IA"
+          sub="confiança média"
         />
         <Metric
           title="Correções humanas"
           value={manual.toString()}
-          sub="overwrites registrados"
+          sub="correções manuais"
         />
         <Metric
           title="Falhas"
@@ -62,7 +62,7 @@ export function ObservabilidadeLive({
           <Bar label="Baixa" value={baixas} total={capturas.length} />
         </section>
         <section className="card">
-          <h2 className="section-title">Qualidade operacional</h2>
+          <h2 className="section-title">Qualidade dos dados</h2>
           <Info
             label="Rodovias com dados"
             value={`${Math.round(coverage * 100)}%`}
@@ -72,7 +72,7 @@ export function ObservabilidadeLive({
             value={`${Math.round(high * 100)}%`}
           />
           <Info
-            label="Taxa de override"
+            label="Taxa de correção"
             value={`${capturas.length ? Math.round((manual / capturas.length) * 100) : 0}%`}
           />
           <Info
