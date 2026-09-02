@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveSupabaseConfig } from "@/lib/persistence";
+import {
+  getCapturaStore,
+  resetCapturaStore,
+  resolveSupabaseConfig,
+} from "@/lib/persistence";
 
 describe("resolveSupabaseConfig", () => {
   it("resolves url and secret key", () => {
@@ -36,5 +40,30 @@ describe("resolveSupabaseConfig", () => {
         SUPABASE_URL: "https://example.supabase.co",
       }),
     ).toBeNull();
+  });
+});
+
+describe("getCapturaStore", () => {
+  it("throws when Supabase env is missing", () => {
+    resetCapturaStore();
+    const previousUrl = process.env.SUPABASE_URL;
+    const previousKey = process.env.SUPABASE_SECRET_KEY;
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SECRET_KEY;
+    try {
+      expect(() => getCapturaStore()).toThrow(/Supabase is required/);
+    } finally {
+      if (previousUrl === undefined) {
+        delete process.env.SUPABASE_URL;
+      } else {
+        process.env.SUPABASE_URL = previousUrl;
+      }
+      if (previousKey === undefined) {
+        delete process.env.SUPABASE_SECRET_KEY;
+      } else {
+        process.env.SUPABASE_SECRET_KEY = previousKey;
+      }
+      resetCapturaStore();
+    }
   });
 });

@@ -93,7 +93,7 @@ export function DashboardLive({
         <section className="card map-card">
           <div className="map-card-head">
             <div>
-              <h2 className="section-title">Mapa operacional</h2>
+              <h2 className="section-title">Mapa</h2>
               <span className="muted" style={{ fontSize: 11 }}>
                 Cada ponto representa uma captura
               </span>

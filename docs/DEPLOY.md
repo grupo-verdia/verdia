@@ -49,7 +49,7 @@ Auto-deploy: later pushes to the connected branch redeploy the web app.
 
 ## 3. Access
 
-Use the Vercel URL + `DEMO_PASSWORD`. Seed capturas via BFF or Supabase if needed.
+Use the Vercel URL + `DEMO_PASSWORD`. Capturas persist in Supabase.
 
 ## 4. Local development
 
@@ -61,7 +61,7 @@ Use the Vercel URL + `DEMO_PASSWORD`. Seed capturas via BFF or Supabase if neede
 | Variable | Where |
 |----------|--------|
 | `DEMO_PASSWORD` | Vercel + local web |
-| `SUPABASE_URL` | Vercel (+ local if not using in-memory) |
+| `SUPABASE_URL` | Vercel + local web |
 | `SUPABASE_SECRET_KEY` | Vercel (+ local) |
 | `VLM_INFERENCE_URL` | Local web only → Python `serve` (ignored if `GOOGLE_API_KEY` is set) |
 | `GOOGLE_API_KEY` | Vercel + local web (Nova captura); also local Python VLM |

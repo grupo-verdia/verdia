@@ -6,12 +6,12 @@ export type CapturaDetail = {
   photoBytes: Uint8Array;
 };
 
-/** Product read surface: capturas visible on the password-gated dashboard. */
+/** Capturas listed on the dashboard. */
 export async function loadDashboardCapturas(): Promise<Captura[]> {
   return getCapturaStore().listCapturas();
 }
 
-/** Product read surface: captura detail with photo. */
+/** Captura detail with photo. */
 export async function loadCapturaDetail(
   id: string,
 ): Promise<CapturaDetail | null> {

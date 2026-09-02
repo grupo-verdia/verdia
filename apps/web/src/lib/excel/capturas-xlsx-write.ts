@@ -189,7 +189,7 @@ const TEMPLATE_ROWS: CapturasSheetRow[] = [
   },
 ];
 
-/** Motiva sample workbook for import demos (Rodovia column selects the corridor). */
+/** Motiva sample workbook for import (Rodovia column selects the corridor). */
 export function buildCapturasTemplate(): Uint8Array {
   return writeCapturasSheet(TEMPLATE_ROWS);
 }

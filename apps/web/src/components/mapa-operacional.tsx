@@ -34,16 +34,19 @@ export function MapaOperacional({
   capturas,
   rodovias,
   height = "100%",
+  planOrdemById,
 }: {
   capturas: Captura[];
   rodovias: Rodovia[];
   height?: string;
+  planOrdemById?: Readonly<Record<string, number>>;
 }) {
   return (
     <MapaOperacionalClient
       capturas={capturas}
       rodovias={rodovias}
       height={height}
+      planOrdemById={planOrdemById}
     />
   );
 }

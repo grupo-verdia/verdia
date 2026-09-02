@@ -1,4 +1,3 @@
-import { createMemoryStore } from "@/lib/persistence/memory";
 import type { CapturaStore } from "@/lib/persistence/types";
 import { createSupabaseStore } from "@/lib/persistence/supabase";
 
@@ -40,10 +39,12 @@ export function resolveSupabaseConfig(
 
 function createStoreFromEnv(): CapturaStore {
   const config = resolveSupabaseConfig();
-  if (config) {
-    return createSupabaseStore(config);
+  if (!config) {
+    throw new Error(
+      "Supabase is required. Set SUPABASE_URL and SUPABASE_SECRET_KEY.",
+    );
   }
-  return createMemoryStore({ seedDemo: true });
+  return createSupabaseStore(config);
 }
 
 export function getCapturaStore(): CapturaStore {

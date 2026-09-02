@@ -52,9 +52,8 @@ function compareKmNullsLast(a: number | null, b: number | null): number {
 }
 
 /**
- * Product read surface: heuristic plan — one row per captura (1:1 trecho),
- * ordered by severidade (alta → média → baixa), then rodovia, then km
- * ascending within that corridor (nulls last).
+ * Maintenance queue: one row per captura, ordered by severidade
+ * (alta → média → baixa), then rodovia, then km (nulls last).
  */
 export async function loadPlanTrechos(): Promise<PlanTrecho[]> {
   const capturas = await getCapturaStore().listCapturas();

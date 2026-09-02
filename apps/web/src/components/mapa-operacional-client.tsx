@@ -11,6 +11,8 @@ type Props = {
   capturas: Captura[];
   rodovias: Rodovia[];
   height?: string;
+  /** 1-based plan ordem keyed by trecho id (captura.trechoId). */
+  planOrdemById?: Readonly<Record<string, number>>;
 };
 
 const COLORS: Record<string, string> = {
@@ -19,10 +21,28 @@ const COLORS: Record<string, string> = {
   baixa: "#61d58b",
 };
 
+function markerIcon(color: string, ordem: number | undefined): L.DivIcon {
+  const inPlan = typeof ordem === "number";
+  const size = inPlan ? 22 : 14;
+  const ring = inPlan
+    ? "box-shadow:0 0 0 1px rgba(0,0,0,0.35),0 0 0 5px #111"
+    : "box-shadow:0 2px 9px #0008";
+  const badge = inPlan
+    ? `<span style="position:absolute;top:-0.55rem;right:-0.55rem;min-width:1.1rem;height:1.1rem;padding:0 0.15rem;border-radius:999px;background:#111;color:#fff;font:700 0.65rem/1.1rem sans-serif;text-align:center">${ordem}</span>`
+    : "";
+  return L.divIcon({
+    className: "",
+    html: `<span style="position:relative;display:block;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #fff;${ring}">${badge}</span>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
 export function MapaOperacionalClient({
   capturas,
   rodovias,
   height = "100%",
+  planOrdemById = {},
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -90,17 +110,15 @@ export function MapaOperacionalClient({
       }
 
       const color = COLORS[captura.classe ?? ""] ?? "#8da49d";
-      const icon = L.divIcon({
-        className: "",
-        html: `<span style="display:block;width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 2px 9px #0008"></span>`,
-        iconSize: [14, 14],
-        iconAnchor: [7, 7],
-      });
-
+      const ordem = planOrdemById[captura.trechoId];
+      const icon = markerIcon(color, ordem);
       const road = rodovias.find((item) => item.id === captura.rodoviaId);
+      const planLine =
+        typeof ordem === "number" ? `Plano: ordem <b>${ordem}</b><br>` : "";
       const marker = L.marker([captura.lat, captura.lon], { icon });
       marker.bindPopup(
         `<b>${road?.codigo ?? "Rodovia"}</b><br>` +
+          planLine +
           `KM ${captura.km?.toFixed(1) ?? "—"}<br>` +
           `Altura: ${captura.alturaCm ?? "—"} cm<br>` +
           `Severidade: ${captura.classe ?? "pendente"}<br>` +
@@ -121,14 +139,20 @@ export function MapaOperacionalClient({
     requestAnimationFrame(() => {
       mapRef.current?.invalidateSize({ pan: false });
     });
-  }, [capturas, rodovias]);
+  }, [capturas, rodovias, planOrdemById]);
+
+  const inPlan = Object.keys(planOrdemById).length > 0;
 
   return (
     <div
       ref={containerRef}
       style={{ height, width: "100%", minHeight: 320 }}
       role="img"
-      aria-label="Mapa operacional de capturas"
+      aria-label={
+        inPlan
+          ? "Mapa de capturas com plano destacado"
+          : "Mapa de capturas"
+      }
     />
   );
 }

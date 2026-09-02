@@ -12,11 +12,9 @@ export default function NovaCapturaPage() {
       <DataAutoRefresh />
       <div className="page-head">
         <div>
-          <div className="eyebrow">INGESTÃO · CAMPO</div>
           <h1 className="page-title">Nova captura</h1>
           <p className="page-subtitle">
-            Envie fotos da vegetação na margem da rodovia. A classificação de
-            altura alimenta capturas processadas, ocorrências e o mapa.
+            Envie fotos da vegetação na margem da rodovia.
           </p>
         </div>
       </div>

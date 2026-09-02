@@ -379,15 +379,6 @@ describe("capturas Excel import/export", () => {
     expect(rows.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("seeds Motiva template rows into the memory store for the demo", async () => {
-    const store = createMemoryStore({ seedDemo: true });
-    const rows = await store.listCapturas();
-    expect(rows.length).toBeGreaterThanOrEqual(6);
-    const ids = new Set(rows.map((row) => row.rodoviaId));
-    expect(ids.has("sp-330")).toBe(true);
-    expect(ids.has("sp-348")).toBe(true);
-  });
-
   it("lists all capturas when rodoviaId=todas", async () => {
     const bytes = buildCapturasTemplate();
     expect((await postImport(bytes, "todas")).status).toBe(200);

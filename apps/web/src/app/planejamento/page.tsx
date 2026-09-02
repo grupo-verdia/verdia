@@ -1,8 +1,9 @@
 import Link from "next/link";
 
-import { MapaLazy } from "@/app/mapa/mapa-lazy";
+import { MapaOperacional } from "@/components/mapa-operacional";
 import { PlanejamentoExcelToolbar } from "@/components/planejamento-excel-toolbar";
 import { StatusPill } from "@/components/status-pill";
+import { loadDashboardCapturas } from "@/lib/dashboard";
 import {
   formatAlturaCm,
   formatConfianca,
@@ -13,8 +14,11 @@ import { listMotivaRodovias } from "@/lib/rodovias";
 export const dynamic = "force-dynamic";
 
 export default async function PlanejamentoPage() {
-  const plan = await loadPlanTrechos();
-  const rodovias = listMotivaRodovias();
+  const [plan, capturas, rodovias] = await Promise.all([
+    loadPlanTrechos(),
+    loadDashboardCapturas(),
+    Promise.resolve(listMotivaRodovias()),
+  ]);
   const planOrdemById = Object.fromEntries(
     plan.map((trecho) => [trecho.id, trecho.ordem]),
   );
@@ -27,7 +31,7 @@ export default async function PlanejamentoPage() {
           <h1 className="page-title">Fila de prioridades</h1>
           <p className="page-subtitle">
             Ordenação por severidade (alta → média → baixa), depois rodovia e
-            KM — derivada das capturas persistidas.
+            KM, a partir das capturas persistidas.
           </p>
         </div>
       </div>
@@ -38,8 +42,8 @@ export default async function PlanejamentoPage() {
         <div className="card">
           <div className="empty">
             Nenhum trecho no plano. Importe um Excel acima, use{" "}
-            <Link href="/rodovias">Rodovias e planilhas</Link>, ou persista
-            capturas via <code>POST /api/capturas</code>.
+            <Link href="/rodovias">Rodovias e planilhas</Link> ou envie fotos em{" "}
+            <Link href="/nova-captura">Nova captura</Link>.
           </div>
         </div>
       ) : (
@@ -93,7 +97,12 @@ export default async function PlanejamentoPage() {
             <p className="muted" style={{ marginBottom: 12, fontSize: 12 }}>
               Trechos do plano atual destacados com anel e ordem na fila.
             </p>
-            <MapaLazy trechos={plan} planOrdemById={planOrdemById} />
+            <MapaOperacional
+              capturas={capturas}
+              rodovias={rodovias}
+              planOrdemById={planOrdemById}
+              height="min(70vh, 36rem)"
+            />
           </section>
         </>
       )}

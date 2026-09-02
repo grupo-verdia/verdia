@@ -8,7 +8,7 @@ import { Brand } from "@/components/brand";
 const items = [
   { label: "Visão geral", href: "/", icon: "⌂" },
   { label: "Nova captura", href: "/nova-captura", icon: "+" },
-  { label: "Mapa operacional", href: "/mapa", icon: "⌖" },
+  { label: "Mapa", href: "/mapa", icon: "⌖" },
   { label: "Rodovias e planilhas", href: "/rodovias", icon: "▤" },
   { label: "Planejamento", href: "/planejamento", icon: "✓" },
   { label: "Observabilidade", href: "/observabilidade", icon: "◌" },
@@ -21,7 +21,6 @@ export function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-top">
         <Brand />
-        <div className="nav-caption">NAVEGAÇÃO</div>
         <nav aria-label="Navegação principal">
           {items.map(({ label, href, icon }) => {
             const active =
@@ -41,12 +40,6 @@ export function Sidebar() {
             );
           })}
         </nav>
-      </div>
-
-      <div className="sidebar-footer">
-        <span className="status-dot" />
-        <span>Sistema operacional</span>
-        <small>Monitoramento de vegetação</small>
       </div>
     </aside>
   );

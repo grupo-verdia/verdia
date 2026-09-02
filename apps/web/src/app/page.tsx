@@ -18,11 +18,9 @@ export default async function Home() {
       <DataAutoRefresh />
       <div className="page-head">
         <div>
-          <div className="eyebrow">CENTRO DE OPERAÇÕES · MOTIVA</div>
           <h1 className="page-title">Monitoramento de vegetação</h1>
           <p className="page-subtitle">
-            Visão operacional das capturas realizadas pelo veículo, classificação
-            da IA e prioridades de manutenção.
+            Capturas classificadas e prioridade de manutenção.
           </p>
         </div>
         <div className="toolbar">
@@ -35,11 +33,6 @@ export default async function Home() {
         </div>
       </div>
       <DashboardLive initialCapturas={capturas} initialRodovias={rodovias} />
-      <p className="footer-note">
-        Os limites de altura exibidos no protótipo são parâmetros de demonstração
-        e devem ser substituídos pelos critérios operacionais definidos pela
-        Motiva.
-      </p>
     </>
   );
 }

@@ -14,7 +14,7 @@ async function sha256Hex(value: string): Promise<string> {
   return toHex(digest);
 }
 
-/** Deterministic session token for the shared demo password. */
+/** Deterministic session token for the shared password. */
 export async function sessionTokenForPassword(password: string): Promise<string> {
   return sha256Hex(`verdia-session:${password}`);
 }
