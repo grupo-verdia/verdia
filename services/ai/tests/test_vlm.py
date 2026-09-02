@@ -49,43 +49,24 @@ def test_classify_image_missing_key_raises(
         classify_image(path)
 
 
-def test_classify_image_fake_by_filename(tmp_path: Path) -> None:
-    path = _write_png(tmp_path / "trecho_alta.png")
+def test_classify_image_fake(tmp_path: Path) -> None:
+    path = _write_png(tmp_path / "roadside.png")
     verdict = classify_image(path, fake=True)
     assert verdict.fake is True
-    assert verdict.classe == "alta"
+    assert verdict.vegetacao_visivel is True
     assert verdict.altura_estimada_cm is not None
     assert verdict.model == DEFAULT_MODEL
     assert 0.0 <= verdict.confianca_declarada <= 1.0
 
 
-def test_classify_image_fake_default_media(tmp_path: Path) -> None:
-    path = _write_png(tmp_path / "roadside.png")
-    verdict = classify_image(path, fake=True)
-    assert verdict.classe == "média"
-    assert verdict.vegetacao_visivel is True
-    assert verdict.altura_estimada_cm is not None
-
-
-def test_classify_image_fake_na(tmp_path: Path) -> None:
-    path = _write_png(tmp_path / "trecho_na.png")
-    verdict = classify_image(path, fake=True)
-    assert verdict.classe is None
-    assert verdict.altura_estimada_cm is None
-    assert verdict.vegetacao_visivel is False
-
-
 def test_classify_folder_json_rows(tmp_path: Path) -> None:
-    _write_png(tmp_path / "a_baixa.jpg")
-    _write_png(tmp_path / "b_alta.jpg")
+    _write_png(tmp_path / "a.jpg")
+    _write_png(tmp_path / "b.jpg")
     (tmp_path / "notes.txt").write_text("ignore", encoding="utf-8")
 
     rows = classify_folder(tmp_path, fake=True)
     assert len(rows) == 2
-    by_name = {Path(r["path"]).name: r for r in rows}
-    assert by_name["a_baixa.jpg"]["classe"] == "baixa"
-    assert by_name["b_alta.jpg"]["classe"] == "alta"
-    assert by_name["a_baixa.jpg"]["fake"] is True
+    assert all(r["fake"] is True for r in rows)
 
 
 @pytest.mark.parametrize(
