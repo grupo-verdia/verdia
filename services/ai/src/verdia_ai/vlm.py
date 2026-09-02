@@ -142,9 +142,6 @@ def classify_image(
         source_name=source_name,
     )
 
-    # 🔴 DESATIVAÇÃO DO MOCK: Garante que o modelo vai SEMPRE processar a imagem.
-    fake = False
-
     if fake is None:
         fake = use_fake_mode()
     if fake:
