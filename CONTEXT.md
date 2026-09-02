@@ -66,4 +66,4 @@ VLM estimates roadside grass height. Code maps Motiva cm bands to
 - Nova captura classifies via Google AI Studio, or local Python HTTP / stub.
 - Data: Supabase (Postgres + Storage). Required for the running web app
   (memory store is tests-only).
-- Deploy: web on Vercel, data on Supabase. Runbook: `docs/DEPLOY.md`.
+- Deploy: web on Vercel, data on Supabase.

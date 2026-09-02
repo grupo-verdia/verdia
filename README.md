@@ -11,8 +11,7 @@ We do not have Motiva's real data. Photos are generic geotagged laterals.
 We do not assume a 360 camera.
 
 Flow: upload or Excel import → classify → persist → dashboard / map /
-planejamento. Glossary: [`CONTEXT.md`](./CONTEXT.md). Deploy:
-[`docs/DEPLOY.md`](./docs/DEPLOY.md).
+planejamento. Glossary: [`CONTEXT.md`](./CONTEXT.md).
 
 ## Product
 
@@ -104,4 +103,3 @@ npm run typecheck
 ## Deploy
 
 Vercel + hosted Supabase. Nova captura on Vercel classifies with `GOOGLE_API_KEY`.
-See [`docs/DEPLOY.md`](./docs/DEPLOY.md).

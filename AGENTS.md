@@ -4,7 +4,7 @@ Motiva roadside vegetation product. A geotagged photo becomes a **captura**, the
 
 We do not have Motiva's real data. Photos are generic geotagged laterals. Do not assume a 360 camera.
 
-Glossary: `CONTEXT.md`. How to run: `README.md`. Deploy: `docs/DEPLOY.md`. Next.js breaking changes: `apps/web/AGENTS.md`. CI: `.github/workflows/ci.yml`.
+Glossary: `CONTEXT.md`. How to run: `README.md`. Next.js breaking changes: `apps/web/AGENTS.md`. CI: `.github/workflows/ci.yml`.
 
 ## Product
 
@@ -61,10 +61,7 @@ Copy `apps/web/.env.example` → `.env.local` (`DEMO_PASSWORD`, `SUPABASE_URL`, 
 
 - User-facing text is Portuguese. Code names (files, functions, types) stay English. Comments and internal docs follow the file you are in.
 - Conventional Commits on every git commit.
+- Keep docs in sync with the product. After any change, recheck `README.md`, `CONTEXT.md`, `AGENTS.md`, and related docs so they still match current behavior and do not point at files nor features that no longer exist.
 - Keep web `.ts`/`.tsx` files ≤ 400 lines. Python files ≤ 500 lines, functions ≤ 60 lines (`scripts/ci/`).
 - Tests stay focused. Web tests inject `createMemoryStore()`.
 - This Next.js has breaking changes. Read `apps/web/AGENTS.md` and `node_modules/next/dist/docs/` before inventing APIs.
-
-## Learned User Preferences
-
-- Use Conventional Commits for all git commits.
