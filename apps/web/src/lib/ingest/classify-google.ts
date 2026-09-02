@@ -27,10 +27,7 @@ type VlmJson = {
   confianca_declarada: number;
 };
 
-/**
- * Call Google AI Studio from the Next.js ingest path (Vercel or local).
- * Same model, prompts, and height→classe mapping as `services/ai`.
- */
+/** Same prompts and height→classe mapping as `services/ai`. */
 export async function classifyViaGoogle(
   input: ClassifyImageInput,
   apiKey: string,

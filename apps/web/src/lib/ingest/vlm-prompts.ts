@@ -5,48 +5,28 @@
 
 export const DEFAULT_VLM_MODEL = "gemma-4-26b-a4b-it";
 
-export const VLM_SYSTEM_PROMPT = `Você é um inspetor de infraestrutura rodoviária analisando imagens da faixa de domínio. Sua tarefa é estimar a altura da vegetação na borda do asfalto.
+export const VLM_SYSTEM_PROMPT = `Estime a altura da vegetação na borda do asfalto, em centímetros.
 
-Como a câmera pode ter ângulos inclinados ou aéreos que distorcem a percepção de profundidade, você está PROIBIDO de buscar referências humanas (como garrafas ou joelhos). Você deve estimar a altura (em cm) avaliando estritamente 3 fatores: Textura, Sombras e Invasão da Pista.
+Não use pessoas, garrafas ou meio-fio como régua. O ângulo da câmera distorce o tamanho.
 
-# MATRIZ DE ANÁLISE FÍSICA:
-- BAIXA (0 a 10 cm):
-  * Textura: Fina, lisa, semelhante a um tapete ou carpete.
-  * Invasão: Nenhuma. A linha que divide o asfalto e a terra/grama é reta e perfeitamente nítida.
-  * Sombra: A grama não projeta sombra no asfalto. É possível ver partes de terra nua.
-  * Saída esperada: Intervalos como 2-6, 4-8.
+Baseie-se só nestes três sinais:
+- Textura: lisa como tapete, rugosa, ou caótica.
+- Invasão da pista: linha do asfalto nítida, serrilhada, ou engolida pelas folhas.
+- Sombras no asfalto: ausentes, leves, ou bolsões profundos entre os caules.
 
-- ALTA (> 30 cm):
-  * Textura: Grosseira, caótica, aspecto selvagem.
-  * Invasão: Alta. As folhas quebram a linha reta da pista, "engolindo" a borda do asfalto ou a linha branca de sinalização.
-  * Sombra: Cria grandes bolsões de sombra preta profunda entre os caules e sobre a pista.
-  * Saída esperada: Intervalos como 35-40, 45-55.
+Se a grama parece aparada, a textura é lisa e a borda é nítida, o intervalo inteiro fica abaixo de 10 cm.
+Se os caules invadem a pista e as sombras são profundas, o intervalo inteiro fica acima de 30 cm.
+Só use 10 a 30 cm quando a borda estiver serrilhada mas a massa verde não estiver tombada sobre a pista.
 
-- MÉDIA (15 a 25 cm):
-  * É o estado de transição. Textura rugosa, projeta pequenas sombras individuais, a borda do asfalto fica levemente serrilhada pelas folhas, mas a massa verde não tomba pesadamente sobre a pista.
+A largura do intervalo é no máximo 5 cm. Não use faixas como 10-20 ou 10-30.
 
-# REGRA DE PROIBIÇÃO DO "CHUTE SEGURO" (ANTI-MÉDIA)
-Você tem um viés algorítmico severo de classificar tudo como "MÉDIA" (15-20cm) quando está em dúvida. Para contornar isso:
-1. Assuma inicialmente que a grama é BAIXA ou ALTA.
-2. A categoria MÉDIA só pode ser escolhida se você provar na justificativa que a vegetação NÃO tem a borda lisa (descartando Baixa) e NÃO está engolindo a pista com bolsões de sombra (descartando Alta).
-3. Nunca use faixas preguiçosas como 10-20 ou 10-30. Mantenha o span em no máximo 5cm.
-
-# FORMATO DE SAÍDA (JSON STRICT)
-{
-  "vegetacao_visivel": boolean,
-  "justificativa": "Responda obrigatoriamente neste formato: 'Textura: [lisa/rugosa/caótica]. Invasão de borda: [nítida/serrilhada/engolindo a pista]. Sombras: [ausentes/leves/profundas]. Portanto, a estimativa de altura é...'",
-  "altura_estimada_cm": { "min": int, "max": int },
-  "confianca_declarada": float
-}`;
+Em justificativa, descreva textura, invasão de borda e sombras, nessa ordem, e então a altura. Formato: "Textura: [lisa/rugosa/caótica]. Invasão de borda: [nítida/serrilhada/engolindo a pista]. Sombras: [ausentes/leves/profundas]. Portanto, a estimativa de altura é..."`;
 
 export const VLM_USER_PROMPT = `Analise a vegetação na borda do asfalto desta imagem.
 
-Antes de estimar a altura, preencha a chave 'justificativa' analisando explicitamente:
-1. A textura da vegetação.
-2. O nível de invasão/quebra da linha do asfalto.
-3. A presença de sombras projetadas.
-
-Lembre-se da regra Anti-Média: evite jogar o resultado para o meio do espectro se a borda estiver claramente limpa (Baixa) ou se os caules estiverem caindo sobre a pista (Alta). Retorne apenas o JSON.`;
+Preencha justificativa (textura, invasão, sombras) antes de estimar a altura.
+Intervalo de no máximo 5 cm. Não jogue para o meio se a borda está limpa (abaixo de 10 cm) ou se os caules caem sobre a pista (acima de 30 cm).
+Retorne apenas o JSON.`;
 
 /** JSON Schema for Google structured output (same fields as the Python VLM). */
 export const VLM_RESPONSE_JSON_SCHEMA = {

@@ -2,8 +2,8 @@
 
 Hosted Gemma VLM estimates roadside grass height; code maps Motiva cm bands to
 `baixa` | `média` | `alta` (or `null` when height is N/A). Module + CLI + notebook
-+ lean HTTP API for local Nova captura (optional). On Vercel, Nova captura calls
-Google AI Studio directly with `GOOGLE_API_KEY` on the web app.
++ optional local HTTP API. On Vercel, Nova captura calls Google AI Studio with
+`GOOGLE_API_KEY` on the web app.
 
 ## Local
 

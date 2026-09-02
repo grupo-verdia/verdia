@@ -41,10 +41,7 @@ function parseOptionalNumber(
   return { ok: false, error: `${field} must be a number or null` };
 }
 
-/**
- * Nova captura ingest: geotagged photo → VLM classify → persist.
- * Feeds dashboard KPIs, ocorrências, mapa, e rodovias via the captura store.
- */
+/** Geotagged photo → VLM classify → persist. */
 export async function POST(request: NextRequest) {
   let raw: unknown;
   try {

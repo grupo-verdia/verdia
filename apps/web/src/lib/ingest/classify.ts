@@ -184,12 +184,7 @@ function failedClassification(message: string): ClassifyResult {
   };
 }
 
-/**
- * Classify one image for Nova captura.
- * Prefers Google AI Studio (`GOOGLE_API_KEY`) so Vercel can classify without
- * a Python host. Else `VLM_INFERENCE_URL`. Else filename stub.
- * On live-call failure, captura still persists with inferenceError.
- */
+/** Google key, else Python HTTP, else filename stub. */
 export async function classifyForIngest(
   input: ClassifyImageInput,
 ): Promise<ClassifyResult> {
