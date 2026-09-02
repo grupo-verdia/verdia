@@ -1,4 +1,4 @@
-# verdia — Context
+# verdia
 
 verdia classifies roadside grass height from a geotagged photo so Motiva can
 prioritize mowing. Today that judgment is done by eye ("olhômetro").
