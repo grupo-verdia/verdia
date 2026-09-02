@@ -290,7 +290,7 @@ def _generate_once(
                 # CORREÇÃO AQUI: Passando o argumento com keyword 'text='
                 types.Part.from_text(text=USER_PROMPT),
                 types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-            ]
+            ],
         )
     ]
 
@@ -299,7 +299,7 @@ def _generate_once(
         contents=contents_list,
         config=config,
     )
-    
+
     text = (response.text or "").strip()
     if not text:
         raise VlmError("empty model response")
