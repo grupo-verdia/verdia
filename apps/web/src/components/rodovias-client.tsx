@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -79,6 +80,12 @@ async function fetchCapturas(scope: string): Promise<Captura[]> {
   return data.capturas ?? [];
 }
 
+function existingInScope(capturas: Captura[], selected: string): number {
+  return selected === "todas"
+    ? capturas.length
+    : capturas.filter((c) => c.rodoviaId === selected).length;
+}
+
 export function RodoviasClient({
   rodovias,
   capturas: initialCapturas,
@@ -92,7 +99,12 @@ export function RodoviasClient({
   const [priority, setPriority] = useState<"todas" | Severidade>("todas");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageOk, setMessageOk] = useState(false);
+  const [pendingConfirm, setPendingConfirm] = useState<"import" | "clear" | null>(
+    null,
+  );
   const fileRef = useRef<HTMLInputElement>(null);
+  const pendingFileRef = useRef<File | null>(null);
 
   const refresh = useCallback(async (scope: string) => {
     const next = await fetchCapturas(scope);
@@ -105,6 +117,15 @@ export function RodoviasClient({
       ]);
     }
   }, []);
+
+  const importArgs = {
+    fileRef,
+    setBusy,
+    setMessage,
+    setMessageOk,
+    setCapturas,
+    refresh: () => refresh("todas"),
+  };
 
   useEffect(() => {
     const handler = () => {
@@ -119,6 +140,54 @@ export function RodoviasClient({
     () => buildCards(capturas, rodovias, selected, search, priority),
     [capturas, selected, search, priority, rodovias],
   );
+  const existingCount = existingInScope(capturas, selected);
+
+  function dismissPending() {
+    pendingFileRef.current = null;
+    setPendingConfirm(null);
+    if (fileRef.current) {
+      fileRef.current.value = "";
+    }
+  }
+
+  function queueImport(file: File) {
+    if (!isExcelFilename(file.name)) {
+      setMessageOk(false);
+      setMessage("Apenas arquivos Excel (.xlsx, .xls) são aceitos.");
+      if (fileRef.current) {
+        fileRef.current.value = "";
+      }
+      return;
+    }
+    if (existingInScope(capturas, selected) > 0) {
+      pendingFileRef.current = file;
+      setPendingConfirm("import");
+      setMessage(null);
+      return;
+    }
+    void runImport({ file, ...importArgs });
+  }
+
+  function confirmPending() {
+    if (pendingConfirm === "import") {
+      const file = pendingFileRef.current;
+      dismissPending();
+      if (file) {
+        void runImport({ file, ...importArgs });
+      }
+      return;
+    }
+    if (pendingConfirm === "clear") {
+      setPendingConfirm(null);
+      void runClear({
+        selected,
+        setBusy,
+        setMessage,
+        setMessageOk,
+        refresh: () => refresh(selected),
+      });
+    }
+  }
 
   return (
     <>
@@ -129,76 +198,76 @@ export function RodoviasClient({
         priority={priority}
         busy={busy}
         message={message}
+        messageOk={messageOk}
         fileRef={fileRef}
         cardsEmpty={cards.length === 0}
+        pendingConfirm={pendingConfirm}
+        existingCount={existingCount}
+        clearScope={selected === "todas" ? "todas" : (road?.codigo ?? selected)}
         onSelect={(id) => {
+          dismissPending();
           setSelected(id);
-          refresh(id).catch(() =>
-            setMessage("Não foi possível sincronizar os dados."),
-          );
+          refresh(id).catch(() => {
+            setMessageOk(false);
+            setMessage("Não foi possível sincronizar os dados.");
+          });
         }}
         onSearch={setSearch}
         onPriority={setPriority}
-        onImport={(file) =>
-          void runImport({
-            file,
-            selected,
-            capturas,
-            fileRef,
-            setBusy,
-            setMessage,
-            setCapturas,
-            refresh: async () => {
-              await refresh("todas");
-            },
-          })
-        }
-        onClear={() =>
-          void runClear({
-            selected,
-            roadCodigo: road?.codigo,
-            setBusy,
-            setMessage,
-            refresh: () => refresh(selected),
-          })
-        }
+        onImport={queueImport}
+        onClear={() => {
+          dismissPending();
+          setPendingConfirm("clear");
+          setMessage(null);
+        }}
+        onConfirmPending={confirmPending}
+        onCancelPending={dismissPending}
       />
-      <div style={{ marginBottom: 12 }}>
-        <h2 className="section-title">
-          {selected === "todas"
+      <ListHeading
+        title={
+          selected === "todas"
             ? "Todas as rodovias"
-            : `${road?.codigo} · ${road?.nome}`}
-        </h2>
-        <span className="muted" style={{ fontSize: 11 }}>
-          {cards.length} registros · Ordem, Rodovia, KM, Altura, Severidade,
-          Confiança
-        </span>
-      </div>
+            : `${road?.codigo} · ${road?.nome}`
+        }
+        count={cards.length}
+      />
       <RodoviasCards
         cards={cards}
         emptyHint={
-          selected === "todas"
-            ? "Nenhum registro. Clique em “Baixar planilha de teste” e depois em Importar Excel."
-            : "Nenhum registro para esta rodovia. Importe a planilha nela ou volte para “Todas as rodovias”."
+          <>
+            Nenhuma captura nesta vista. Use Importar ou{" "}
+            <Link href="/nova-captura">Nova captura</Link>.
+          </>
         }
       />
     </>
   );
 }
 
+function ListHeading({ title, count }: { title: string; count: number }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <h2 className="section-title">{title}</h2>
+      <span className="muted" style={{ fontSize: 11 }}>
+        {count} {count === 1 ? "captura" : "capturas"}
+      </span>
+    </div>
+  );
+}
+
 function translateImportError(message: string): string {
   const lower = message.toLowerCase();
   if (lower.includes("rodoviaid") && lower.includes("not found")) {
-    return "Rodovia não encontrada. Deixe “Todas as rodovias” ou escolha uma da lista.";
+    return "Rodovia não encontrada. Escolha uma da lista ou use Todas as rodovias.";
   }
   if (lower.includes("not a valid excel") || lower.includes("invalid workbook")) {
-    return "Este arquivo não é um Excel válido. Baixe a planilha pelo botão nesta tela.";
+    return "Este arquivo não é um Excel válido.";
   }
   if (lower.includes("only excel")) {
     return "Apenas arquivos Excel (.xlsx, .xls) são aceitos.";
   }
   if (lower.includes("lat") && lower.includes("lon")) {
-    return "Falta Latitude e Longitude. Baixe a planilha de teste nesta tela e importe ela.";
+    return "Falta latitude e longitude nas linhas.";
   }
   return message;
 }
@@ -216,33 +285,25 @@ function importResultMessage(data: {
       ? `Nenhuma linha importada. ${translateImportError(first)}`
       : translateImportError(data.error ?? "Nenhuma linha importada.");
   }
-  return `${imported} registros importados${
+  return `${imported} capturas importadas${
     failed ? ` · ${failed} linhas com erro` : ""
   }.`;
 }
 
 async function runImport(args: {
   file: File;
-  selected: string;
-  capturas: Captura[];
   fileRef: React.RefObject<HTMLInputElement | null>;
   setBusy: (v: boolean) => void;
   setMessage: (v: string | null) => void;
+  setMessageOk: (v: boolean) => void;
   setCapturas: React.Dispatch<React.SetStateAction<Captura[]>>;
   refresh: () => Promise<void>;
 }) {
-  const {
-    file,
-    selected,
-    capturas,
-    fileRef,
-    setBusy,
-    setMessage,
-    setCapturas,
-    refresh,
-  } = args;
+  const { file, fileRef, setBusy, setMessage, setMessageOk, setCapturas, refresh } =
+    args;
 
   if (!isExcelFilename(file.name)) {
+    setMessageOk(false);
     setMessage("Apenas arquivos Excel (.xlsx, .xls) são aceitos.");
     if (fileRef.current) {
       fileRef.current.value = "";
@@ -250,27 +311,6 @@ async function runImport(args: {
     return;
   }
 
-  const existentes =
-    selected === "todas"
-      ? capturas.length
-      : capturas.filter((c) => c.rodoviaId === selected).length;
-  if (existentes > 0) {
-    const ok = window.confirm(
-      `Já existem ${existentes} registro(s) na tela.\n\n` +
-        `Importar agora soma essas linhas às que já estão aqui.\n\n` +
-        `Quer continuar?\n` +
-        `Para testar só esta planilha: Cancelar, clique em Limpar, depois importe de novo.`,
-    );
-    if (!ok) {
-      setMessage(
-        "Importação cancelada. Clique em Limpar e importe de novo para ver só esta planilha.",
-      );
-      if (fileRef.current) {
-        fileRef.current.value = "";
-      }
-      return;
-    }
-  }
   setBusy(true);
   setMessage(null);
   try {
@@ -301,11 +341,14 @@ async function runImport(args: {
         return extra.length > 0 ? [...prev, ...extra] : prev;
       });
     }
-    setMessage(importResultMessage(data));
+    const text = importResultMessage(data);
+    setMessageOk((data.imported ?? 0) > 0);
+    setMessage(text);
     if (fileRef.current) {
       fileRef.current.value = "";
     }
   } catch (error) {
+    setMessageOk(false);
     setMessage(error instanceof Error ? error.message : "Falha ao importar.");
   } finally {
     setBusy(false);
@@ -314,22 +357,12 @@ async function runImport(args: {
 
 async function runClear(args: {
   selected: string;
-  roadCodigo: string | undefined;
   setBusy: (v: boolean) => void;
   setMessage: (v: string | null) => void;
+  setMessageOk: (v: boolean) => void;
   refresh: () => Promise<void>;
 }) {
-  const { selected, roadCodigo, setBusy, setMessage, refresh } = args;
-  const escopo =
-    selected === "todas"
-      ? "TODAS as rodovias"
-      : `a rodovia ${roadCodigo ?? selected}`;
-  const ok = window.confirm(
-    `Limpar os dados de ${escopo}?\n\nIsso remove as capturas importadas e não pode ser desfeito.`,
-  );
-  if (!ok) {
-    return;
-  }
+  const { selected, setBusy, setMessage, setMessageOk, refresh } = args;
   setBusy(true);
   setMessage(null);
   try {
@@ -350,8 +383,10 @@ async function runClear(args: {
       throw new Error(data.error ?? `Falha ao limpar (${response.status}).`);
     }
     await refresh();
+    setMessageOk(true);
     setMessage(data.message ?? "Dados limpos.");
   } catch (error) {
+    setMessageOk(false);
     setMessage(error instanceof Error ? error.message : "Falha ao limpar.");
   } finally {
     setBusy(false);

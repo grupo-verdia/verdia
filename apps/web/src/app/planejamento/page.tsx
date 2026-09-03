@@ -1,7 +1,7 @@
 import Link from "next/link";
 
+import { MapLegend } from "@/components/map-legend";
 import { MapaOperacional } from "@/components/mapa-operacional";
-import { PlanejamentoExcelToolbar } from "@/components/planejamento-excel-toolbar";
 import { StatusPill } from "@/components/status-pill";
 import { loadDashboardCapturas } from "@/lib/dashboard";
 import {
@@ -27,22 +27,16 @@ export default async function PlanejamentoPage() {
     <>
       <div className="page-head">
         <div>
-          <div className="eyebrow">MANUTENÇÃO</div>
           <h1 className="page-title">Fila de prioridades</h1>
-          <p className="page-subtitle">
-            Ordenação por severidade (alta → média → baixa), depois rodovia e
-            KM, a partir das capturas persistidas.
-          </p>
+          <p className="page-subtitle">Trechos na ordem de manutenção.</p>
         </div>
       </div>
-
-      <PlanejamentoExcelToolbar rodovias={rodovias} />
 
       {plan.length === 0 ? (
         <div className="card">
           <div className="empty">
-            Nenhum trecho no plano. Importe um Excel acima, use{" "}
-            <Link href="/rodovias">Rodovias e planilhas</Link> ou envie fotos em{" "}
+            Nenhum trecho no plano. Cadastre dados em{" "}
+            <Link href="/rodovias">Rodovias</Link> ou envie fotos em{" "}
             <Link href="/nova-captura">Nova captura</Link>.
           </div>
         </div>
@@ -90,19 +84,30 @@ export default async function PlanejamentoPage() {
             </div>
           </section>
 
-          <section className="card" style={{ marginTop: 16 }} aria-labelledby="mapa-plano-heading">
-            <h2 id="mapa-plano-heading" className="section-title">
-              Plano no mapa
-            </h2>
-            <p className="muted" style={{ marginBottom: 12, fontSize: 12 }}>
-              Trechos do plano atual destacados com anel e ordem na fila.
-            </p>
-            <MapaOperacional
-              capturas={capturas}
-              rodovias={rodovias}
-              planOrdemById={planOrdemById}
-              height="min(70vh, 36rem)"
-            />
+          <section
+            className="card map-card"
+            style={{ marginTop: 16 }}
+            aria-labelledby="mapa-plano-heading"
+          >
+            <div className="map-card-head">
+              <div>
+                <h2 id="mapa-plano-heading" className="section-title">
+                  Plano no mapa
+                </h2>
+                <p className="muted" style={{ fontSize: 12 }}>
+                  Anel e número marcam a ordem na fila.
+                </p>
+              </div>
+              <MapLegend />
+            </div>
+            <div className="map-box" style={{ height: "min(70vh, 36rem)" }}>
+              <MapaOperacional
+                capturas={capturas}
+                rodovias={rodovias}
+                planOrdemById={planOrdemById}
+                height="100%"
+              />
+            </div>
           </section>
         </>
       )}

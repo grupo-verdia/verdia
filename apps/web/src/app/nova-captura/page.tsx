@@ -14,7 +14,8 @@ export default function NovaCapturaPage() {
         <div>
           <h1 className="page-title">Nova captura</h1>
           <p className="page-subtitle">
-            Envie fotos da vegetação na margem da rodovia.
+            Fotos da vegetação na margem. GPS do arquivo, ou latitude e
+            longitude se faltar.
           </p>
         </div>
       </div>

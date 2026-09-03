@@ -5,7 +5,7 @@ export function Brand() {
     <Link href="/" className="brand">
       <span className="brand-mark">v</span>
       <span>verdia</span>
-      <small>· Motiva</small>
+      <small>Motiva</small>
     </Link>
   );
 }

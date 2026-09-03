@@ -1,4 +1,5 @@
 import { DataAutoRefresh } from "@/components/data-auto-refresh";
+import { MapLegend } from "@/components/map-legend";
 import { MapaLive } from "@/app/mapa/mapa-live";
 import { loadDashboardCapturas } from "@/lib/dashboard";
 import { listMotivaRodovias } from "@/lib/rodovias";
@@ -18,15 +19,12 @@ export default async function MapaPage() {
         <div>
           <h1 className="page-title">Mapa</h1>
           <p className="page-subtitle">
-            Localização de cada captura, severidade detectada e referência de
-            quilômetro.
+            Localização das capturas por classe.
           </p>
-        </div>
-        <div className="toolbar">
-          <span className="status-pill baixa">● {capturas.length} capturas</span>
         </div>
       </div>
       <section className="map-full">
+        <MapLegend />
         <MapaLive initialCapturas={capturas} initialRodovias={rodovias} />
       </section>
     </>

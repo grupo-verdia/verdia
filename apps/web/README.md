@@ -14,13 +14,13 @@ Domain terms: [`CONTEXT.md`](../../CONTEXT.md). Repo runbook:
 | `/` | Visão geral |
 | `/nova-captura` | Nova captura (upload de fotos) |
 | `/mapa` | Mapa (marcadores por classe, sem PostGIS) |
-| `/rodovias` | Rodovias e planilhas (Excel + correção da classe) |
+| `/rodovias` | Rodovias (Excel + correção da classe) |
 | `/planejamento` | Planejamento (severidade, depois rodovia, depois km) |
 | `/observabilidade` | Observabilidade |
 
 Nova captura prefers EXIF GPS; if missing, the operator can type latitude and
-longitude. **Rodovias e planilhas** is also how you import/export Excel and
-override a classe.
+longitude. **Rodovias** is how you import/export Excel. Classe correction lives
+on the captura page.
 
 ## Local
 
@@ -31,8 +31,7 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). The BFF requires Supabase
-env vars. Apply migrations, then add data via **Nova captura** or **Rodovias e
-planilhas**.
+env vars. Apply migrations, then add data via **Nova captura** or **Rodovias**.
 
 Classification: `GOOGLE_API_KEY` (Google AI Studio) → else `VLM_INFERENCE_URL`
 (local Python). If neither is set, Nova captura fails. Failed inference still

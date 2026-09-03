@@ -8,8 +8,6 @@ import { severidadeFromClasse } from "@/lib/domain";
 
 export type CapturaReport = {
   justificativa: string | null;
-  fake: boolean;
-  modelVersion: string;
   inferenceError: string | null;
 };
 
@@ -33,11 +31,11 @@ export type FileOutcome =
 function priorityLabel(severidade: Severidade): string {
   switch (severidade) {
     case "alta":
-      return "Prioridade alta — intervenção recomendada";
+      return "Prioridade alta";
     case "média":
-      return "Prioridade média — acompanhar manutenção";
+      return "Prioridade média";
     case "baixa":
-      return "Prioridade baixa — dentro do controle";
+      return "Prioridade baixa";
     default: {
       const _exhaustive: never = severidade;
       return _exhaustive;
@@ -55,7 +53,7 @@ function OkReport({
   const conf =
     captura.confidence != null
       ? `${Math.round(captura.confidence * 100)}%`
-      : "—";
+      : "-";
 
   return (
     <article className="card" style={{ marginBottom: 12 }}>
@@ -69,30 +67,27 @@ function OkReport({
           />
         </div>
         <div>
-          <div className="eyebrow">Relatório da captura</div>
           <h3 className="section-title" style={{ marginBottom: 8 }}>
             {outcome.name}
           </h3>
           <div className="toolbar" style={{ marginBottom: 12, gap: 8 }}>
             <StatusPill value={captura.classe as Classe | null} />
-            <StatusPill value={prioridade} />
           </div>
           <p style={{ fontSize: 13, fontWeight: 650, margin: "0 0 8px" }}>
             {priorityLabel(prioridade)}
           </p>
           <p className="muted" style={{ fontSize: 13, lineHeight: 1.55, margin: 0 }}>
             {report.inferenceError
-              ? `Falha de inferência: ${report.inferenceError}`
-              : (report.justificativa ?? "Sem justificativa da IA.")}
+              ? `Não foi possível classificar: ${report.inferenceError}`
+              : (report.justificativa ?? "Sem justificativa.")}
           </p>
           <div className="alert-meta" style={{ marginTop: 12 }}>
-            Altura {captura.alturaCm ?? "—"} cm · Confiança {conf} · GPS{" "}
+            Altura {captura.alturaCm ?? "-"} cm · Confiança {conf} · GPS{" "}
             {captura.lat.toFixed(5)}, {captura.lon.toFixed(5)}
-            {report.fake ? " · modo stub" : ""}
           </div>
           <div className="toolbar" style={{ marginTop: 14 }}>
             <Link className="btn" href={`/capturas/${captura.id}`}>
-              Abrir detalhe
+              Abrir
             </Link>
           </div>
         </div>
@@ -109,9 +104,8 @@ export function NovaCapturaResults({ outcomes }: { outcomes: FileOutcome[] }) {
     <section>
       <div className="page-head" style={{ marginBottom: 14 }}>
         <div>
-          <div className="eyebrow">APÓS O ENVIO</div>
           <h2 className="page-title" style={{ fontSize: 22 }}>
-            Relatório das imagens
+            Resultado
           </h2>
           <p className="page-subtitle">
             {okCount} registrada{okCount === 1 ? "" : "s"}
@@ -156,14 +150,8 @@ export function NovaCapturaResults({ outcomes }: { outcomes: FileOutcome[] }) {
 
       {okCount > 0 ? (
         <div className="toolbar" style={{ marginTop: 8 }}>
-          <Link className="btn btn-primary" href="/">
-            Ver no painel
-          </Link>
-          <Link className="btn" href="/rodovias">
-            Ver em rodovias
-          </Link>
-          <Link className="btn" href="/mapa">
-            Abrir mapa
+          <Link className="btn btn-primary" href="/mapa">
+            Ver no mapa
           </Link>
         </div>
       ) : null}

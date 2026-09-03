@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { MapLegend } from "@/components/map-legend";
 import { MapaOperacional } from "@/components/mapa-operacional";
 import { useOperationalData } from "@/components/operational-live";
 import { StatusPill } from "@/components/status-pill";
@@ -12,17 +13,14 @@ import type { Rodovia } from "@/lib/rodovias";
 function Kpi({
   label,
   value,
-  note,
 }: {
   label: string;
   value: string | number;
-  note: string;
 }) {
   return (
     <div className="card">
       <div className="kpi-label">{label}</div>
       <div className="kpi-value">{value}</div>
-      <div className="kpi-note">{note}</div>
     </div>
   );
 }
@@ -48,10 +46,6 @@ export function DashboardLive({
   const avg = conf.length
     ? conf.reduce((sum, value) => sum + value, 0) / conf.length
     : null;
-  const coverage = rodovias.length
-    ? new Set(capturas.map((c) => c.rodoviaId).filter(Boolean)).size /
-      rodovias.length
-    : 0;
   const recentes = [...capturas]
     .sort(
       (a, b) =>
@@ -62,30 +56,13 @@ export function DashboardLive({
   return (
     <>
       <div className="grid kpis">
-        <Kpi
-          label="Capturas processadas"
-          value={capturas.length}
-          note="imagens georreferenciadas"
-        />
-        <Kpi
-          label="Alta prioridade"
-          value={altas}
-          note="intervenção prioritária"
-        />
-        <Kpi
-          label="Média prioridade"
-          value={medias}
-          note="acompanhar manutenção"
-        />
-        <Kpi
-          label="Baixa prioridade"
-          value={baixas}
-          note="dentro do controle"
-        />
+        <Kpi label="Capturas" value={capturas.length} />
+        <Kpi label="Alta" value={altas} />
+        <Kpi label="Média" value={medias} />
+        <Kpi label="Baixa" value={baixas} />
         <Kpi
           label="Confiança média"
           value={avg === null ? "—" : formatConfianca(avg)}
-          note={`${Math.round(coverage * 100)}% das rodovias com dados`}
         />
       </div>
 
@@ -98,6 +75,7 @@ export function DashboardLive({
                 Cada ponto representa uma captura
               </span>
             </div>
+            <MapLegend />
           </div>
           <div className="map-box">
             <MapaOperacional capturas={capturas} rodovias={rodovias} />
@@ -105,7 +83,7 @@ export function DashboardLive({
         </section>
 
         <section className="card">
-          <h2 className="section-title">Últimas ocorrências</h2>
+          <h2 className="section-title">Últimas capturas</h2>
           <div className="alert-list">
             {recentes.length ? (
               recentes.map((captura) => {
@@ -123,8 +101,8 @@ export function DashboardLive({
                         KM {captura.km?.toFixed(1) ?? "—"}
                       </div>
                       <div className="alert-meta">
-                        {captura.alturaCm ?? "—"} cm ·{" "}
-                        {captura.sentido ?? "sentido não informado"}
+                        {captura.alturaCm ?? "—"} cm
+                        {captura.sentido ? ` · ${captura.sentido}` : ""}
                       </div>
                     </div>
                     <StatusPill value={captura.classe} />
@@ -132,7 +110,7 @@ export function DashboardLive({
                 );
               })
             ) : (
-              <div className="empty">Nenhuma captura recebida ainda.</div>
+              <div className="empty">Nenhuma captura ainda.</div>
             )}
           </div>
         </section>

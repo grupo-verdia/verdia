@@ -33,12 +33,12 @@ Use these terms in code, tests, and docs.
   it is not a captura. One captura creates one trecho.
 - **Severidade** — maintenance priority of a trecho, driven primarily by classe
   (alta first).
-- **Nova captura** — web upload of one or more geotagged photos (multi-select).
-  Each valid file becomes a captura (infer → persist → dashboard/map).
-  Browser only (no CLI). Prefer EXIF GPS; if missing, the operator can enter
-  latitude/longitude. Classifies with Google AI Studio (`GOOGLE_API_KEY`) on
-  Vercel; otherwise local Python Inference HTTP (`VLM_INFERENCE_URL`). No
-  classifier configured means the upload fails.
+- **Nova captura** — web upload of one or more geotagged photos. The operator
+  queues files, then sends. Each valid file becomes a captura (infer → persist
+  → dashboard/map). Browser only (no CLI). Prefer EXIF GPS; if missing, the
+  operator can enter latitude/longitude. Classifies with Google AI Studio
+  (`GOOGLE_API_KEY`) on Vercel; otherwise local Python Inference HTTP
+  (`VLM_INFERENCE_URL`). No classifier configured means the upload fails.
 
 ## Fronts (all in scope)
 

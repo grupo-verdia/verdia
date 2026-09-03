@@ -128,7 +128,7 @@ export function MapaOperacionalClient({
           planLine +
           `KM ${captura.km?.toFixed(1) ?? "—"}<br>` +
           `Altura: ${captura.alturaCm ?? "—"} cm<br>` +
-          `Severidade: ${captura.classe ?? "pendente"}<br>` +
+          `Classe: ${captura.classe ?? "pendente"}<br>` +
           `<small>${new Date(captura.capturedAt).toLocaleString("pt-BR")}</small>`,
       );
       marker.addTo(markers);

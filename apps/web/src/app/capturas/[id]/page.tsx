@@ -1,6 +1,7 @@
-import Link from "next/link";
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 
+import { BackLink } from "@/components/back-link";
 import { OverrideForm } from "@/components/override-form";
 import { StatusPill } from "@/components/status-pill";
 import { loadCapturaDetail } from "@/lib/dashboard";
@@ -12,7 +13,7 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
       <div className="kpi-label">{label}</div>
@@ -28,16 +29,17 @@ export default async function CapturaDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const { captura } = detail;
+  const { captura, photoBytes } = detail;
   const rodovia = captura.rodoviaId
     ? getRodoviaById(captura.rodoviaId)
     : null;
+  const b64 = Buffer.from(photoBytes).toString("base64");
+  const src = `data:image/jpeg;base64,${b64}`;
 
   return (
     <>
       <div className="page-head">
         <div>
-          <div className="eyebrow">DETALHE DA CAPTURA</div>
           <h1 className="page-title">
             {rodovia?.codigo ?? "Rodovia"} · KM {captura.km?.toFixed(1) ?? "—"}
           </h1>
@@ -46,24 +48,27 @@ export default async function CapturaDetailPage({ params }: PageProps) {
             {captura.lat.toFixed(6)}, {captura.lon.toFixed(6)}
           </p>
         </div>
-        <Link className="btn" href="/rodovias">
-          ← Voltar aos dados
-        </Link>
+        <BackLink />
       </div>
 
       <div className="grid detail-grid">
         <section className="card">
-          <h2 className="section-title">Captura</h2>
+          {/* eslint-disable-next-line @next/next/no-img-element -- stored photo as data URL */}
+          <img
+            className="capture-image"
+            src={src}
+            alt="Captura da vegetação"
+          />
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
               gap: 12,
-              marginBottom: 16,
+              marginTop: 16,
             }}
           >
             <Info
-              label="Altura detectada"
+              label="Altura"
               value={
                 captura.alturaCm != null
                   ? `${captura.alturaCm} cm`
@@ -74,7 +79,10 @@ export default async function CapturaDetailPage({ params }: PageProps) {
               label="Sentido"
               value={captura.sentido ?? "Não informado"}
             />
-            <Info label="IA" value={captura.classe ?? "Sem classificação"} />
+            <Info
+              label="Classe"
+              value={<StatusPill value={captura.classe} />}
+            />
             <Info
               label="Confiança"
               value={
@@ -83,21 +91,21 @@ export default async function CapturaDetailPage({ params }: PageProps) {
                   : "—"
               }
             />
-            <Info label="Modelo" value={captura.modelVersion ?? "—"} />
-            <Info
-              label="Decisão final"
-              value={captura.classe ?? "Pendente"}
-            />
+            {rodovia ? <Info label="Rodovia" value={rodovia.nome} /> : null}
           </div>
-          <StatusPill value={captura.classe} />
+          {captura.modelVersion ? (
+            <p className="muted" style={{ fontSize: 11, marginTop: 12 }}>
+              {captura.modelVersion}
+            </p>
+          ) : null}
           {captura.inferenceError ? (
-            <div className="notice" style={{ marginTop: 14 }}>
-              Falha de inferência: {captura.inferenceError}
+            <div className="notice notice-danger" style={{ marginTop: 14 }}>
+              Não foi possível classificar: {captura.inferenceError}
             </div>
           ) : null}
           {captura.overrideMotivo ? (
             <div className="notice" style={{ marginTop: 14 }}>
-              Override: {captura.overrideMotivo}
+              Correção: {captura.overrideMotivo}
               {captura.overrideAt
                 ? ` · ${new Date(captura.overrideAt).toLocaleString("pt-BR")}`
                 : ""}
@@ -106,19 +114,18 @@ export default async function CapturaDetailPage({ params }: PageProps) {
         </section>
 
         <section className="card">
-          <h2 className="section-title">Overwrite da IA</h2>
-          <p className="muted" style={{ fontSize: 12, lineHeight: 1.6 }}>
-            Use somente quando a análise humana identificar divergência. A
-            alteração fica registrada em auditoria.
+          <h2 className="section-title" style={{ marginBottom: 6 }}>
+            Corrigir classe
+          </h2>
+          <p
+            className="muted"
+            style={{ fontSize: 12, lineHeight: 1.6, margin: "0 0 14px" }}
+          >
+            Quando a classe da foto estiver errada.
           </p>
           <OverrideForm id={captura.id} current={captura.classe} />
         </section>
       </div>
-
-      <p className="footer-note">
-        ID da captura:{" "}
-        <span style={{ fontFamily: "var(--font-mono)" }}>{captura.id}</span>
-      </p>
     </>
   );
 }

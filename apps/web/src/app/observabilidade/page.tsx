@@ -18,7 +18,7 @@ export default async function ObservabilidadePage() {
         <div>
           <h1 className="page-title">Observabilidade</h1>
           <p className="page-subtitle">
-            Volume, confiança, falhas de inferência e correções manuais.
+            Confiança do modelo, falhas e correções.
           </p>
         </div>
       </div>

@@ -24,9 +24,6 @@ export default async function Home() {
           </p>
         </div>
         <div className="toolbar">
-          <Link className="btn" href="/rodovias">
-            Gerenciar dados
-          </Link>
           <Link className="btn btn-primary" href="/mapa">
             Abrir mapa
           </Link>

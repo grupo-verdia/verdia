@@ -17,9 +17,9 @@ Screens (UI in Portuguese):
 | `/` | Visão geral | Classified capturas and maintenance priority |
 | `/nova-captura` | Nova captura | Browser multi-upload of geotagged photos |
 | `/mapa` | Mapa | Markers by classe (no PostGIS) |
-| `/rodovias` | Rodovias e planilhas | Per-rodovia table, Excel import/export, classe overrides |
+| `/rodovias` | Rodovias | Capturas by rodovia, Excel import/export, classe correction |
 | `/planejamento` | Planejamento | Queue by severidade, then rodovia, then km |
-| `/observabilidade` | Observabilidade | Volume, confiança, falhas, overrides |
+| `/observabilidade` | Observabilidade | Confiança, falhas, correções |
 
 Not built: video frames + GPS sync, drift detection, route optimization, Supabase Auth.
 
@@ -31,7 +31,7 @@ Use these terms in code, tests, and docs. Details live in `CONTEXT.md`.
 - **Trecho.** Roadside stretch at that GPS point. One captura defines one trecho (1:1). Default length is 500 m (Motiva's manual-analysis constant).
 - **Classe.** Ordered height scale, not three unrelated labels. Motiva bands: `h < 10 cm` → `baixa`; `10-30 cm` → `média`; `h > 30 cm` → `alta`. `classe` is `null` only when the roadside strip is not visible or has no grass. Under uncertainty the model still estimates height (lower confidence).
 - **Severidade.** Maintenance priority of a trecho, follows classe (`alta` first). Null classe → `baixa`.
-- **Nova captura.** Browser only (no CLI). Each valid file: infer → persist. Failed inference still persists the captura with `inferenceError` set.
+- **Nova captura.** Browser only (no CLI). Operator queues photos, then sends. Each valid file: infer → persist. Failed inference still persists the captura with `inferenceError` set.
 - **Rodovia.** Motiva catalog entry (code-seeded, e.g. SP-330). Optional on a captura, used by planilhas and planejamento.
 
 ## Stack

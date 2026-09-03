@@ -37,26 +37,28 @@ export function ObservabilidadeLive({
   return (
     <>
       <div className="grid metric-grid">
-        <Metric title="Capturas" value={capturas.length.toString()} sub="processadas" />
         <Metric
           title="Confiança média"
           value={avg != null ? `${Math.round(avg * 100)}%` : "—"}
-          sub="confiança média"
         />
         <Metric
           title="Correções humanas"
           value={manual.toString()}
-          sub="correções manuais"
+          sub="classe alterada na captura"
         />
         <Metric
           title="Falhas"
           value={errors.toString()}
-          sub="inferência/ingestão"
+          sub="falha ao classificar"
+        />
+        <Metric
+          title="Confiança acima de 80%"
+          value={`${Math.round(high * 100)}%`}
         />
       </div>
       <div className="grid dashboard-grid" style={{ marginTop: 16 }}>
         <section className="card">
-          <h2 className="section-title">Distribuição das previsões</h2>
+          <h2 className="section-title">Distribuição por classe</h2>
           <Bar label="Alta" value={altas} total={capturas.length} />
           <Bar label="Média" value={medias} total={capturas.length} />
           <Bar label="Baixa" value={baixas} total={capturas.length} />
@@ -66,10 +68,6 @@ export function ObservabilidadeLive({
           <Info
             label="Rodovias com dados"
             value={`${Math.round(coverage * 100)}%`}
-          />
-          <Info
-            label="Predições ≥ 80%"
-            value={`${Math.round(high * 100)}%`}
           />
           <Info
             label="Taxa de correção"
@@ -92,13 +90,13 @@ function Metric({
 }: {
   title: string;
   value: string;
-  sub: string;
+  sub?: string;
 }) {
   return (
     <div className="card">
       <div className="kpi-label">{title}</div>
       <div className="metric-big">{value}</div>
-      <div className="kpi-note">{sub}</div>
+      {sub ? <div className="kpi-note">{sub}</div> : null}
     </div>
   );
 }

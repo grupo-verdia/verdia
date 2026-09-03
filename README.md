@@ -23,7 +23,7 @@ the operator types lat/lon). Each captura defines one **trecho** of 500 m.
 visible or has no grass. **Severidade** follows classe (`alta` first).
 
 Screens (UI in Portuguese): **Visão geral**, **Nova captura**, **Mapa**,
-**Rodovias e planilhas** (Excel + correção da classe), **Planejamento**,
+**Rodovias** (Excel + correção da classe), **Planejamento**,
 **Observabilidade**.
 
 Not built: video + GPS sync, drift detection, route optimization, Supabase Auth.
