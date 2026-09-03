@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -14,6 +14,9 @@ type Props = {
   /** 1-based plan ordem keyed by trecho id (captura.trechoId). */
   planOrdemById?: Readonly<Record<string, number>>;
 };
+
+/** Stable default so live re-renders do not rebuild markers or refit the camera. */
+const EMPTY_PLAN_ORDEM: Readonly<Record<string, number>> = {};
 
 const COLORS: Record<string, string> = {
   alta: "#ff5d5d",
@@ -42,11 +45,13 @@ export function MapaOperacionalClient({
   capturas,
   rodovias,
   height = "100%",
-  planOrdemById = {},
+  planOrdemById = EMPTY_PLAN_ORDEM,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
+  const fittedRef = useRef(false);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -68,6 +73,7 @@ export function MapaOperacionalClient({
 
     markersRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
+    setMapReady(true);
 
     const raf = requestAnimationFrame(() => {
       mapRef.current?.invalidateSize({ pan: false });
@@ -80,6 +86,7 @@ export function MapaOperacionalClient({
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", handleResize);
+      setMapReady(false);
       map.scrollWheelZoom.disable();
       map.dragging.disable();
       map.touchZoom.disable();
@@ -97,7 +104,7 @@ export function MapaOperacionalClient({
   useEffect(() => {
     const map = mapRef.current;
     const markers = markersRef.current;
-    if (!map || !markers) {
+    if (!mapReady || !map || !markers) {
       return;
     }
 
@@ -128,18 +135,23 @@ export function MapaOperacionalClient({
       bounds.push([captura.lat, captura.lon]);
     }
 
-    if (bounds.length > 1) {
-      map.fitBounds(bounds, { padding: [35, 35], maxZoom: 16 });
-    } else if (bounds.length === 1) {
-      map.setView(bounds[0]!, 13);
-    } else {
-      map.setView([-14.235, -51.9253], 4);
+    // Live refresh rebuilds this list every few seconds. Fit once so zoom/pan stay put.
+    if (!fittedRef.current) {
+      if (bounds.length > 1) {
+        map.fitBounds(bounds, { padding: [35, 35], maxZoom: 16 });
+        fittedRef.current = true;
+      } else if (bounds.length === 1) {
+        map.setView(bounds[0]!, 13);
+        fittedRef.current = true;
+      } else {
+        map.setView([-14.235, -51.9253], 4);
+      }
     }
 
     requestAnimationFrame(() => {
       mapRef.current?.invalidateSize({ pan: false });
     });
-  }, [capturas, rodovias, planOrdemById]);
+  }, [mapReady, capturas, rodovias, planOrdemById]);
 
   const inPlan = Object.keys(planOrdemById).length > 0;
 
