@@ -37,7 +37,8 @@ Use these terms in code, tests, and docs.
   Each valid file becomes a captura (infer → persist → dashboard/map).
   Browser only (no CLI). Prefer EXIF GPS; if missing, the operator can enter
   latitude/longitude. Classifies with Google AI Studio (`GOOGLE_API_KEY`) on
-  Vercel; otherwise local Python Inference HTTP (`VLM_INFERENCE_URL`) or a stub.
+  Vercel; otherwise local Python Inference HTTP (`VLM_INFERENCE_URL`). No
+  classifier configured means the upload fails.
 
 ## Fronts (all in scope)
 
@@ -63,7 +64,8 @@ VLM estimates roadside grass height. Code maps Motiva cm bands to
   routes. Access gated by a single shared password.
 - `services/ai` — Python VLM (module + CLI + notebook). Optional Inference HTTP
   (`python -m verdia_ai serve`).
-- Nova captura classifies via Google AI Studio, or local Python HTTP / stub.
+- Nova captura classifies via Google AI Studio, or local Python HTTP. No
+  classifier means the upload fails.
 - Data: Supabase (Postgres + Storage). Required for the running web app
   (memory store is tests-only).
 - Deploy: web on Vercel, data on Supabase.

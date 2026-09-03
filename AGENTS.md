@@ -38,7 +38,7 @@ Use these terms in code, tests, and docs. Details live in `CONTEXT.md`.
 
 - `apps/web`: Next.js + TypeScript (Node 22, `npm`). Shared `DEMO_PASSWORD`. Memory store is tests-only.
 - `services/ai`: Python 3.12 VLM (`uv`): module, CLI, notebook, optional `POST /v1/classify`.
-- Classify for ingest: `GOOGLE_API_KEY` (Google AI Studio) → else `VLM_INFERENCE_URL` → else filename stub. Hosted Nova captura uses the Google key on the web app. Do not set `VLM_INFERENCE_URL` on Vercel.
+- Classify for ingest: `GOOGLE_API_KEY` (Google AI Studio) → else `VLM_INFERENCE_URL` → else error (do not guess classe). Hosted Nova captura uses the Google key on the web app. Do not set `VLM_INFERENCE_URL` on Vercel.
 - Data: Supabase (Postgres + `capturas` bucket). Required for the running web app.
 
 ## Commands

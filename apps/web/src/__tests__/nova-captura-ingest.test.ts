@@ -3,7 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { POST as ingestCaptura } from "@/app/api/capturas/ingest/route";
 import { loadDashboardCapturas } from "@/lib/dashboard";
-import { classifyForIngest } from "@/lib/ingest/classify";
+import {
+  CLASSIFIER_UNAVAILABLE,
+  classifyForIngest,
+} from "@/lib/ingest/classify";
 import { readGeotagFromImage } from "@/lib/ingest/exif-gps";
 import { resolveGeotag } from "@/lib/ingest/resolve-geotag";
 import {
@@ -79,6 +82,17 @@ describe("classifyForIngest HTTP", () => {
     expect(result.classe).toBeNull();
     expect(result.inferenceError).toContain("GOOGLE_API_KEY");
   });
+
+  it("errors when no classifier is configured", async () => {
+    const result = await classifyForIngest({
+      filename: "campo.jpg",
+      imageBytes: new Uint8Array([1]),
+      contentType: "image/jpeg",
+    });
+    expect(result.classe).toBeNull();
+    expect(result.fake).toBe(false);
+    expect(result.inferenceError).toBe(CLASSIFIER_UNAVAILABLE);
+  });
 });
 
 describe("resolveGeotag", () => {
@@ -122,13 +136,32 @@ describe("readGeotagFromImage", () => {
 });
 
 describe("POST /api/capturas/ingest", () => {
+  const originalFetch = globalThis.fetch;
+
   beforeEach(() => {
     setCapturaStore(createMemoryStore());
     delete process.env.VLM_INFERENCE_URL;
     delete process.env.GOOGLE_API_KEY;
   });
 
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    vi.restoreAllMocks();
+  });
+
   it("classifies, persists, and feeds dashboard indices", async () => {
+    process.env.VLM_INFERENCE_URL = "http://ai.test:8000";
+    globalThis.fetch = vi.fn(async () =>
+      Response.json({
+        classe: "média",
+        altura_cm: 20,
+        confidence: 0.7,
+        model_version: "gemma-test",
+        fake: false,
+        justificativa: "ok",
+      }),
+    ) as typeof fetch;
+
     const response = await ingestCaptura(
       new NextRequest("http://localhost:3000/api/capturas/ingest", {
         method: "POST",
@@ -147,11 +180,25 @@ describe("POST /api/capturas/ingest", () => {
     };
     expect(body.captura.rodoviaId).toBe("sp-330");
     expect(body.captura.km).toBe(12.5);
-    expect(body.classification.fake).toBe(true);
+    expect(body.classification.fake).toBe(false);
 
     const dashboard = await loadDashboardCapturas();
     expect(dashboard).toHaveLength(1);
     expect(dashboard[0]?.id).toBe(body.captura.id);
+  });
+
+  it("rejects ingest when no classifier is configured", async () => {
+    const response = await ingestCaptura(
+      new NextRequest("http://localhost:3000/api/capturas/ingest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(ingestBody()),
+      }),
+    );
+    expect(response.status).toBe(503);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toBe(CLASSIFIER_UNAVAILABLE);
+    expect(await loadDashboardCapturas()).toHaveLength(0);
   });
 
   it("rejects missing GPS fields", async () => {

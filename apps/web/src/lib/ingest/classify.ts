@@ -1,7 +1,7 @@
-import { classeFromAlturaCm, isClasse, type Classe } from "@/lib/domain";
+import { isClasse, type Classe } from "@/lib/domain";
 import { classifyViaGoogle } from "@/lib/ingest/classify-google";
 
-/** Result of vegetation classification (Google, Python HTTP, or stub). */
+/** Result of vegetation classification (Google or Python HTTP). */
 export type ClassifyResult = {
   classe: Classe | null;
   alturaCm: number | null;
@@ -19,78 +19,8 @@ export type ClassifyImageInput = {
   contentType: string;
 };
 
-const STUB_MODEL = "stub-vlm-0.1";
-
-function stubJustificativa(classe: Classe | null): string {
-  switch (classe) {
-    case "alta":
-      return "Vegetação alta na margem da rodovia; prioridade de intervenção elevada.";
-    case "média":
-      return "Altura intermediária da grama; acompanhar o ciclo de manutenção.";
-    case "baixa":
-      return "Vegetação baixa, dentro do controle operacional.";
-    case null:
-      return "Faixa lateral sem vegetação visível ou não classificável.";
-    default: {
-      const _exhaustive: never = classe;
-      return _exhaustive;
-    }
-  }
-}
-
-/**
- * Offline stub mirroring `services/ai` fake filename heuristics.
- * Used when Google and `VLM_INFERENCE_URL` are both unset.
- */
-export function classifyImageStub(filename: string): ClassifyResult {
-  const stem = filename.replace(/\.[^.]+$/, "").toLowerCase();
-  const parts = new Set(stem.split(/[_\-\s.]+/).filter(Boolean));
-
-  if (parts.has("na") || parts.has("null")) {
-    return {
-      classe: null,
-      alturaCm: null,
-      confidence: 0.5,
-      modelVersion: STUB_MODEL,
-      inferenceError: null,
-      fake: true,
-      justificativa: stubJustificativa(null),
-    };
-  }
-
-  let minCm: number;
-  let maxCm: number;
-  let confidence: number;
-  if (parts.has("alta")) {
-    minCm = 40;
-    maxCm = 60;
-    confidence = 0.7;
-  } else if (parts.has("media") || parts.has("média")) {
-    minCm = 15;
-    maxCm = 25;
-    confidence = 0.65;
-  } else if (parts.has("baixa")) {
-    minCm = 3;
-    maxCm = 8;
-    confidence = 0.7;
-  } else {
-    minCm = 15;
-    maxCm = 25;
-    confidence = 0.4;
-  }
-
-  const alturaCm = (minCm + maxCm) / 2;
-  const classe = classeFromAlturaCm(alturaCm);
-  return {
-    classe,
-    alturaCm,
-    confidence,
-    modelVersion: STUB_MODEL,
-    inferenceError: null,
-    fake: true,
-    justificativa: stubJustificativa(classe),
-  };
-}
+export const CLASSIFIER_UNAVAILABLE =
+  "Classificador de vegetação não configurado.";
 
 type VlmHttpBody = {
   classe?: unknown;
@@ -130,7 +60,7 @@ function parseHttpVerdict(body: VlmHttpBody): ClassifyResult {
   const justificativa =
     typeof body.justificativa === "string" && body.justificativa.trim()
       ? body.justificativa.trim()
-      : stubJustificativa(classe);
+      : null;
   return {
     classe,
     alturaCm,
@@ -184,7 +114,7 @@ function failedClassification(message: string): ClassifyResult {
   };
 }
 
-/** Google key, else Python HTTP, else filename stub. */
+/** Google key, else Python HTTP, else error. */
 export async function classifyForIngest(
   input: ClassifyImageInput,
 ): Promise<ClassifyResult> {
@@ -200,7 +130,7 @@ export async function classifyForIngest(
   }
   const inferenceUrl = process.env.VLM_INFERENCE_URL?.trim();
   if (!inferenceUrl) {
-    return classifyImageStub(input.filename);
+    return failedClassification(CLASSIFIER_UNAVAILABLE);
   }
   try {
     return await classifyViaHttp(inferenceUrl, input);

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { classifyForIngest } from "@/lib/ingest/classify";
+import {
+  CLASSIFIER_UNAVAILABLE,
+  classifyForIngest,
+} from "@/lib/ingest/classify";
 import { getCapturaStore } from "@/lib/persistence";
 import { resolveRodoviaParam } from "@/lib/rodovias";
 
@@ -120,6 +123,12 @@ export async function POST(request: NextRequest) {
     imageBytes,
     contentType: body.contentType,
   });
+  if (verdict.inferenceError === CLASSIFIER_UNAVAILABLE) {
+    return NextResponse.json(
+      { error: CLASSIFIER_UNAVAILABLE },
+      { status: 503 },
+    );
+  }
 
   try {
     const captura = await getCapturaStore().createCaptura({

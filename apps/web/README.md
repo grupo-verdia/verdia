@@ -35,7 +35,8 @@ env vars. Apply migrations, then add data via **Nova captura** or **Rodovias e
 planilhas**.
 
 Classification: `GOOGLE_API_KEY` (Google AI Studio) → else `VLM_INFERENCE_URL`
-(local Python) → else a filename stub. Failed inference still saves the captura.
+(local Python). If neither is set, Nova captura fails. Failed inference still
+saves the captura.
 
 ### Supabase
 
