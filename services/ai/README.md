@@ -17,8 +17,10 @@ Domain: [`CONTEXT.md`](../../CONTEXT.md). Web ingest: [`apps/web/README.md`](../
 uv sync
 ```
 
-Needs `GOOGLE_API_KEY` for live Google AI Studio calls; optional `VLM_MODEL`,
-`VLM_BASE_URL`. Offline stub: `VLM_FAKE=1` or `--fake`.
+Copy `.env.example` → `.env`. Live calls need `GOOGLE_API_KEY`. Optional
+`VLM_MODEL`, `VLM_BASE_URL`. Offline stub: `VLM_FAKE=1` or `--fake`. The
+notebook reads `.env`. For CLI and `serve`, export the same vars or source the
+file.
 
 ### Inference HTTP (optional local)
 

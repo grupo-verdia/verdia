@@ -25,7 +25,7 @@ on the captura page.
 ## Local
 
 ```bash
-cp .env.example .env.local   # set DEMO_PASSWORD, SUPABASE_URL, SUPABASE_SECRET_KEY
+cp .env.example .env.local   # DEMO_PASSWORD, SUPABASE_URL, SUPABASE_SECRET_KEY; optional GOOGLE_API_KEY
 npm install
 npm run dev
 ```

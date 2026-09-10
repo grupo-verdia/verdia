@@ -56,6 +56,7 @@ cd services/ai && VLM_FAKE=1 uv run python -m verdia_ai serve
 ```
 
 Copy `apps/web/.env.example` → `.env.local` (`DEMO_PASSWORD`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`).
+Copy `services/ai/.env.example` → `.env` (`GOOGLE_API_KEY`) for the CLI and notebook.
 
 ## Conventions
 

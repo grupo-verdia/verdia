@@ -54,7 +54,8 @@ VLM_FAKE=1 uv run python -m verdia_ai serve
 
 For the live classifier in the web app (Vercel and local Nova captura), set
 `GOOGLE_API_KEY` in `apps/web/.env.local` (and on Vercel). Same key as
-`services/ai/.env`. Do not set `VLM_INFERENCE_URL` on Vercel.
+`services/ai/.env` (from `services/ai/.env.example`). Do not set
+`VLM_INFERENCE_URL` on Vercel.
 
 To use the local Python server instead, omit `GOOGLE_API_KEY` on the web
 process and point at it:
@@ -82,7 +83,7 @@ uv run pytest
 
 ```bash
 cd apps/web
-cp .env.example .env.local   # set DEMO_PASSWORD, SUPABASE_URL, SUPABASE_SECRET_KEY
+cp .env.example .env.local   # DEMO_PASSWORD, SUPABASE_URL, SUPABASE_SECRET_KEY; optional GOOGLE_API_KEY
 npm install
 npm run dev
 ```
