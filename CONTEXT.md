@@ -33,10 +33,10 @@ Use these terms in code, tests, and docs.
   it is not a captura. One captura creates one trecho.
 - **Severidade** — maintenance priority of a trecho, driven primarily by classe
   (alta first).
-- **Nova captura** — web upload of one or more geotagged photos. The operator
-  queues files, then sends. Each valid file becomes a captura (infer → persist
-  → dashboard/map). Browser only (no CLI). Prefer EXIF GPS; if missing, the
-  operator can enter latitude/longitude. Classifies with Google AI Studio
+- **Nova captura** — web upload of geotagged photos, including large batches.
+  The operator queues files, then sends. Each valid file is saved first, then
+  classified in the background. No GPS means the photo is skipped, unless the
+  operator types latitude/longitude. Classifies with Google AI Studio
   (`GOOGLE_API_KEY`) on Vercel; otherwise local Python Inference HTTP
   (`VLM_INFERENCE_URL`). No classifier configured means the upload fails.
 
@@ -44,7 +44,7 @@ Use these terms in code, tests, and docs.
 
 1. Hosted VLM (`services/ai` module + CLI + notebook).
 2. Inference HTTP in `services/ai` (`POST /v1/classify`), optional local.
-3. Nova captura (web upload → classify → persist).
+3. Nova captura (web upload → persist → classify in the background).
 4. Dashboard.
 5. Map of trechos.
 6. Observability: counters from persisted capturas (volume, confiança, falhas,
@@ -64,8 +64,8 @@ VLM estimates roadside grass height. Code maps Motiva cm bands to
   routes. Access gated by a single shared password.
 - `services/ai` — Python VLM (module + CLI + notebook). Optional Inference HTTP
   (`python -m verdia_ai serve`).
-- Nova captura classifies via Google AI Studio, or local Python HTTP. No
-  classifier means the upload fails.
+- Nova captura classifies via Google AI Studio, or local Python HTTP, after
+  the photo is saved. No classifier means the upload fails.
 - Data: Supabase (Postgres + Storage). Required for the running web app
   (memory store is tests-only).
 - Deploy: web on Vercel, data on Supabase.

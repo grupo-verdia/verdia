@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { POST as ingestCaptura } from "@/app/api/capturas/ingest/route";
+import { POST as classifyCaptura } from "@/app/api/capturas/[id]/classify/route";
 import { loadDashboardCapturas } from "@/lib/dashboard";
 import {
   CLASSIFIER_UNAVAILABLE,
@@ -149,18 +150,8 @@ describe("POST /api/capturas/ingest", () => {
     vi.restoreAllMocks();
   });
 
-  it("classifies, persists, and feeds dashboard indices", async () => {
+  it("persists into the classification queue and feeds the dashboard", async () => {
     process.env.VLM_INFERENCE_URL = "http://ai.test:8000";
-    globalThis.fetch = vi.fn(async () =>
-      Response.json({
-        classe: "média",
-        altura_cm: 20,
-        confidence: 0.7,
-        model_version: "gemma-test",
-        fake: false,
-        justificativa: "ok",
-      }),
-    ) as typeof fetch;
 
     const response = await ingestCaptura(
       new NextRequest("http://localhost:3000/api/capturas/ingest", {
@@ -175,12 +166,12 @@ describe("POST /api/capturas/ingest", () => {
         id: string;
         rodoviaId: string | null;
         km: number | null;
+        classifiedAt: string | null;
       };
-      classification: { fake: boolean };
     };
     expect(body.captura.rodoviaId).toBe("sp-330");
     expect(body.captura.km).toBe(12.5);
-    expect(body.classification.fake).toBe(false);
+    expect(body.captura.classifiedAt).toBeNull();
 
     const dashboard = await loadDashboardCapturas();
     expect(dashboard).toHaveLength(1);
@@ -221,5 +212,56 @@ describe("POST /api/capturas/ingest", () => {
       }),
     );
     expect(response.status).toBe(400);
+  });
+});
+
+describe("POST /api/capturas/:id/classify", () => {
+  const originalFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    setCapturaStore(createMemoryStore());
+    delete process.env.GOOGLE_API_KEY;
+    process.env.VLM_INFERENCE_URL = "http://ai.test:8000";
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    delete process.env.VLM_INFERENCE_URL;
+    vi.restoreAllMocks();
+  });
+
+  it("classifies a captura saved first", async () => {
+    const ingestResponse = await ingestCaptura(
+      new NextRequest("http://localhost:3000/api/capturas/ingest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(ingestBody()),
+      }),
+    );
+    const ingested = (await ingestResponse.json()) as { captura: { id: string } };
+
+    globalThis.fetch = vi.fn(async () =>
+      Response.json({
+        classe: "média",
+        altura_cm: 20,
+        confidence: 0.7,
+        model_version: "gemma-test",
+        fake: false,
+        justificativa: "ok",
+      }),
+    ) as typeof fetch;
+
+    const response = await classifyCaptura(
+      new Request("http://localhost:3000/api/capturas/id/classify", {
+        method: "POST",
+      }),
+      { params: Promise.resolve({ id: ingested.captura.id }) },
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      captura: { classe: string | null; classifiedAt: string | null };
+    };
+    expect(body.captura.classe).toBe("média");
+    expect(body.captura.classifiedAt).toBeTruthy();
   });
 });

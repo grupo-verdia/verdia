@@ -216,6 +216,36 @@ describe("planejamento product read surface", () => {
     ]);
   });
 
+  it("omits capturas still in the classification queue", async () => {
+    const store = createMemoryStore();
+    setCapturaStore(store);
+    await store.createCaptura({
+      lat: -23.55,
+      lon: -46.63,
+      capturedAt: "2026-09-10T12:00:00.000Z",
+      classe: null,
+      confidence: null,
+      modelVersion: null,
+      imageBytes: new Uint8Array([1]),
+      contentType: "image/jpeg",
+      classifiedAt: null,
+    });
+    await seedCaptura({
+      lat: -22.9,
+      lon: -43.2,
+      capturedAt: "2026-07-20T11:00:00.000Z",
+      classe: "baixa",
+      confidence: 0.7,
+      modelVersion: "stub-0.1",
+      imageBase64: Buffer.from("baixa").toString("base64"),
+      contentType: "image/jpeg",
+    });
+
+    const plan = await loadPlanTrechos();
+    expect(plan).toHaveLength(1);
+    expect(plan[0]?.severidade).toBe("baixa");
+  });
+
   it("blocks unauthenticated access to /planejamento", async () => {
     const request = new NextRequest("http://localhost:3000/planejamento");
     const response = await proxy(request);

@@ -1,11 +1,13 @@
 import { DataAutoRefresh } from "@/components/data-auto-refresh";
 import { NovaCapturaForm } from "@/components/nova-captura-form";
+import { loadDashboardCapturas } from "@/lib/dashboard";
 import { listMotivaRodovias } from "@/lib/rodovias";
 
 export const dynamic = "force-dynamic";
 
-export default function NovaCapturaPage() {
+export default async function NovaCapturaPage() {
   const rodovias = listMotivaRodovias();
+  const capturas = await loadDashboardCapturas();
 
   return (
     <>
@@ -14,12 +16,12 @@ export default function NovaCapturaPage() {
         <div>
           <h1 className="page-title">Nova captura</h1>
           <p className="page-subtitle">
-            Fotos da vegetação na margem. GPS do arquivo, ou latitude e
-            longitude se faltar.
+            Envie o lote. A classificação continua depois. Sem GPS no arquivo,
+            a foto fica de fora, a menos que você informe latitude e longitude.
           </p>
         </div>
       </div>
-      <NovaCapturaForm rodovias={rodovias} />
+      <NovaCapturaForm rodovias={rodovias} initialCapturas={capturas} />
     </>
   );
 }

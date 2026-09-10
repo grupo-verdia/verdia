@@ -25,7 +25,7 @@ From there the operator can look at classified capturas, pin them on a map, grou
 The UI is Portuguese.
 
 - Visão geral shows classified capturas and what to mow first.
-- Nova captura is the browser upload of geotagged photos.
+- Nova captura is the browser upload of geotagged photos. The batch is saved first, then classified. Photos without GPS are skipped unless you type coordinates.
 - The map shows a pin for each captura, colored by classe.
 - Rodovias groups by highway, imports and exports Excel, and lets you correct a class.
 - Planejamento is the mowing queue.

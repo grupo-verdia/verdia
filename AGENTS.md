@@ -8,14 +8,14 @@ Glossary: `CONTEXT.md`. How to run: `README.md` (Portuguese: `README.pt-BR.md`).
 
 ## Product
 
-Flow: upload or Excel import → classify → persist in Supabase → dashboard, map, planejamento.
+Flow: upload or Excel import → persist in Supabase → classify → dashboard, map, planejamento.
 
 Screens (UI in Portuguese):
 
 | Route | Label | Role |
 | --- | --- | --- |
 | `/` | Visão geral | Classified capturas and maintenance priority |
-| `/nova-captura` | Nova captura | Browser multi-upload of geotagged photos |
+| `/nova-captura` | Nova captura | Bulk geotagged photo upload; AI queue runs after save |
 | `/mapa` | Mapa | Markers by classe (no PostGIS) |
 | `/rodovias` | Rodovias | Capturas by rodovia, Excel import/export, classe correction |
 | `/planejamento` | Planejamento | Queue by severidade, then rodovia, then km |
@@ -31,7 +31,7 @@ Use these terms in code, tests, and docs. Details live in `CONTEXT.md`.
 - **Trecho.** Roadside stretch at that GPS point. One captura defines one trecho (1:1). Default length is 500 m (Motiva's manual-analysis constant).
 - **Classe.** Ordered height scale, not three unrelated labels. Motiva bands: `h < 10 cm` → `baixa`; `10-30 cm` → `média`; `h > 30 cm` → `alta`. `classe` is `null` only when the roadside strip is not visible or has no grass. Under uncertainty the model still estimates height (lower confidence).
 - **Severidade.** Maintenance priority of a trecho, follows classe (`alta` first). Null classe → `baixa`.
-- **Nova captura.** Browser only (no CLI). Operator queues photos, then sends. Each valid file: infer → persist. Failed inference still persists the captura with `inferenceError` set.
+- **Nova captura.** Browser only (no CLI). Operator queues a batch, then sends. Each valid file is saved first, then classified in the background. Closing the tab after upload keeps the photos; continue from Nova captura if any are still in the queue. Photos without GPS are skipped unless lat/lon are filled. Failed inference still keeps the captura with `inferenceError` set.
 - **Rodovia.** Motiva catalog entry (code-seeded, e.g. SP-330). Optional on a captura, used by planilhas and planejamento.
 
 ## Stack

@@ -1,4 +1,4 @@
-import { severidadeFromClasse, type Severidade } from "@/lib/domain";
+import { isClassificationPending, severidadeFromClasse, type Severidade } from "@/lib/domain";
 import type { MapTrecho } from "@/lib/mapa";
 import { getCapturaStore } from "@/lib/persistence";
 import { getRodoviaById } from "@/lib/rodovias";
@@ -56,7 +56,9 @@ function compareKmNullsLast(a: number | null, b: number | null): number {
  * (alta → média → baixa), then rodovia, then km (nulls last).
  */
 export async function loadPlanTrechos(): Promise<PlanTrecho[]> {
-  const capturas = await getCapturaStore().listCapturas();
+  const capturas = (await getCapturaStore().listCapturas()).filter(
+    (captura) => !isClassificationPending(captura),
+  );
 
   const rows: Omit<PlanTrecho, "ordem">[] = capturas.map((captura) => {
     const rodovia = captura.rodoviaId

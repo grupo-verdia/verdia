@@ -22,6 +22,13 @@ export type ClassifyImageInput = {
 export const CLASSIFIER_UNAVAILABLE =
   "Classificador de vegetação não configurado.";
 
+/** True when Nova captura can enqueue photos for the VLM. */
+export function isClassifierConfigured(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return Boolean(env.GOOGLE_API_KEY?.trim() || env.VLM_INFERENCE_URL?.trim());
+}
+
 type VlmHttpBody = {
   classe?: unknown;
   altura_cm?: unknown;

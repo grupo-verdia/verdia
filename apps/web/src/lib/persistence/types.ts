@@ -16,6 +16,16 @@ export type CreateCapturaInput = {
   km?: number | null;
   sentido?: string | null;
   alturaCm?: number | null;
+  /** Omit for already-classified writes. Pass `null` to enqueue for the VLM. */
+  classifiedAt?: string | null;
+};
+
+export type ApplyClassificationInput = {
+  classe: Classe | null;
+  confidence: number;
+  modelVersion: string;
+  inferenceError: string | null;
+  alturaCm: number | null;
 };
 
 export type ListCapturasFilter = {
@@ -35,6 +45,7 @@ export type CapturaStore = {
   getTrecho(id: string): Promise<Trecho | null>;
   listRodovias(): Promise<Rodovia[]>;
   overrideCaptura(id: string, input: OverrideCapturaInput): Promise<Captura>;
+  applyClassification(id: string, input: ApplyClassificationInput): Promise<Captura>;
   /** Clear capturas for one rodovia id, or all when `"todas"`. */
   clearCapturas(rodoviaId: string): Promise<number>;
 };
