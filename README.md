@@ -1,106 +1,102 @@
 # verdia
 
-verdia classifies roadside grass height from a geotagged photo so Motiva can
-prioritize mowing. Today that work is done by eye ("olhômetro").
+Also in [Portuguese](./README.pt-BR.md).
 
-[Motiva](https://www.motiva.com.br/) (formerly Grupo CCR) runs highway, rail, and
-airport concessions. verdia is only for vegetação na margem de rodovias:
-classe → severidade → planejamento.
+Motiva still judges roadside grass by eye ("olhômetro"). verdia takes a geotagged photo, estimates how tall the grass is, and says what to mow first.
 
-We do not have Motiva's real data. Photos are generic geotagged laterals.
-We do not assume a 360 camera.
+[Motiva](https://www.motiva.com.br/) (formerly Grupo CCR) runs highway, rail, and airport concessions. This product is only the vegetation on the highway margin. Height class sets how urgent a stretch is. That order is what planning uses.
 
-Flow: upload or Excel import → classify → persist → dashboard / map /
-planejamento. Glossary: [`CONTEXT.md`](./CONTEXT.md).
+## What it does
 
-## Product
+You send photos from the browser, or you import an Excel sheet. Each photo needs GPS, from the file or typed in. No GPS, it is not a captura. Each captura stands for 500 m of roadside, the same length Motiva uses when someone does this by hand.
 
-A **captura** is one geotagged, timestamped photo. No GPS, no captura (EXIF, or
-the operator types lat/lon). Each captura defines one **trecho** of 500 m.
+A vision model estimates height in centimeters. Code maps that onto Motiva's bands:
 
-**Classe** is an ordered height scale from Motiva bands: below 10 cm `baixa`,
-10-30 cm `média`, above 30 cm `alta`. Null only when the roadside strip is not
-visible or has no grass. **Severidade** follows classe (`alta` first).
+- below 10 cm: baixa
+- 10-30 cm: média
+- above 30 cm: alta
 
-Screens (UI in Portuguese): **Visão geral**, **Nova captura**, **Mapa**,
-**Rodovias** (Excel + correção da classe), **Planejamento**,
-**Observabilidade**.
+If the strip is missing from the photo, or there is no grass, classe stays empty. When the model is unsure, it still estimates height, with lower confidence. Maintenance priority follows classe. alta goes first. Empty classe counts as baixa.
 
-Not built: video + GPS sync, drift detection, route optimization, Supabase Auth.
+If classification fails, the captura is still saved, with the error on it.
 
-## Layout
+From there the operator can look at classified capturas, pin them on a map, group them by rodovia, fix a wrong class, and work a queue ordered by urgency, then highway, then km.
 
-| Path | Role |
-|------|------|
-| `apps/web` | Next.js (TypeScript) app + BFF, shared-password gate |
-| `services/ai` | Python VLM grass classifier + optional Inference HTTP |
+The UI is Portuguese.
 
-## Prerequisites
+- Visão geral shows classified capturas and what to mow first.
+- Nova captura is the browser upload of geotagged photos.
+- The map shows a pin for each captura, colored by classe.
+- Rodovias groups by highway, imports and exports Excel, and lets you correct a class.
+- Planejamento is the mowing queue.
+- Observabilidade tracks confidence, failures, and corrections.
 
-- Node.js 22+ and npm
-- Python 3.12+ and [uv](https://docs.astral.sh/uv/)
-- Supabase (hosted or `supabase start`) for the web app
+Video synced to GPS, drift detection, route optimization, and real user accounts are out. One shared password gets you in.
+
+Product words (captura, trecho, classe, severidade, rodovia) are in [`CONTEXT.md`](./CONTEXT.md).
+
+The operator app is `apps/web`. The classifier is `services/ai`.
 
 ## Run locally
 
-### 1. AI VLM + Inference API (`services/ai`)
+You need Node.js 22+, npm, Python 3.12+, [uv](https://docs.astral.sh/uv/), and a Supabase project. Cloud or `supabase start` both work. The web app will not start without `SUPABASE_URL` and `SUPABASE_SECRET_KEY`.
+
+### Web
+
+```bash
+cd apps/web
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+Put `DEMO_PASSWORD`, `SUPABASE_URL`, and `SUPABASE_SECRET_KEY` in `.env.local`. Apply the SQL in `supabase/migrations/` first, in timestamp order.
+
+Open [http://localhost:3000](http://localhost:3000). You land on `/login`. The password in `DEMO_PASSWORD` lets you in.
+
+### Classifier
+
+For live Nova captura, put `GOOGLE_API_KEY` in `apps/web/.env.local`. Same key as `services/ai/.env` (copy from `services/ai/.env.example`). Hosted Nova captura on Vercel uses that key too. Do not set `VLM_INFERENCE_URL` on Vercel.
+
+To classify with the local Python server instead, leave `GOOGLE_API_KEY` off the web process and point at it:
 
 ```bash
 cd services/ai
 uv sync
-# Optional: Inference HTTP for the web app when GOOGLE_API_KEY is unset
 VLM_FAKE=1 uv run python -m verdia_ai serve
 ```
 
-For the live classifier in the web app (Vercel and local Nova captura), set
-`GOOGLE_API_KEY` in `apps/web/.env.local` (and on Vercel). Same key as
-`services/ai/.env` (from `services/ai/.env.example`). Do not set
-`VLM_INFERENCE_URL` on Vercel.
-
-To use the local Python server instead, omit `GOOGLE_API_KEY` on the web
-process and point at it:
+In `apps/web/.env.local`:
 
 ```bash
 VLM_INFERENCE_URL=http://127.0.0.1:8000
 ```
 
-Python CLI folder classify still works:
+`VLM_FAKE=1` is the stub. Drop it and export `GOOGLE_API_KEY` when you want a real call. Details: [`services/ai/README.md`](./services/ai/README.md).
 
-```bash
-VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary
-```
-
-Details: [`services/ai/README.md`](./services/ai/README.md).
-
-Tests:
+Folder classify without the HTTP server:
 
 ```bash
 cd services/ai
-uv run pytest
+VLM_FAKE=1 uv run python -m verdia_ai.classify path/to/photos --summary
 ```
 
-### 2. Web app (`apps/web`)
 
-```bash
-cd apps/web
-cp .env.example .env.local   # DEMO_PASSWORD, SUPABASE_URL, SUPABASE_SECRET_KEY; optional GOOGLE_API_KEY
-npm install
-npm run dev
-```
 
-Open [http://localhost:3000](http://localhost:3000). Unauthenticated requests go
-to `/login`; the shared `DEMO_PASSWORD` unlocks the app. The home dashboard lists
-persisted **capturas** from Supabase (apply `supabase/migrations/` first).
-Without those env vars the app does not start a store.
-
-Tests / typecheck:
+### Tests
 
 ```bash
 cd apps/web
 npm test
+npm run lint
 npm run typecheck
+
+cd services/ai
+uv run pytest
 ```
+
+Web tests fake the database. The running app does not.
 
 ## Deploy
 
-Vercel + hosted Supabase. Nova captura on Vercel classifies with `GOOGLE_API_KEY`.
+Web on Vercel, data on hosted Supabase. Nova captura on Vercel classifies with `GOOGLE_API_KEY`.

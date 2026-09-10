@@ -4,7 +4,7 @@ Motiva roadside vegetation product. A geotagged photo becomes a **captura**, the
 
 We do not have Motiva's real data. Photos are generic geotagged laterals. Do not assume a 360 camera.
 
-Glossary: `CONTEXT.md`. How to run: `README.md`. Next.js breaking changes: `apps/web/AGENTS.md`. CI: `.github/workflows/ci.yml`.
+Glossary: `CONTEXT.md`. How to run: `README.md` (Portuguese: `README.pt-BR.md`). Next.js breaking changes: `apps/web/AGENTS.md`. CI: `.github/workflows/ci.yml`.
 
 ## Product
 
