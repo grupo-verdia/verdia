@@ -35,7 +35,7 @@ Ficou de fora o vídeo sincronizado com GPS, a detecção de deriva, a otimizaç
 
 Os termos do produto (captura, trecho, classe, severidade, rodovia) estão no [`CONTEXT.md`](./CONTEXT.md).
 
-O app do operador fica em `apps/web`. O classificador fica em `services/ai`.
+O app do operador fica em `apps/web`. É o mesmo site no celular. Abaixo de ~700px, a navegação é uma barra embaixo, não um app separado. O classificador fica em `services/ai`.
 
 ## Na sua máquina
 

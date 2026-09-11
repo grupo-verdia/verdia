@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { AppShell } from "@/components/app-shell";
@@ -18,6 +18,11 @@ const mono = Geist_Mono({
 export const metadata: Metadata = {
   title: "verdia · Motiva",
   description: "Monitoramento da vegetação nas rodovias Motiva.",
+};
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: "#07110f",
 };
 
 export default function RootLayout({

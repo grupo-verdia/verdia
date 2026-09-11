@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { ConfirmStrip } from "@/components/confirm-strip";
 import { Field } from "@/components/field";
 import type { Severidade } from "@/lib/domain";
@@ -166,49 +168,63 @@ function ExcelCluster({
   onImport: (file: File) => void;
   onClear: () => void;
 }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="toolbar-cluster">
+    <>
       <button
         type="button"
-        className="btn"
-        onClick={() => {
-          window.location.href = "/api/capturas/template";
-        }}
+        className="btn planilha-toggle"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
       >
-        Modelo Excel
+        Planilha
       </button>
-      <label className={`btn btn-primary ${busy ? "disabled" : ""}`}>
-        {busy ? "Importando…" : "Importar"}
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-          hidden
-          disabled={busy}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) {
-              onImport(file);
-            }
-          }}
-        />
-      </label>
-      <a className="btn" href={exportHref}>
-        Exportar
-      </a>
-      <a className="btn" href="/verdia-teste-rodovias.xlsx">
-        Planilha de teste
-      </a>
-      <button
-        type="button"
-        className="btn btn-danger"
-        style={{ marginLeft: "auto" }}
-        disabled={busy || cardsEmpty}
-        onClick={onClear}
-      >
-        Limpar
-      </button>
-    </div>
+      <div className={open ? "excel-cluster is-open" : "excel-cluster"}>
+        <div className="toolbar-cluster">
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              window.location.href = "/api/capturas/template";
+            }}
+          >
+            Modelo Excel
+          </button>
+          <label className={`btn btn-primary ${busy ? "disabled" : ""}`}>
+            {busy ? "Importando…" : "Importar"}
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              hidden
+              disabled={busy}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  onImport(file);
+                }
+              }}
+            />
+          </label>
+          <a className="btn" href={exportHref}>
+            Exportar
+          </a>
+          <a className="btn" href="/verdia-teste-rodovias.xlsx">
+            Planilha de teste
+          </a>
+          <button
+            type="button"
+            className="btn btn-danger"
+            style={{ marginLeft: "auto" }}
+            disabled={busy || cardsEmpty}
+            onClick={onClear}
+          >
+            Limpar
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 

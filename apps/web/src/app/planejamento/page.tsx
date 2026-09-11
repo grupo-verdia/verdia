@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { MapLegend } from "@/components/map-legend";
 import { MapaOperacional } from "@/components/mapa-operacional";
+import { RodoviasCards } from "@/components/rodovias-cards";
 import { StatusPill } from "@/components/status-pill";
 import { loadDashboardCapturas } from "@/lib/dashboard";
 import {
@@ -46,7 +47,7 @@ export default async function PlanejamentoPage() {
             <h2 id="fila-heading" className="section-title">
               Fila por severidade
             </h2>
-            <div className="table-wrap">
+            <div className="table-wrap plan-table">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -82,6 +83,27 @@ export default async function PlanejamentoPage() {
                 </tbody>
               </table>
             </div>
+            <div className="plan-cards">
+              <RodoviasCards
+                cards={plan.map((trecho) => ({
+                  id: trecho.capturaId,
+                  ordem: trecho.ordem,
+                  ordemLabel: `#${trecho.ordem}`,
+                  rodovia: trecho.rodoviaCodigo ?? "—",
+                  km: trecho.km === null ? "—" : String(trecho.km),
+                  altura: formatAlturaCm(trecho.alturaCm),
+                  severidade: trecho.severidade,
+                  confianca: formatConfianca(trecho.confidence),
+                }))}
+                emptyHint={
+                  <>
+                    Nenhum trecho no plano. Cadastre dados em{" "}
+                    <Link href="/rodovias">Rodovias</Link> ou envie fotos em{" "}
+                    <Link href="/nova-captura">Nova captura</Link>.
+                  </>
+                }
+              />
+            </div>
           </section>
 
           <section
@@ -100,7 +122,7 @@ export default async function PlanejamentoPage() {
               </div>
               <MapLegend />
             </div>
-            <div className="map-box" style={{ height: "min(70vh, 36rem)" }}>
+            <div className="map-box map-box-plan">
               <MapaOperacional
                 capturas={capturas}
                 rodovias={rodovias}

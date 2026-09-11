@@ -2,6 +2,8 @@
 
 import { usePathname } from "next/navigation";
 
+import { BottomNav } from "@/components/bottom-nav";
+import { PhoneTopbar } from "@/components/phone-topbar";
 import { Sidebar } from "@/components/sidebar";
 
 type AppShellProps = {
@@ -18,8 +20,10 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="app-shell">
+      <PhoneTopbar />
       <Sidebar />
       <div className="content">{children}</div>
+      <BottomNav />
     </div>
   );
 }

@@ -10,6 +10,8 @@ Glossary: `CONTEXT.md`. How to run: `README.md` (Portuguese: `README.pt-BR.md`).
 
 Flow: Nova captura saves then classifies. Excel import already has classe. Then dashboard, map, planejamento.
 
+The operator app is the same website on phones. Below ~700px, navigation is a bottom bar, not a separate app.
+
 Screens (UI in Portuguese):
 
 | Route | Label | Role |
