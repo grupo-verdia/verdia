@@ -7,6 +7,7 @@ import {
   type Trecho,
 } from "@/lib/domain";
 import type {
+  ApplyClassificationInput,
   CapturaStore,
   CreateCapturaInput,
   ListCapturasFilter,
@@ -49,6 +50,10 @@ export function createMemoryStore(): CapturaStore {
         alturaCm: input.alturaCm ?? null,
         overrideMotivo: null,
         overrideAt: null,
+        classifiedAt:
+          input.classifiedAt === undefined
+            ? new Date().toISOString()
+            : input.classifiedAt,
       };
       capturas.set(id, captura);
       return captura;
@@ -91,12 +96,43 @@ export function createMemoryStore(): CapturaStore {
       const updated: Captura = {
         ...existing,
         classe: input.classe,
+        inferenceError: null,
         overrideMotivo: input.motivo,
         overrideAt: new Date().toISOString(),
       };
       capturas.set(id, updated);
       const trecho = trechos.get(existing.trechoId);
       if (trecho) {
+        trechos.set(existing.trechoId, {
+          ...trecho,
+          severidade: severidadeFromClasse(input.classe),
+        });
+      }
+      return updated;
+    },
+
+    async applyClassification(
+      id: string,
+      input: ApplyClassificationInput,
+    ): Promise<Captura> {
+      const existing = capturas.get(id);
+      if (!existing) {
+        throw new Error("captura not found");
+      }
+      const keepOverride = existing.overrideAt != null;
+      const updated: Captura = {
+        ...existing,
+        confidence: input.confidence,
+        modelVersion: input.modelVersion,
+        inferenceError: input.inferenceError,
+        classifiedAt: new Date().toISOString(),
+        ...(keepOverride
+          ? {}
+          : { classe: input.classe, alturaCm: input.alturaCm }),
+      };
+      capturas.set(id, updated);
+      const trecho = trechos.get(existing.trechoId);
+      if (trecho && !keepOverride) {
         trechos.set(existing.trechoId, {
           ...trecho,
           severidade: severidadeFromClasse(input.classe),

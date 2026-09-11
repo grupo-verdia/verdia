@@ -9,6 +9,7 @@ import {
   type Trecho,
 } from "@/lib/domain";
 import type {
+  ApplyClassificationInput,
   CapturaStore,
   CreateCapturaInput,
   ListCapturasFilter,
@@ -39,12 +40,13 @@ type CapturaRow = {
   altura_cm: number | null;
   override_motivo: string | null;
   override_at: string | null;
+  classified_at: string | null;
 };
 
 const BUCKET = "capturas";
 
 const CAPTURA_SELECT =
-  "id, trecho_id, storage_key, lat, lon, captured_at, classe, confidence, model_version, inference_error, rodovia_id, km, sentido, altura_cm, override_motivo, override_at";
+  "id, trecho_id, storage_key, lat, lon, captured_at, classe, confidence, model_version, inference_error, rodovia_id, km, sentido, altura_cm, override_motivo, override_at, classified_at";
 
 function rowToCaptura(row: CapturaRow): Captura {
   return {
@@ -64,6 +66,7 @@ function rowToCaptura(row: CapturaRow): Captura {
     alturaCm: row.altura_cm,
     overrideMotivo: row.override_motivo ?? null,
     overrideAt: row.override_at ?? null,
+    classifiedAt: row.classified_at ?? null,
   };
 }
 
@@ -115,6 +118,10 @@ async function createCaptura(
       altura_cm: input.alturaCm ?? null,
       override_motivo: null,
       override_at: null,
+      classified_at:
+        input.classifiedAt === undefined
+          ? new Date().toISOString()
+          : input.classifiedAt,
     })
     .select(CAPTURA_SELECT)
     .single();
@@ -177,6 +184,7 @@ async function overrideCaptura(
     .from("capturas")
     .update({
       classe: input.classe,
+      inference_error: null,
       override_motivo: input.motivo,
       override_at: overrideAt,
     })
@@ -192,6 +200,45 @@ async function overrideCaptura(
     .from("trechos")
     .update({ severidade: severidadeFromClasse(input.classe) })
     .eq("id", existing.trechoId);
+  return rowToCaptura(data as CapturaRow);
+}
+
+async function applyClassification(
+  client: SupabaseClient,
+  id: string,
+  input: ApplyClassificationInput,
+): Promise<Captura> {
+  const existing = await getCaptura(client, id);
+  if (!existing) {
+    throw new Error("captura not found");
+  }
+  const classifiedAt = new Date().toISOString();
+  const keepOverride = existing.overrideAt != null;
+  const { data, error } = await client
+    .from("capturas")
+    .update({
+      ...(keepOverride
+        ? {}
+        : { classe: input.classe, altura_cm: input.alturaCm }),
+      confidence: input.confidence,
+      model_version: input.modelVersion,
+      inference_error: input.inferenceError,
+      classified_at: classifiedAt,
+    })
+    .eq("id", id)
+    .select(CAPTURA_SELECT)
+    .single();
+  if (error || !data) {
+    throw new Error(
+      `failed to apply classification: ${error?.message ?? "unknown"}`,
+    );
+  }
+  if (!keepOverride) {
+    await client
+      .from("trechos")
+      .update({ severidade: severidadeFromClasse(input.classe) })
+      .eq("id", existing.trechoId);
+  }
   return rowToCaptura(data as CapturaRow);
 }
 
@@ -288,6 +335,7 @@ export function createSupabaseStore(options: {
       return listMotivaRodovias();
     },
     overrideCaptura: (id, input) => overrideCaptura(client, id, input),
+    applyClassification: (id, input) => applyClassification(client, id, input),
     clearCapturas: (rodoviaId) => clearCapturas(client, rodoviaId),
   };
 }

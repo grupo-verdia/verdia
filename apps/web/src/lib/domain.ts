@@ -28,6 +28,8 @@ export type Captura = {
   overrideMotivo: string | null;
   /** ISO timestamp of the last human override, if any. */
   overrideAt: string | null;
+  /** Set when classification finished (ok or failed). Null means still waiting. */
+  classifiedAt: string | null;
 };
 
 /** Motiva roadside grass bands (cm), mirrored from services/ai labels. */
@@ -65,6 +67,13 @@ export const CLASSES: readonly Classe[] = ["baixa", "média", "alta"] as const;
 
 export function isClasse(value: unknown): value is Classe {
   return typeof value === "string" && (CLASSES as readonly string[]).includes(value);
+}
+
+/** Waiting for classification. Continuar still shows on Nova captura. */
+export function isClassificationPending(
+  captura: Pick<Captura, "classifiedAt">,
+): boolean {
+  return captura.classifiedAt == null;
 }
 
 /** Severidade follows classe (alta first); null classe → baixa. */

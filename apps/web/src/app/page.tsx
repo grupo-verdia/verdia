@@ -20,7 +20,7 @@ export default async function Home() {
         <div>
           <h1 className="page-title">Monitoramento de vegetação</h1>
           <p className="page-subtitle">
-            Capturas classificadas e prioridade de manutenção.
+            Capturas e o que cortar primeiro.
           </p>
         </div>
         <div className="toolbar">

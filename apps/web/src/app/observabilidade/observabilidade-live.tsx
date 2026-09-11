@@ -2,6 +2,7 @@
 
 import { useOperationalData } from "@/components/operational-live";
 import type { Captura } from "@/lib/domain";
+import { isClassificationPending } from "@/lib/domain";
 import type { Rodovia } from "@/lib/rodovias";
 
 export function ObservabilidadeLive({
@@ -15,12 +16,14 @@ export function ObservabilidadeLive({
     initialCapturas,
     initialRodovias,
   );
-  const altas = capturas.filter((c) => c.classe === "alta").length;
-  const medias = capturas.filter((c) => c.classe === "média").length;
-  const baixas = capturas.filter((c) => c.classe === "baixa").length;
+  const done = capturas.filter((c) => !isClassificationPending(c));
+  const altas = done.filter((c) => c.classe === "alta").length;
+  const medias = done.filter((c) => c.classe === "média").length;
+  const baixas = done.filter((c) => c.classe === "baixa").length;
   const manual = capturas.filter((c) => c.overrideAt != null).length;
   const errors = capturas.filter((c) => c.inferenceError).length;
-  const confidences = capturas
+  const queued = capturas.filter(isClassificationPending).length;
+  const confidences = done
     .map((c) => c.confidence)
     .filter((v): v is number => typeof v === "number");
   const avg = confidences.length
@@ -47,6 +50,11 @@ export function ObservabilidadeLive({
           sub="classe alterada na captura"
         />
         <Metric
+          title="Na fila"
+          value={queued.toString()}
+          sub="aguardando classificação"
+        />
+        <Metric
           title="Falhas"
           value={errors.toString()}
           sub="falha ao classificar"
@@ -59,9 +67,9 @@ export function ObservabilidadeLive({
       <div className="grid dashboard-grid" style={{ marginTop: 16 }}>
         <section className="card">
           <h2 className="section-title">Distribuição por classe</h2>
-          <Bar label="Alta" value={altas} total={capturas.length} />
-          <Bar label="Média" value={medias} total={capturas.length} />
-          <Bar label="Baixa" value={baixas} total={capturas.length} />
+          <Bar label="Alta" value={altas} total={done.length} />
+          <Bar label="Média" value={medias} total={done.length} />
+          <Bar label="Baixa" value={baixas} total={done.length} />
         </section>
         <section className="card">
           <h2 className="section-title">Qualidade dos dados</h2>

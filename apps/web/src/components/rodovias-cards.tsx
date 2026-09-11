@@ -12,7 +12,8 @@ export type RodoviaCard = {
   rodovia: string;
   km: string;
   altura: string;
-  severidade: Severidade;
+  severidade: Severidade | null;
+  pillLabel: string;
   confianca: string;
 };
 
@@ -41,14 +42,14 @@ export function RodoviasCards({
       {cards.map((card) => (
         <article
           key={card.id}
-          className={`record-card ${card.severidade}`}
+          className={["record-card", card.severidade].filter(Boolean).join(" ")}
         >
           <header>
             <div>
               <div className="record-kicker">Rodovia</div>
               <strong>{card.rodovia}</strong>
             </div>
-            <StatusPill value={card.severidade} />
+            <StatusPill value={card.severidade} label={card.pillLabel} />
           </header>
           <div className="record-fields">
             <RecordField label="KM" value={card.km} />

@@ -16,20 +16,20 @@ A vision model estimates height in centimeters. Code maps that onto Motiva's ban
 - 10-30 cm: média
 - above 30 cm: alta
 
-If the strip is missing from the photo, or there is no grass, classe stays empty. When the model is unsure, it still estimates height, with lower confidence. Maintenance priority follows classe. alta goes first. Empty classe counts as baixa.
+If the strip is missing from the photo, or there is no grass, classe stays empty after classification. While the photo is still waiting, classe is also empty. When the model is unsure, it still estimates height, with lower confidence. Maintenance priority follows classe. alta goes first. Empty classe after classification counts as baixa. A failed classify does not enter Planejamento.
 
 If classification fails, the captura is still saved, with the error on it.
 
-From there the operator can look at classified capturas, pin them on a map, group them by rodovia, fix a wrong class, and work a queue ordered by urgency, then highway, then km.
+From there the operator can look at capturas, pin them on a map, group them by rodovia, fix a wrong class, and work a queue ordered by urgency, then highway, then km.
 
 The UI is Portuguese.
 
-- Visão geral shows classified capturas and what to mow first.
-- Nova captura is the browser upload of geotagged photos.
+- Visão geral shows capturas and what to mow first, including how many are still waiting.
+- Nova captura is the browser upload. Photos are saved first, then classified. Close the tab: photos stay. Continue on Nova captura.
 - The map shows a pin for each captura, colored by classe.
 - Rodovias groups by highway, imports and exports Excel, and lets you correct a class.
-- Planejamento is the mowing queue.
-- Observabilidade tracks confidence, failures, and corrections.
+- Planejamento is the mowing queue. It skips photos still waiting or whose classify failed.
+- Observabilidade tracks confidence, the queue, failures, and corrections.
 
 Video synced to GPS, drift detection, route optimization, and real user accounts are out. One shared password gets you in.
 

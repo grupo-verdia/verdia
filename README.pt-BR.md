@@ -16,20 +16,20 @@ Um modelo de visão estima a altura em centímetros. O código encaixa isso nas 
 - 10-30 cm: média
 - acima de 30 cm: alta
 
-Se a faixa não aparece na foto, ou não tem grama, a classe fica vazia. Se o modelo não tiver certeza, ainda estima a altura, com confiança menor. A prioridade de manutenção segue a classe. alta primeiro. Classe vazia conta como baixa.
+Se a faixa não aparece na foto, ou não tem grama, a classe fica vazia depois da classificação. Enquanto a foto espera na fila, a classe também fica vazia. Se o modelo não tiver certeza, ainda estima a altura, com confiança menor. A prioridade de manutenção segue a classe. alta primeiro. Classe vazia depois da classificação conta como baixa. Falha de classificação não entra no Planejamento.
 
 Se a classificação falhar, a captura mesmo assim é salva, com o erro nela.
 
-Dali o operador vê as capturas classificadas, marca no mapa, agrupa por rodovia, corrige uma classe errada e trabalha a fila: urgência, depois rodovia, depois km.
+Dali o operador vê as capturas, marca no mapa, agrupa por rodovia, corrige uma classe errada e trabalha a fila: urgência, depois rodovia, depois km.
 
 A interface está em português.
 
-- Visão geral mostra as capturas classificadas e o que cortar primeiro.
-- Nova captura é o envio de fotos com GPS no navegador.
+- Visão geral mostra as capturas e o que cortar primeiro, inclusive quantas ainda esperam.
+- Nova captura é o envio de fotos com GPS. O lote é salvo primeiro, depois classificado. Fecha a aba: as fotos ficam. Continue em Nova captura.
 - O mapa mostra um pino por captura, na cor da classe.
 - Rodovias agrupa por rodovia, importa e exporta Excel, e deixa corrigir a classe.
-- Planejamento é a fila de corte.
-- Observabilidade mostra confiança, falhas e correções.
+- Planejamento é a fila de corte. Não entra foto ainda na fila nem foto cuja classificação falhou.
+- Observabilidade mostra confiança, fila, falhas e correções.
 
 Ficou de fora o vídeo sincronizado com GPS, a detecção de deriva, a otimização de rota e a conta de usuário. Uma senha compartilhada libera o acesso.
 

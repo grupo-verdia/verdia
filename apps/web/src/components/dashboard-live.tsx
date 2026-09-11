@@ -5,8 +5,9 @@ import Link from "next/link";
 import { MapLegend } from "@/components/map-legend";
 import { MapaOperacional } from "@/components/mapa-operacional";
 import { useOperationalData } from "@/components/operational-live";
-import { StatusPill } from "@/components/status-pill";
+import { capturaStatus, StatusPill } from "@/components/status-pill";
 import type { Captura } from "@/lib/domain";
+import { isClassificationPending } from "@/lib/domain";
 import { formatConfianca } from "@/lib/planejamento";
 import type { Rodovia } from "@/lib/rodovias";
 
@@ -37,9 +38,16 @@ export function DashboardLive({
     initialRodovias,
   );
 
-  const altas = capturas.filter((c) => c.classe === "alta").length;
-  const medias = capturas.filter((c) => c.classe === "média").length;
-  const baixas = capturas.filter((c) => c.classe === "baixa").length;
+  const pending = capturas.filter(isClassificationPending).length;
+  const altas = capturas.filter(
+    (c) => !isClassificationPending(c) && c.classe === "alta",
+  ).length;
+  const medias = capturas.filter(
+    (c) => !isClassificationPending(c) && c.classe === "média",
+  ).length;
+  const baixas = capturas.filter(
+    (c) => !isClassificationPending(c) && c.classe === "baixa",
+  ).length;
   const conf = capturas
     .map((c) => c.confidence)
     .filter((v): v is number => typeof v === "number");
@@ -57,6 +65,7 @@ export function DashboardLive({
     <>
       <div className="grid kpis">
         <Kpi label="Capturas" value={capturas.length} />
+        <Kpi label="Na fila" value={pending} />
         <Kpi label="Alta" value={altas} />
         <Kpi label="Média" value={medias} />
         <Kpi label="Baixa" value={baixas} />
@@ -88,6 +97,7 @@ export function DashboardLive({
             {recentes.length ? (
               recentes.map((captura) => {
                 const road = rodovias.find((r) => r.id === captura.rodoviaId);
+                const status = capturaStatus(captura);
                 return (
                   <Link
                     className="alert"
@@ -105,7 +115,7 @@ export function DashboardLive({
                         {captura.sentido ? ` · ${captura.sentido}` : ""}
                       </div>
                     </div>
-                    <StatusPill value={captura.classe} />
+                    <StatusPill value={status.value} label={status.label} />
                   </Link>
                 );
               })

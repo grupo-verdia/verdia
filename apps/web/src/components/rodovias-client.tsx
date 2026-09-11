@@ -8,7 +8,8 @@ import {
   type RodoviaCard,
 } from "@/components/rodovias-cards";
 import { RodoviasToolbar } from "@/components/rodovias-toolbar";
-import type { Captura, Severidade } from "@/lib/domain";
+import { capturaStatus } from "@/components/status-pill";
+import { type Captura, type Severidade } from "@/lib/domain";
 import { isExcelFilename } from "@/lib/excel/excel-filename";
 import type { Rodovia } from "@/lib/rodovias";
 
@@ -51,13 +52,15 @@ function buildCards(
       !c.rodoviaId || c.rodoviaId === "todas"
         ? "—"
         : (codigo ?? c.rodoviaId);
+    const status = capturaStatus(c);
     return {
       id: c.id,
       ordem: index + 1,
       rodovia: rodoviaLabel,
       km: c.km != null ? c.km.toFixed(1) : "—",
       altura: c.alturaCm != null ? `${c.alturaCm} cm` : "—",
-      severidade: (c.classe ?? "baixa") as Severidade,
+      severidade: status.value,
+      pillLabel: status.label,
       confianca:
         c.confidence != null ? `${Math.round(c.confidence * 100)}%` : "—",
     };

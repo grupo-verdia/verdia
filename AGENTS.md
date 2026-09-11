@@ -8,18 +8,18 @@ Glossary: `CONTEXT.md`. How to run: `README.md` (Portuguese: `README.pt-BR.md`).
 
 ## Product
 
-Flow: upload or Excel import → classify → persist in Supabase → dashboard, map, planejamento.
+Flow: Nova captura saves then classifies. Excel import already has classe. Then dashboard, map, planejamento.
 
 Screens (UI in Portuguese):
 
 | Route | Label | Role |
 | --- | --- | --- |
-| `/` | Visão geral | Classified capturas and maintenance priority |
-| `/nova-captura` | Nova captura | Browser multi-upload of geotagged photos |
+| `/` | Visão geral | Capturas, queue, and maintenance priority |
+| `/nova-captura` | Nova captura | Bulk geotagged photo upload. Classification starts after save |
 | `/mapa` | Mapa | Markers by classe (no PostGIS) |
 | `/rodovias` | Rodovias | Capturas by rodovia, Excel import/export, classe correction |
 | `/planejamento` | Planejamento | Queue by severidade, then rodovia, then km |
-| `/observabilidade` | Observabilidade | Confiança, falhas, correções |
+| `/observabilidade` | Observabilidade | Confiança, fila, falhas, correções |
 
 Not built: video frames + GPS sync, drift detection, route optimization, Supabase Auth.
 
@@ -29,9 +29,9 @@ Use these terms in code, tests, and docs. Details live in `CONTEXT.md`.
 
 - **Captura.** One geotagged, timestamped roadside photo. No valid GPS means it is not a captura. Prefer EXIF; the operator can type lat/lon.
 - **Trecho.** Roadside stretch at that GPS point. One captura defines one trecho (1:1). Default length is 500 m (Motiva's manual-analysis constant).
-- **Classe.** Ordered height scale, not three unrelated labels. Motiva bands: `h < 10 cm` → `baixa`; `10-30 cm` → `média`; `h > 30 cm` → `alta`. `classe` is `null` only when the roadside strip is not visible or has no grass. Under uncertainty the model still estimates height (lower confidence).
-- **Severidade.** Maintenance priority of a trecho, follows classe (`alta` first). Null classe → `baixa`.
-- **Nova captura.** Browser only (no CLI). Operator queues photos, then sends. Each valid file: infer → persist. Failed inference still persists the captura with `inferenceError` set.
+- **Classe.** Ordered height scale, not three unrelated labels. Motiva bands: `h < 10 cm` → `baixa`; `10-30 cm` → `média`; `h > 30 cm` → `alta`. After classification, `classe` is `null` only when the roadside strip is not visible or has no grass. Before `classifiedAt`, null means still waiting. Under uncertainty the model still estimates height (lower confidence).
+- **Severidade.** Maintenance priority of a trecho, follows classe (`alta` first). Null classe → `baixa`. Failed inference does not enter Planejamento.
+- **Nova captura.** Browser only (no CLI). Operator queues a batch, then sends. Each valid file is saved first, then classified in the background. Closing the tab after upload keeps the photos. Continue on Nova captura if any are still waiting. Photos without GPS are skipped unless lat/lon are filled. Failed inference still keeps the captura with `inferenceError` set.
 - **Rodovia.** Motiva catalog entry (code-seeded, e.g. SP-330). Optional on a captura, used by planilhas and planejamento.
 
 ## Stack

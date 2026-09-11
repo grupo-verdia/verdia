@@ -1,13 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 
 import {
   CLASSIFIER_UNAVAILABLE,
-  classifyForIngest,
+  isClassifierConfigured,
 } from "@/lib/ingest/classify";
+import { classifyPersistedCaptura } from "@/lib/ingest/classify-persisted";
 import { getCapturaStore } from "@/lib/persistence";
 import { resolveRodoviaParam } from "@/lib/rodovias";
 
-/** Google VLM can exceed the default serverless budget (Hobby still caps lower). */
+/** Classification may continue after the response. Still capped at 60s. */
 export const maxDuration = 60;
 
 type IngestBody = {
@@ -16,7 +17,6 @@ type IngestBody = {
   capturedAt?: unknown;
   imageBase64?: unknown;
   contentType?: unknown;
-  filename?: unknown;
   rodoviaId?: unknown;
   km?: unknown;
   sentido?: unknown;
@@ -44,7 +44,17 @@ function parseOptionalNumber(
   return { ok: false, error: `${field} must be a number or null` };
 }
 
-/** Geotagged photo → VLM classify → persist. */
+function scheduleClassify(id: string): void {
+  try {
+    after(() => {
+      void classifyPersistedCaptura(id).catch(() => undefined);
+    });
+  } catch {
+    // Vitest has no Next after() context. Failed background runs stay pending.
+  }
+}
+
+/** Persist geotagged photo, then classify in the background. */
 export async function POST(request: NextRequest) {
   let raw: unknown;
   try {
@@ -76,10 +86,6 @@ export async function POST(request: NextRequest) {
   if (typeof body.contentType !== "string" || body.contentType.length === 0) {
     return NextResponse.json({ error: "contentType is required" }, { status: 400 });
   }
-  const filename =
-    typeof body.filename === "string" && body.filename.length > 0
-      ? body.filename
-      : "upload.jpg";
 
   let rodoviaId: string | null | undefined;
   if (body.rodoviaId === undefined) {
@@ -118,16 +124,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "imageBase64 is invalid" }, { status: 400 });
   }
 
-  const verdict = await classifyForIngest({
-    filename,
-    imageBytes,
-    contentType: body.contentType,
-  });
-  if (verdict.inferenceError === CLASSIFIER_UNAVAILABLE) {
-    return NextResponse.json(
-      { error: CLASSIFIER_UNAVAILABLE },
-      { status: 503 },
-    );
+  if (!isClassifierConfigured()) {
+    return NextResponse.json({ error: CLASSIFIER_UNAVAILABLE }, { status: 503 });
   }
 
   try {
@@ -135,32 +133,20 @@ export async function POST(request: NextRequest) {
       lat: body.lat,
       lon: body.lon,
       capturedAt: body.capturedAt,
-      classe: verdict.classe,
-      confidence: verdict.confidence,
-      modelVersion: verdict.modelVersion,
-      inferenceError: verdict.inferenceError,
+      classe: null,
+      confidence: null,
+      modelVersion: null,
+      inferenceError: null,
       imageBytes,
       contentType: body.contentType,
       rodoviaId,
       km: kmParsed.value,
       sentido,
-      alturaCm: verdict.alturaCm,
+      alturaCm: null,
+      classifiedAt: null,
     });
-    return NextResponse.json(
-      {
-        captura,
-        classification: {
-          fake: verdict.fake,
-          modelVersion: verdict.modelVersion,
-          justificativa: verdict.justificativa,
-          classe: verdict.classe,
-          alturaCm: verdict.alturaCm,
-          confidence: verdict.confidence,
-          inferenceError: verdict.inferenceError,
-        },
-      },
-      { status: 201 },
-    );
+    scheduleClassify(captura.id);
+    return NextResponse.json({ captura }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "ingest failed";
     return NextResponse.json({ error: message }, { status: 500 });

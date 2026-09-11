@@ -2,15 +2,18 @@ import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { POST as ingestCaptura } from "@/app/api/capturas/ingest/route";
+import { POST as classifyCaptura } from "@/app/api/capturas/[id]/classify/route";
 import { loadDashboardCapturas } from "@/lib/dashboard";
 import {
   CLASSIFIER_UNAVAILABLE,
   classifyForIngest,
 } from "@/lib/ingest/classify";
+import { sniffImageContentType } from "@/lib/ingest/image-type";
 import { readGeotagFromImage } from "@/lib/ingest/exif-gps";
 import { resolveGeotag } from "@/lib/ingest/resolve-geotag";
 import {
   createMemoryStore,
+  getCapturaStore,
   setCapturaStore,
 } from "@/lib/persistence";
 
@@ -149,18 +152,8 @@ describe("POST /api/capturas/ingest", () => {
     vi.restoreAllMocks();
   });
 
-  it("classifies, persists, and feeds dashboard indices", async () => {
+  it("persists into the classification queue and feeds the dashboard", async () => {
     process.env.VLM_INFERENCE_URL = "http://ai.test:8000";
-    globalThis.fetch = vi.fn(async () =>
-      Response.json({
-        classe: "média",
-        altura_cm: 20,
-        confidence: 0.7,
-        model_version: "gemma-test",
-        fake: false,
-        justificativa: "ok",
-      }),
-    ) as typeof fetch;
 
     const response = await ingestCaptura(
       new NextRequest("http://localhost:3000/api/capturas/ingest", {
@@ -175,12 +168,12 @@ describe("POST /api/capturas/ingest", () => {
         id: string;
         rodoviaId: string | null;
         km: number | null;
+        classifiedAt: string | null;
       };
-      classification: { fake: boolean };
     };
     expect(body.captura.rodoviaId).toBe("sp-330");
     expect(body.captura.km).toBe(12.5);
-    expect(body.classification.fake).toBe(false);
+    expect(body.captura.classifiedAt).toBeNull();
 
     const dashboard = await loadDashboardCapturas();
     expect(dashboard).toHaveLength(1);
@@ -221,5 +214,159 @@ describe("POST /api/capturas/ingest", () => {
       }),
     );
     expect(response.status).toBe(400);
+  });
+});
+
+describe("POST /api/capturas/:id/classify", () => {
+  const originalFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    setCapturaStore(createMemoryStore());
+    delete process.env.GOOGLE_API_KEY;
+    process.env.VLM_INFERENCE_URL = "http://ai.test:8000";
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    delete process.env.VLM_INFERENCE_URL;
+    vi.restoreAllMocks();
+  });
+
+  it("classifies a captura saved first", async () => {
+    const ingestResponse = await ingestCaptura(
+      new NextRequest("http://localhost:3000/api/capturas/ingest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(ingestBody()),
+      }),
+    );
+    const ingested = (await ingestResponse.json()) as { captura: { id: string } };
+
+    globalThis.fetch = vi.fn(async () =>
+      Response.json({
+        classe: "média",
+        altura_cm: 20,
+        confidence: 0.7,
+        model_version: "gemma-test",
+        fake: false,
+        justificativa: "ok",
+      }),
+    ) as typeof fetch;
+
+    const response = await classifyCaptura(
+      new Request("http://localhost:3000/api/capturas/id/classify", {
+        method: "POST",
+      }),
+      { params: Promise.resolve({ id: ingested.captura.id }) },
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      captura: { classe: string | null; classifiedAt: string | null };
+    };
+    expect(body.captura.classe).toBe("média");
+    expect(body.captura.classifiedAt).toBeTruthy();
+  });
+
+  it("sends PNG bytes as image/png, not jpeg", async () => {
+    const png = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3,
+    ]);
+    const ingestResponse = await ingestCaptura(
+      new NextRequest("http://localhost:3000/api/capturas/ingest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(
+          ingestBody({
+            imageBase64: Buffer.from(png).toString("base64"),
+            contentType: "image/png",
+            filename: "campo.png",
+          }),
+        ),
+      }),
+    );
+    const ingested = (await ingestResponse.json()) as { captura: { id: string } };
+
+    globalThis.fetch = vi.fn(async (_url, init) => {
+      const payload = JSON.parse(String(init?.body)) as { content_type?: string };
+      expect(payload.content_type).toBe("image/png");
+      return Response.json({
+        classe: "baixa",
+        altura_cm: 4,
+        confidence: 0.6,
+        model_version: "gemma-test",
+        fake: false,
+        justificativa: "ok",
+      });
+    }) as typeof fetch;
+
+    const response = await classifyCaptura(
+      new Request("http://localhost:3000/api/capturas/id/classify", {
+        method: "POST",
+      }),
+      { params: Promise.resolve({ id: ingested.captura.id }) },
+    );
+    expect(response.status).toBe(200);
+  });
+
+  it("does not overwrite a human classe correction", async () => {
+    const ingestResponse = await ingestCaptura(
+      new NextRequest("http://localhost:3000/api/capturas/ingest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(ingestBody()),
+      }),
+    );
+    const ingested = (await ingestResponse.json()) as { captura: { id: string } };
+    await getCapturaStore().overrideCaptura(ingested.captura.id, {
+      classe: "alta",
+      motivo: "Revisão de campo",
+    });
+
+    globalThis.fetch = vi.fn(async () =>
+      Response.json({
+        classe: "baixa",
+        altura_cm: 4,
+        confidence: 0.6,
+        model_version: "gemma-test",
+        fake: false,
+        justificativa: "ok",
+      }),
+    ) as typeof fetch;
+
+    const response = await classifyCaptura(
+      new Request("http://localhost:3000/api/capturas/id/classify", {
+        method: "POST",
+      }),
+      { params: Promise.resolve({ id: ingested.captura.id }) },
+    );
+    const body = (await response.json()) as {
+      captura: {
+        classe: string | null;
+        classifiedAt: string | null;
+        overrideMotivo: string | null;
+      };
+    };
+    expect(response.status).toBe(200);
+    expect(body.captura.classe).toBe("alta");
+    expect(body.captura.overrideMotivo).toBe("Revisão de campo");
+    expect(body.captura.classifiedAt).toBeTruthy();
+  });
+});
+
+describe("sniffImageContentType", () => {
+  it("reads JPEG, PNG, and WebP magic bytes", () => {
+    expect(sniffImageContentType(new Uint8Array([0xff, 0xd8, 0xff, 1]))).toBe(
+      "image/jpeg",
+    );
+    expect(
+      sniffImageContentType(
+        new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      ),
+    ).toBe("image/png");
+    const webp = new Uint8Array(12);
+    webp.set([0x52, 0x49, 0x46, 0x46], 0);
+    webp.set([0x57, 0x45, 0x42, 0x50], 8);
+    expect(sniffImageContentType(webp)).toBe("image/webp");
+    expect(sniffImageContentType(new Uint8Array([1, 2, 3]))).toBe("image/jpeg");
   });
 });

@@ -18,9 +18,10 @@ Domain terms: [`CONTEXT.md`](../../CONTEXT.md). Repo runbook:
 | `/planejamento` | Planejamento (severidade, depois rodovia, depois km) |
 | `/observabilidade` | Observabilidade |
 
-Nova captura prefers EXIF GPS; if missing, the operator can type latitude and
-longitude. **Rodovias** is how you import/export Excel. Classe correction lives
-on the captura page.
+Nova captura prefers EXIF GPS. Type lat/lon if the file has none. Photos are
+saved first, then classified. Close the tab: photos stay. Continue on Nova
+captura. Excel import/export is on Rodovias. Classe correction is on the
+captura page.
 
 ## Local
 
@@ -35,7 +36,7 @@ env vars. Apply migrations, then add data via **Nova captura** or **Rodovias**.
 
 Classification: `GOOGLE_API_KEY` (Google AI Studio) → else `VLM_INFERENCE_URL`
 (local Python). If neither is set, Nova captura fails. Failed inference still
-saves the captura.
+saves the captura. Apply the SQL in `supabase/migrations/` in timestamp order.
 
 ### Supabase
 

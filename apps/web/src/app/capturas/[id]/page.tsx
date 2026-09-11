@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 
 import { BackLink } from "@/components/back-link";
 import { OverrideForm } from "@/components/override-form";
-import { StatusPill } from "@/components/status-pill";
+import { capturaStatus, StatusPill } from "@/components/status-pill";
 import { loadCapturaDetail } from "@/lib/dashboard";
+import { isClassificationPending } from "@/lib/domain";
+import { sniffImageContentType } from "@/lib/ingest/image-type";
 import { getRodoviaById } from "@/lib/rodovias";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +36,8 @@ export default async function CapturaDetailPage({ params }: PageProps) {
     ? getRodoviaById(captura.rodoviaId)
     : null;
   const b64 = Buffer.from(photoBytes).toString("base64");
-  const src = `data:image/jpeg;base64,${b64}`;
+  const src = `data:${sniffImageContentType(photoBytes)};base64,${b64}`;
+  const status = capturaStatus(captura);
 
   return (
     <>
@@ -81,7 +84,7 @@ export default async function CapturaDetailPage({ params }: PageProps) {
             />
             <Info
               label="Classe"
-              value={<StatusPill value={captura.classe} />}
+              value={<StatusPill value={status.value} label={status.label} />}
             />
             <Info
               label="Confiança"
@@ -98,6 +101,11 @@ export default async function CapturaDetailPage({ params }: PageProps) {
               {captura.modelVersion}
             </p>
           ) : null}
+          {isClassificationPending(captura) ? (
+            <div className="notice" style={{ marginTop: 14 }}>
+              Ainda na fila.
+            </div>
+          ) : null}
           {captura.inferenceError ? (
             <div className="notice notice-danger" style={{ marginTop: 14 }}>
               Não foi possível classificar: {captura.inferenceError}
@@ -113,18 +121,20 @@ export default async function CapturaDetailPage({ params }: PageProps) {
           ) : null}
         </section>
 
-        <section className="card">
-          <h2 className="section-title" style={{ marginBottom: 6 }}>
-            Corrigir classe
-          </h2>
-          <p
-            className="muted"
-            style={{ fontSize: 12, lineHeight: 1.6, margin: "0 0 14px" }}
-          >
-            Quando a classe da foto estiver errada.
-          </p>
-          <OverrideForm id={captura.id} current={captura.classe} />
-        </section>
+        {isClassificationPending(captura) ? null : (
+          <section className="card">
+            <h2 className="section-title" style={{ marginBottom: 6 }}>
+              Corrigir classe
+            </h2>
+            <p
+              className="muted"
+              style={{ fontSize: 12, lineHeight: 1.6, margin: "0 0 14px" }}
+            >
+              Quando a classe da foto estiver errada.
+            </p>
+            <OverrideForm id={captura.id} current={captura.classe} />
+          </section>
+        )}
       </div>
     </>
   );

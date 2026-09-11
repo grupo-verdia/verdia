@@ -9,7 +9,7 @@ export type ClassifyResult = {
   modelVersion: string;
   inferenceError: string | null;
   fake: boolean;
-  /** Short AI rationale shown on the upload report. */
+  /** Model rationale. Not shown in the UI. */
   justificativa: string | null;
 };
 
@@ -21,6 +21,13 @@ export type ClassifyImageInput = {
 
 export const CLASSIFIER_UNAVAILABLE =
   "Classificador de vegetação não configurado.";
+
+/** True when Nova captura can classify (Google key or local Python URL). */
+export function isClassifierConfigured(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return Boolean(env.GOOGLE_API_KEY?.trim() || env.VLM_INFERENCE_URL?.trim());
+}
 
 type VlmHttpBody = {
   classe?: unknown;
