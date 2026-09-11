@@ -28,7 +28,7 @@ export type Captura = {
   overrideMotivo: string | null;
   /** ISO timestamp of the last human override, if any. */
   overrideAt: string | null;
-  /** Set when classification finished (ok or failed). Null means still in the AI queue. */
+  /** Set when classification finished (ok or failed). Null means still waiting. */
   classifiedAt: string | null;
 };
 
@@ -69,7 +69,7 @@ export function isClasse(value: unknown): value is Classe {
   return typeof value === "string" && (CLASSES as readonly string[]).includes(value);
 }
 
-/** True until the VLM has written a result (or a failure) onto the captura. */
+/** Waiting for classification. Continuar still shows on Nova captura. */
 export function isClassificationPending(
   captura: Pick<Captura, "classifiedAt">,
 ): boolean {

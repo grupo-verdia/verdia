@@ -10,19 +10,24 @@ import { useOperationalData } from "@/components/operational-live";
 import { isClassificationPending, type Captura } from "@/lib/domain";
 import type { Rodovia } from "@/lib/rodovias";
 
-/** Resume AI work left pending after a closed tab. */
+/** Photos already saved, classification not done. Continuar on Nova captura. */
 export function NovaCapturaPending({
   initialCapturas,
   initialRodovias,
+  hideIds = [],
 }: {
   initialCapturas: Captura[];
   initialRodovias: Rodovia[];
+  hideIds?: string[];
 }) {
   const { capturas, refresh } = useOperationalData(
     initialCapturas,
     initialRodovias,
   );
-  const pending = capturas.filter(isClassificationPending);
+  const hidden = new Set(hideIds);
+  const pending = capturas.filter(
+    (captura) => isClassificationPending(captura) && !hidden.has(captura.id),
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,11 +38,25 @@ export function NovaCapturaPending({
     setBusy(true);
     setError(null);
     try {
+      const failed: string[] = [];
       await runPool(pending, 2, async (captura) => {
-        await classifyOne(captura.id);
+        try {
+          await classifyOne(captura.id);
+        } catch (caught) {
+          failed.push(
+            caught instanceof Error ? caught.message : "Falha ao classificar.",
+          );
+        }
       });
       await refresh();
       window.dispatchEvent(new Event("verdia:data-refresh"));
+      if (failed.length > 0) {
+        setError(
+          failed.length === pending.length
+            ? (failed[0] ?? "Falha ao classificar.")
+            : "Algumas fotos não classificaram. Tente de novo.",
+        );
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Falha ao classificar.");
     } finally {
@@ -54,10 +73,10 @@ export function NovaCapturaPending({
       <div className="toolbar" style={{ justifyContent: "space-between" }}>
         <div>
           <div style={{ fontWeight: 650, fontSize: 14 }}>
-            {pending.length} na fila da classificação
+            {pending.length} na fila
           </div>
           <p className="muted" style={{ fontSize: 12, margin: "4px 0 0" }}>
-            Fotos já salvas. Pode continuar daqui.
+            Fotos já salvas. Classificação incompleta.
           </p>
         </div>
         <button

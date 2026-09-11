@@ -16,8 +16,8 @@ export default async function NovaCapturaPage() {
         <div>
           <h1 className="page-title">Nova captura</h1>
           <p className="page-subtitle">
-            Envie o lote. A classificação continua depois. Sem GPS no arquivo,
-            a foto fica de fora, a menos que você informe latitude e longitude.
+            Envie as fotos. A classificação continua depois. Sem GPS, informe
+            latitude e longitude.
           </p>
         </div>
       </div>

@@ -184,6 +184,7 @@ async function overrideCaptura(
     .from("capturas")
     .update({
       classe: input.classe,
+      inference_error: null,
       override_motivo: input.motivo,
       override_at: overrideAt,
     })
@@ -212,14 +213,16 @@ async function applyClassification(
     throw new Error("captura not found");
   }
   const classifiedAt = new Date().toISOString();
+  const keepOverride = existing.overrideAt != null;
   const { data, error } = await client
     .from("capturas")
     .update({
-      classe: input.classe,
+      ...(keepOverride
+        ? {}
+        : { classe: input.classe, altura_cm: input.alturaCm }),
       confidence: input.confidence,
       model_version: input.modelVersion,
       inference_error: input.inferenceError,
-      altura_cm: input.alturaCm,
       classified_at: classifiedAt,
     })
     .eq("id", id)
@@ -230,10 +233,12 @@ async function applyClassification(
       `failed to apply classification: ${error?.message ?? "unknown"}`,
     );
   }
-  await client
-    .from("trechos")
-    .update({ severidade: severidadeFromClasse(input.classe) })
-    .eq("id", existing.trechoId);
+  if (!keepOverride) {
+    await client
+      .from("trechos")
+      .update({ severidade: severidadeFromClasse(input.classe) })
+      .eq("id", existing.trechoId);
+  }
   return rowToCaptura(data as CapturaRow);
 }
 

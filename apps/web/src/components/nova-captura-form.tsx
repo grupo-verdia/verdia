@@ -2,19 +2,20 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { Field } from "@/components/field";
+import { CapturaMetaFields } from "@/components/nova-captura-fields";
 import {
-  finishClassify,
   kmFieldError,
   manualGpsFieldErrors,
   persistOne,
   runPool,
+  watchClassify,
   type FieldErrors,
   type IngestMeta,
 } from "@/components/nova-captura-ingest";
 import { NovaCapturaPending } from "@/components/nova-captura-pending";
 import {
   NovaCapturaQueue,
+  QUEUE_PREVIEW_LIMIT,
   type QueuedImage,
 } from "@/components/nova-captura-queue";
 import {
@@ -25,105 +26,6 @@ import { fileQueueKey } from "@/lib/ingest/drop-files";
 import { readGeotagFromImage } from "@/lib/ingest/exif-gps";
 import { isClassificationPending, type Captura } from "@/lib/domain";
 import type { Rodovia } from "@/lib/rodovias";
-
-const SENTIDOS = [
-  "Norte",
-  "Sul",
-  "Leste",
-  "Oeste",
-  "Crescente",
-  "Decrescente",
-] as const;
-
-const GPS_HINT = "Só nas fotos sem GPS.";
-const PREVIEW_LIMIT = 8;
-
-type MetaFieldsProps = {
-  rodovias: Rodovia[];
-  rodoviaId: string;
-  km: string;
-  sentido: string;
-  lat: string;
-  lon: string;
-  errors: FieldErrors;
-  onRodovia: (value: string) => void;
-  onKm: (value: string) => void;
-  onSentido: (value: string) => void;
-  onLat: (value: string) => void;
-  onLon: (value: string) => void;
-};
-
-function CapturaMetaFields({
-  rodovias,
-  rodoviaId,
-  km,
-  sentido,
-  lat,
-  lon,
-  errors,
-  onRodovia,
-  onKm,
-  onSentido,
-  onLat,
-  onLon,
-}: MetaFieldsProps) {
-  return (
-    <div className="form-grid">
-      <Field label="Rodovia">
-        <select
-          className="select"
-          value={rodoviaId}
-          onChange={(event) => onRodovia(event.target.value)}
-        >
-          <option value="">Não informar</option>
-          {rodovias.map((rodovia) => (
-            <option key={rodovia.id} value={rodovia.id}>
-              {rodovia.codigo} · {rodovia.nome}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="KM" error={errors.km}>
-        <input
-          className={`input${errors.km ? " input-invalid" : ""}`}
-          value={km}
-          onChange={(event) => onKm(event.target.value)}
-          inputMode="decimal"
-        />
-      </Field>
-      <Field label="Sentido">
-        <select
-          className="select"
-          value={sentido}
-          onChange={(event) => onSentido(event.target.value)}
-        >
-          <option value="">Não informar</option>
-          {SENTIDOS.map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="Latitude" hint={GPS_HINT} error={errors.lat}>
-        <input
-          className={`input${errors.lat ? " input-invalid" : ""}`}
-          value={lat}
-          onChange={(event) => onLat(event.target.value)}
-          inputMode="decimal"
-        />
-      </Field>
-      <Field label="Longitude" error={errors.lon}>
-        <input
-          className={`input${errors.lon ? " input-invalid" : ""}`}
-          value={lon}
-          onChange={(event) => onLon(event.target.value)}
-          inputMode="decimal"
-        />
-      </Field>
-    </div>
-  );
-}
 
 function validateQueue(items: QueuedImage[], km: string, lat: string, lon: string) {
   const next: FieldErrors = {};
@@ -174,7 +76,7 @@ function addFiles(refs: QueueRefs, files: File[]) {
     }
     keys.add(key);
     const canPreview =
-      refs.queueRef.current.length + additions.length < PREVIEW_LIMIT;
+      refs.queueRef.current.length + additions.length < QUEUE_PREVIEW_LIMIT;
     const previewUrl = canPreview ? URL.createObjectURL(file) : "";
     if (previewUrl) {
       refs.previewUrlsRef.current.push(previewUrl);
@@ -212,6 +114,23 @@ function clearQueue(refs: QueueRefs) {
   setQueueBoth(refs, []);
 }
 
+function dropSucceeded(refs: QueueRefs, keys: Set<string>) {
+  const next: QueuedImage[] = [];
+  for (const item of refs.queueRef.current) {
+    if (keys.has(item.key)) {
+      if (item.previewUrl) {
+        URL.revokeObjectURL(item.previewUrl);
+      }
+      continue;
+    }
+    next.push(item);
+  }
+  refs.previewUrlsRef.current = next
+    .map((item) => item.previewUrl)
+    .filter(Boolean);
+  setQueueBoth(refs, next);
+}
+
 async function sendQueuedBatch(options: {
   items: QueuedImage[];
   meta: IngestMeta;
@@ -219,6 +138,7 @@ async function sendQueuedBatch(options: {
   refs: QueueRefs;
   setProgress: (value: string | null) => void;
   setReport: (report: BatchReport) => void;
+  onPersisted: (ids: string[]) => void;
 }): Promise<void> {
   const toSend = options.items.filter(
     (item) =>
@@ -230,14 +150,14 @@ async function sendQueuedBatch(options: {
   }
   const uploaded: BatchReport["uploaded"] = [];
   const failed: BatchReport["failed"] = [];
+  const succeeded = new Set<string>();
   let current = 0;
   await runPool(toSend, 3, async (item) => {
-    current += 1;
-    options.setProgress(`${current} de ${toSend.length} enviadas`);
     try {
       const result = await persistOne(item.file, options.meta);
       if (result.ok) {
         uploaded.push(result.captura);
+        succeeded.add(item.key);
       } else {
         failed.push({ name: item.file.name, message: result.message });
       }
@@ -247,18 +167,23 @@ async function sendQueuedBatch(options: {
         message: error instanceof Error ? error.message : "Erro inesperado.",
       });
     }
+    current += 1;
+    options.setProgress(`${current} de ${toSend.length} enviadas`);
   });
-  clearQueue(options.refs);
+  dropSucceeded(options.refs, succeeded);
   const ids = uploaded.map((captura) => captura.id);
   options.setReport({ uploaded: [...uploaded], failed, skipped });
-  options.setProgress(
-    uploaded.length ? "Classificando em segundo plano…" : null,
-  );
+  options.onPersisted(ids);
+  if (ids.length === 0) {
+    options.setProgress(null);
+    return;
+  }
+  options.setProgress("Classificando…");
   window.dispatchEvent(new Event("verdia:data-refresh"));
-  await finishClassify(ids, () => options.refs.aliveRef.current, (capturas) => {
+  await watchClassify(ids, () => options.refs.aliveRef.current, (capturas) => {
     options.setReport({ uploaded: capturas, failed, skipped });
     const left = capturas.filter(isClassificationPending).length;
-    options.setProgress(left > 0 ? `${left} na fila da classificação` : null);
+    options.setProgress(left > 0 ? `${left} na fila` : null);
   });
   window.dispatchEvent(new Event("verdia:data-refresh"));
 }
@@ -283,6 +208,7 @@ export function NovaCapturaForm({
   const [progress, setProgress] = useState<string | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [report, setReport] = useState<BatchReport | null>(null);
+  const [watchingIds, setWatchingIds] = useState<string[]>([]);
   const refs: QueueRefs = { queueRef, previewUrlsRef, aliveRef, setQueue };
 
   useEffect(() => {
@@ -315,15 +241,31 @@ export function NovaCapturaForm({
     const includeMissing = lat.trim() !== "" && lon.trim() !== "";
     setBusy(true);
     setReport(null);
-    await sendQueuedBatch({
-      items,
-      meta: { rodoviaId, km, sentido, lat, lon },
-      includeMissing,
-      refs,
-      setProgress,
-      setReport,
-    });
-    setBusy(false);
+    const sentIds: string[] = [];
+    try {
+      await sendQueuedBatch({
+        items,
+        meta: { rodoviaId, km, sentido, lat, lon },
+        includeMissing,
+        refs,
+        setProgress,
+        setReport,
+        onPersisted(ids) {
+          sentIds.push(...ids);
+          setBusy(false);
+          if (ids.length) {
+            setWatchingIds((prev) => [...prev, ...ids]);
+          }
+        },
+      });
+    } catch {
+      setProgress(null);
+    } finally {
+      setBusy(false);
+      if (sentIds.length) {
+        setWatchingIds((prev) => prev.filter((id) => !sentIds.includes(id)));
+      }
+    }
   }
 
   const includeMissing = lat.trim() !== "" && lon.trim() !== "";
@@ -331,7 +273,10 @@ export function NovaCapturaForm({
     (item) => item.gps === "ok" || (includeMissing && item.gps === "missing"),
   ).length;
   const sendDisabled =
-    busy || queue.length === 0 || queue.some((item) => item.gps === "reading");
+    busy ||
+    queue.length === 0 ||
+    sendCount === 0 ||
+    queue.some((item) => item.gps === "reading");
   const sendLabel = busy
     ? "Enviando…"
     : sendCount > 1
@@ -343,6 +288,7 @@ export function NovaCapturaForm({
       <NovaCapturaPending
         initialCapturas={initialCapturas}
         initialRodovias={rodovias}
+        hideIds={watchingIds}
       />
       <form className="card" style={{ marginBottom: 16 }} onSubmit={onSubmit}>
         <CapturaMetaFields

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { capturaStatus } from "@/components/status-pill";
 import type { Captura } from "@/lib/domain";
 import type { Rodovia } from "@/lib/rodovias";
 
@@ -128,7 +129,7 @@ export function MapaOperacionalClient({
           planLine +
           `KM ${captura.km?.toFixed(1) ?? "—"}<br>` +
           `Altura: ${captura.alturaCm ?? "—"} cm<br>` +
-          `Classe: ${captura.classe ?? "pendente"}<br>` +
+          `Classe: ${capturaStatus(captura).label}<br>` +
           `<small>${new Date(captura.capturedAt).toLocaleString("pt-BR")}</small>`,
       );
       marker.addTo(markers);

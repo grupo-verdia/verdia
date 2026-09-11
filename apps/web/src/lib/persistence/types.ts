@@ -16,7 +16,7 @@ export type CreateCapturaInput = {
   km?: number | null;
   sentido?: string | null;
   alturaCm?: number | null;
-  /** Omit for already-classified writes. Pass `null` to enqueue for the VLM. */
+  /** Omit when the row already has a class (Excel, API). Pass null on Nova captura. */
   classifiedAt?: string | null;
 };
 

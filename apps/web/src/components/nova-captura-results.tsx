@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 
-import { StatusPill } from "@/components/status-pill";
-import type { Captura, Classe } from "@/lib/domain";
+import { capturaStatus, StatusPill } from "@/components/status-pill";
+import type { Captura } from "@/lib/domain";
 import { isClassificationPending, severidadeFromClasse } from "@/lib/domain";
 
 export type BatchReport = {
@@ -27,17 +27,14 @@ function priorityLabel(captura: Captura): string {
 }
 
 function OneReport({ captura }: { captura: Captura }) {
+  const status = capturaStatus(captura);
   return (
     <article className="card" style={{ marginBottom: 12 }}>
       <h3 className="section-title" style={{ marginBottom: 8 }}>
         Captura
       </h3>
       <div className="toolbar" style={{ marginBottom: 12, gap: 8 }}>
-        <StatusPill
-          value={
-            isClassificationPending(captura) ? null : (captura.classe as Classe | null)
-          }
-        />
+        <StatusPill value={status.value} label={status.label} />
       </div>
       <p style={{ fontSize: 13, fontWeight: 650, margin: "0 0 8px" }}>
         {priorityLabel(captura)}
@@ -90,8 +87,8 @@ export function NovaCapturaResults({
         <OneReport captura={uploaded[0]} />
       ) : null}
 
-      {failed.map((item) => (
-        <div className="alert" key={item.name} style={{ marginBottom: 12 }}>
+      {failed.map((item, index) => (
+        <div className="alert" key={`${item.name}-${index}`} style={{ marginBottom: 12 }}>
           <span className="alert-dot" style={{ background: "var(--danger)" }} />
           <div className="alert-main">
             <div className="alert-title">{item.name}</div>

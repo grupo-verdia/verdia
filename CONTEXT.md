@@ -4,8 +4,8 @@ verdia classifies roadside grass height from a geotagged photo so Motiva can
 prioritize mowing. Today that judgment is done by eye ("olhômetro").
 
 We do not have Motiva's real data. Photos are generic geotagged laterals. We
-do not assume a 360º camera. The app runs end-to-end: upload → classify →
-persist → dashboard / map / planejamento.
+do not assume a 360º camera. The app runs end-to-end: upload → persist →
+classify → dashboard / map / planejamento.
 
 ## Motiva
 
@@ -26,19 +26,23 @@ Use these terms in code, tests, and docs.
 - **Altura da grama / classe** — ordinal vegetation-height class:
   **baixa < média < alta**, from estimated height (Motiva bands):
   **h < 10 cm → baixa**, **10–30 cm → média**, **h > 30 cm → alta**.
-  **classe is null** only when the roadside strip is not visible or has no grass.
-  Under uncertainty the model still estimates height (lower confidence).
+  **classe is null after classification** when the roadside strip is not
+  visible or has no grass. **classe is also null before classifiedAt**
+  (still waiting). Under uncertainty the model still estimates height
+  (lower confidence).
   This is an ordered scale, not three unrelated labels.
 - **Captura** — a single geotagged, timestamped roadside photo. Without valid GPS,
   it is not a captura. One captura creates one trecho.
 - **Severidade** — maintenance priority of a trecho, driven primarily by classe
   (alta first).
-- **Nova captura** — web upload of geotagged photos, including large batches.
-  The operator queues files, then sends. Each valid file is saved first, then
-  classified in the background. No GPS means the photo is skipped, unless the
-  operator types latitude/longitude. Classifies with Google AI Studio
+- **Nova captura.** Web upload of geotagged photos. The operator queues
+  files, then sends. Each valid file is saved first, then classified in
+  the background. Close the tab: photos stay. Continue on Nova captura.
+  No GPS means the photo is skipped, unless the operator types
+  latitude/longitude. Classifies with Google AI Studio
   (`GOOGLE_API_KEY`) on Vercel; otherwise local Python Inference HTTP
-  (`VLM_INFERENCE_URL`). No classifier configured means the upload fails.
+  (`VLM_INFERENCE_URL`). No Google key and no local Python URL: the send
+  is rejected. If classification fails later, the photo is already saved.
 
 ## Fronts (all in scope)
 
@@ -65,7 +69,8 @@ VLM estimates roadside grass height. Code maps Motiva cm bands to
 - `services/ai` — Python VLM (module + CLI + notebook). Optional Inference HTTP
   (`python -m verdia_ai serve`).
 - Nova captura classifies via Google AI Studio, or local Python HTTP, after
-  the photo is saved. No classifier means the upload fails.
+  the photo is saved. No Google key and no local Python URL: the send is
+  rejected. If classification fails later, the photo is already saved.
 - Data: Supabase (Postgres + Storage). Required for the running web app
   (memory store is tests-only).
 - Deploy: web on Vercel, data on Supabase.

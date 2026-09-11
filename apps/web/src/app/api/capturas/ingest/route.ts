@@ -8,7 +8,7 @@ import { classifyPersistedCaptura } from "@/lib/ingest/classify-persisted";
 import { getCapturaStore } from "@/lib/persistence";
 import { resolveRodoviaParam } from "@/lib/rodovias";
 
-/** Save is fast. Classification continues after the response, still under this cap. */
+/** Classification may continue after the response. Still capped at 60s. */
 export const maxDuration = 60;
 
 type IngestBody = {
@@ -17,7 +17,6 @@ type IngestBody = {
   capturedAt?: unknown;
   imageBase64?: unknown;
   contentType?: unknown;
-  filename?: unknown;
   rodoviaId?: unknown;
   km?: unknown;
   sentido?: unknown;
@@ -51,7 +50,7 @@ function scheduleClassify(id: string): void {
       void classifyPersistedCaptura(id).catch(() => undefined);
     });
   } catch {
-    // Vitest calls this handler without Next request context.
+    // Vitest has no Next after() context. Failed background runs stay pending.
   }
 }
 

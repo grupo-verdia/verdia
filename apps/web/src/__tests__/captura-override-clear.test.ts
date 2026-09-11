@@ -57,6 +57,27 @@ describe("captura override and clear", () => {
     expect(updated.overrideAt).toBeTruthy();
   });
 
+  it("clears inferenceError when classe is corrected", async () => {
+    const store = getCapturaStore();
+    const created = await store.createCaptura({
+      lat: -23.55,
+      lon: -46.63,
+      capturedAt: "2026-07-20T12:00:00.000Z",
+      classe: null,
+      confidence: 0,
+      modelVersion: "inference-error",
+      inferenceError: "timeout",
+      imageBytes: new Uint8Array([1]),
+      contentType: "image/jpeg",
+    });
+    const updated = await store.overrideCaptura(created.id, {
+      classe: "média",
+      motivo: "Revisão de campo",
+    });
+    expect(updated.inferenceError).toBeNull();
+    expect(updated.classe).toBe("média");
+  });
+
   it("DELETEs capturas for a rodovia scope", async () => {
     await createCaptura(
       new NextRequest("http://localhost:3000/api/capturas", {

@@ -9,7 +9,7 @@ import {
 
 const GOOGLE_GENERATE_URL =
   "https://generativelanguage.googleapis.com/v1beta/models";
-/** Leave headroom under the ingest route's 60s maxDuration. */
+/** 50s so one Google call stays under the 60s route cap. */
 const GOOGLE_TIMEOUT_MS = 50_000;
 
 type GooglePart = { text?: string };

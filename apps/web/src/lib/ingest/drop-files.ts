@@ -62,7 +62,7 @@ async function walkDropEntry(entry: DropEntry): Promise<File[]> {
   return [];
 }
 
-/** Files from a drop, including images inside a dropped folder. */
+/** Folder drops become a flat file list. */
 export async function filesFromDrop(event: {
   dataTransfer: DataTransfer | null;
 }): Promise<File[]> {
@@ -70,15 +70,22 @@ export async function filesFromDrop(event: {
   if (!transfer) {
     return [];
   }
-  const entries = [...transfer.items]
-    .map(asEntry)
-    .filter((entry): entry is DropEntry => entry != null);
-  if (entries.length === 0) {
-    return [...transfer.files];
-  }
   const files: File[] = [];
-  for (const entry of entries) {
-    files.push(...(await walkDropEntry(entry)));
+  let usedEntry = false;
+  for (const item of [...transfer.items]) {
+    const entry = asEntry(item);
+    if (entry) {
+      usedEntry = true;
+      files.push(...(await walkDropEntry(entry)));
+      continue;
+    }
+    const file = item.getAsFile();
+    if (file) {
+      files.push(file);
+    }
+  }
+  if (!usedEntry) {
+    return [...transfer.files];
   }
   return files;
 }

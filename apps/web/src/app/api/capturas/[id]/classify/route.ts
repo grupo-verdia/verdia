@@ -9,23 +9,21 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-/** Classify a captura that was saved first (Nova captura queue / resume). */
+/** Used by Nova captura after save, and by Continuar. */
 export async function POST(_request: Request, context: RouteContext) {
   const { id } = await context.params;
   try {
     const captura = await classifyPersistedCaptura(id);
-    return NextResponse.json({
-      captura,
-      classification: {
-        classe: captura.classe,
-        alturaCm: captura.alturaCm,
-        confidence: captura.confidence,
-        inferenceError: captura.inferenceError,
-      },
-    });
+    return NextResponse.json({ captura });
   } catch (error) {
     const message = error instanceof Error ? error.message : "classify failed";
     const status = message === "captura not found" ? 404 : 500;
-    return NextResponse.json({ error: message }, { status });
+    const errorText =
+      message === "captura not found"
+        ? "Captura não encontrada."
+        : message === "missing photo bytes"
+          ? "Foto não encontrada."
+          : message;
+    return NextResponse.json({ error: errorText }, { status });
   }
 }

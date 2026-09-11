@@ -13,7 +13,7 @@ export type QueuedImage = {
   gps: QueueGps;
 };
 
-const PREVIEW_LIMIT = 8;
+export const QUEUE_PREVIEW_LIMIT = 8;
 
 function gpsLabel(gps: QueueGps): string {
   if (gps === "reading") {
@@ -75,7 +75,7 @@ export function NovaCapturaQueue({
   const ready = items.filter((item) => item.gps === "ok").length;
   const missing = items.filter((item) => item.gps === "missing").length;
   const reading = items.filter((item) => item.gps === "reading").length;
-  const showRows = items.length > 0 && items.length <= PREVIEW_LIMIT;
+  const showRows = items.length > 0 && items.length <= QUEUE_PREVIEW_LIMIT;
   const dropClass = `dropzone${drag && !busy ? " dropzone-active" : ""}`;
 
   return (
@@ -104,7 +104,7 @@ export function NovaCapturaQueue({
           aria-label="Fotos"
           onChange={(event) => takeFiles(event.target.files)}
         />
-        <span>JPEG, PNG ou WebP. Pasta ou várias fotos.</span>
+        <span>JPEG, PNG ou WebP. Clique, arraste ou solte uma pasta.</span>
         <span className="btn">
           {items.length > 0 ? "Adicionar imagens" : "Selecionar imagens"}
         </span>
@@ -113,7 +113,7 @@ export function NovaCapturaQueue({
         <div className="queue-summary">
           <div>
             <strong>{items.length}</strong> foto{items.length === 1 ? "" : "s"}
-            {reading > 0 ? ` · lendo GPS em ${reading}` : ""}
+            {reading > 0 ? ` · ${reading} lendo GPS` : ""}
             {ready > 0 ? ` · ${ready} com GPS` : ""}
             {missing > 0 ? ` · ${missing} sem GPS` : ""}
           </div>
@@ -122,10 +122,9 @@ export function NovaCapturaQueue({
           </button>
         </div>
       ) : null}
-      {missing > 0 && items.length > PREVIEW_LIMIT ? (
+      {missing > 0 ? (
         <p className="muted" style={{ fontSize: 12, margin: "8px 0 0" }}>
-          Sem GPS só entram se você preencher latitude e longitude. Senão
-          ficam de fora.
+          Sem GPS: preencha latitude e longitude, ou essas fotos ficam de fora.
         </p>
       ) : null}
       {showRows ? (

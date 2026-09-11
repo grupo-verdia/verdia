@@ -1,8 +1,6 @@
-import type { Captura } from "@/lib/domain";
-import { isClassificationPending } from "@/lib/domain";
+import { isClassificationPending, type Captura } from "@/lib/domain";
 import { readGeotagFromImage } from "@/lib/ingest/exif-gps";
 import { resolveGeotag } from "@/lib/ingest/resolve-geotag";
-import { fileQueueKey } from "@/lib/ingest/drop-files";
 
 export type IngestMeta = {
   rodoviaId: string;
@@ -102,7 +100,6 @@ export async function persistOne(
     capturedAt: geotag.value.capturedAt,
     imageBase64,
     contentType: file.type || "image/jpeg",
-    filename: file.name,
   };
   if (meta.rodoviaId) {
     body.rodoviaId = meta.rodoviaId;
@@ -162,42 +159,46 @@ export async function listCapturas(): Promise<Captura[]> {
   const response = await fetch(`/api/capturas?t=${Date.now()}`, {
     cache: "no-store",
   });
+  if (!response.ok) {
+    throw new Error("Falha ao listar capturas.");
+  }
   const data = (await response.json()) as { capturas?: Captura[] };
   return data.capturas ?? [];
 }
 
-export function pendingAmong(capturas: Captura[], ids: Set<string>): Captura[] {
-  return capturas.filter(
-    (captura) => ids.has(captura.id) && isClassificationPending(captura),
-  );
-}
+const POLL_MS = 4000;
+const POLL_TRIES = 15;
 
-/** Drive leftover VLM work if persist-time after() did not finish. */
-export async function finishClassify(
+/** Poll until ingest `after()` stamps classifiedAt. Do not POST classify. */
+export async function watchClassify(
   ids: string[],
   alive: () => boolean,
   onUpdate: (capturas: Captura[]) => void,
 ): Promise<void> {
-  const idSet = new Set(ids);
-  await new Promise((resolve) => {
-    window.setTimeout(resolve, 1200);
-  });
-  if (!alive() || ids.length === 0) {
+  if (ids.length === 0) {
     return;
   }
-  let listed = await listCapturas();
-  onUpdate(listed.filter((captura) => idSet.has(captura.id)));
-  const leftover = pendingAmong(listed, idSet);
-  if (leftover.length > 0) {
-    await runPool(leftover, 2, async (captura) => {
-      if (!alive()) {
+  const idSet = new Set(ids);
+  for (let attempt = 0; attempt < POLL_TRIES; attempt += 1) {
+    if (!alive()) {
+      return;
+    }
+    try {
+      const listed = await listCapturas();
+      const batch = listed.filter((captura) => idSet.has(captura.id));
+      if (batch.length > 0) {
+        onUpdate(batch);
+      }
+      if (batch.length > 0 && batch.every((captura) => !isClassificationPending(captura))) {
         return;
       }
-      await classifyOne(captura.id);
-    });
-    listed = await listCapturas();
-    onUpdate(listed.filter((captura) => idSet.has(captura.id)));
+    } catch {
+      // Keep the last report. Continuar remains if the server never finishes.
+    }
+    if (attempt < POLL_TRIES - 1) {
+      await new Promise((resolve) => {
+        window.setTimeout(resolve, POLL_MS);
+      });
+    }
   }
 }
-
-export { fileQueueKey };

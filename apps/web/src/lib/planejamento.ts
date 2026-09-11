@@ -57,7 +57,7 @@ function compareKmNullsLast(a: number | null, b: number | null): number {
  */
 export async function loadPlanTrechos(): Promise<PlanTrecho[]> {
   const capturas = (await getCapturaStore().listCapturas()).filter(
-    (captura) => !isClassificationPending(captura),
+    (captura) => !isClassificationPending(captura) && !captura.inferenceError,
   );
 
   const rows: Omit<PlanTrecho, "ordem">[] = capturas.map((captura) => {

@@ -96,6 +96,7 @@ export function createMemoryStore(): CapturaStore {
       const updated: Captura = {
         ...existing,
         classe: input.classe,
+        inferenceError: null,
         overrideMotivo: input.motivo,
         overrideAt: new Date().toISOString(),
       };
@@ -118,18 +119,20 @@ export function createMemoryStore(): CapturaStore {
       if (!existing) {
         throw new Error("captura not found");
       }
+      const keepOverride = existing.overrideAt != null;
       const updated: Captura = {
         ...existing,
-        classe: input.classe,
         confidence: input.confidence,
         modelVersion: input.modelVersion,
         inferenceError: input.inferenceError,
-        alturaCm: input.alturaCm,
         classifiedAt: new Date().toISOString(),
+        ...(keepOverride
+          ? {}
+          : { classe: input.classe, alturaCm: input.alturaCm }),
       };
       capturas.set(id, updated);
       const trecho = trechos.get(existing.trechoId);
-      if (trecho) {
+      if (trecho && !keepOverride) {
         trechos.set(existing.trechoId, {
           ...trecho,
           severidade: severidadeFromClasse(input.classe),

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { MapLegend } from "@/components/map-legend";
 import { MapaOperacional } from "@/components/mapa-operacional";
 import { useOperationalData } from "@/components/operational-live";
-import { StatusPill } from "@/components/status-pill";
+import { capturaStatus, StatusPill } from "@/components/status-pill";
 import type { Captura } from "@/lib/domain";
 import { isClassificationPending } from "@/lib/domain";
 import { formatConfianca } from "@/lib/planejamento";
@@ -97,6 +97,7 @@ export function DashboardLive({
             {recentes.length ? (
               recentes.map((captura) => {
                 const road = rodovias.find((r) => r.id === captura.rodoviaId);
+                const status = capturaStatus(captura);
                 return (
                   <Link
                     className="alert"
@@ -114,7 +115,7 @@ export function DashboardLive({
                         {captura.sentido ? ` · ${captura.sentido}` : ""}
                       </div>
                     </div>
-                    <StatusPill value={captura.classe} />
+                    <StatusPill value={status.value} label={status.label} />
                   </Link>
                 );
               })

@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 
 import { BackLink } from "@/components/back-link";
 import { OverrideForm } from "@/components/override-form";
-import { StatusPill } from "@/components/status-pill";
+import { capturaStatus, StatusPill } from "@/components/status-pill";
 import { loadCapturaDetail } from "@/lib/dashboard";
 import { isClassificationPending } from "@/lib/domain";
+import { sniffImageContentType } from "@/lib/ingest/image-type";
 import { getRodoviaById } from "@/lib/rodovias";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +36,8 @@ export default async function CapturaDetailPage({ params }: PageProps) {
     ? getRodoviaById(captura.rodoviaId)
     : null;
   const b64 = Buffer.from(photoBytes).toString("base64");
-  const src = `data:image/jpeg;base64,${b64}`;
+  const src = `data:${sniffImageContentType(photoBytes)};base64,${b64}`;
+  const status = capturaStatus(captura);
 
   return (
     <>
@@ -82,7 +84,7 @@ export default async function CapturaDetailPage({ params }: PageProps) {
             />
             <Info
               label="Classe"
-              value={<StatusPill value={captura.classe} />}
+              value={<StatusPill value={status.value} label={status.label} />}
             />
             <Info
               label="Confiança"
@@ -101,7 +103,7 @@ export default async function CapturaDetailPage({ params }: PageProps) {
           ) : null}
           {isClassificationPending(captura) ? (
             <div className="notice" style={{ marginTop: 14 }}>
-              Na fila da classificação.
+              Ainda na fila.
             </div>
           ) : null}
           {captura.inferenceError ? (
