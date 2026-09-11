@@ -26,8 +26,9 @@ The UI is Portuguese.
 
 - Visão geral shows capturas and what to mow first, including how many are still waiting.
 - Nova captura is the browser upload. Photos up to 10 MB are accepted, heavy ones are shrunk in the browser before they are sent. Photos are saved first, then classified. Close the tab: photos stay. Continue on Nova captura.
-- The map shows a pin for each captura, colored by classe.
-- Rodovias groups by highway, imports and exports Excel, and lets you correct a class.
+- The map shows a pin for each captura, colored by classe. Click the pin to see the photo next to the stats.
+- Rodovias groups by highway, imports and exports Excel, and lets you correct a class. The list shows each photo.
+- Light and dark use the same layout. A toggle in the sidebar (and on the phone top bar) switches them.
 - Planejamento is the mowing queue. It skips photos still waiting or whose classify failed.
 - Observabilidade tracks confidence, the queue, failures, and corrections.
 
