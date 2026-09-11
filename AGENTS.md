@@ -33,7 +33,7 @@ Use these terms in code, tests, and docs. Details live in `CONTEXT.md`.
 - **Trecho.** Roadside stretch at that GPS point. One captura defines one trecho (1:1). Default length is 500 m (Motiva's manual-analysis constant).
 - **Classe.** Ordered height scale, not three unrelated labels. Motiva bands: `h < 10 cm` → `baixa`; `10-30 cm` → `média`; `h > 30 cm` → `alta`. After classification, `classe` is `null` only when the roadside strip is not visible or has no grass. Before `classifiedAt`, null means still waiting. Under uncertainty the model still estimates height (lower confidence).
 - **Severidade.** Maintenance priority of a trecho, follows classe (`alta` first). Null classe → `baixa`. Failed inference does not enter Planejamento.
-- **Nova captura.** Browser only (no CLI). Operator queues a batch, then sends. Each valid file is saved first, then classified in the background. Closing the tab after upload keeps the photos. Continue on Nova captura if any are still waiting. Photos without GPS are skipped unless lat/lon are filled. Failed inference still keeps the captura with `inferenceError` set.
+- **Nova captura.** Browser only (no CLI). Operator queues a batch, then sends. Each valid file is saved first, then classified in the background. Closing the tab after upload keeps the photos. Continue on Nova captura if any are still waiting. Photos without GPS are skipped unless lat/lon are filled. Files up to 10 MB are accepted; heavy ones are re-encoded smaller in the browser before upload. Failed inference still keeps the captura with `inferenceError` set.
 - **Rodovia.** Motiva catalog entry (code-seeded, e.g. SP-330). Optional on a captura, used by planilhas and planejamento.
 
 ## Stack

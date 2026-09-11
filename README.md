@@ -25,7 +25,7 @@ From there the operator can look at capturas, pin them on a map, group them by r
 The UI is Portuguese.
 
 - Visão geral shows capturas and what to mow first, including how many are still waiting.
-- Nova captura is the browser upload. Photos are saved first, then classified. Close the tab: photos stay. Continue on Nova captura.
+- Nova captura is the browser upload. Photos up to 10 MB are accepted, heavy ones are shrunk in the browser before they are sent. Photos are saved first, then classified. Close the tab: photos stay. Continue on Nova captura.
 - The map shows a pin for each captura, colored by classe.
 - Rodovias groups by highway, imports and exports Excel, and lets you correct a class.
 - Planejamento is the mowing queue. It skips photos still waiting or whose classify failed.

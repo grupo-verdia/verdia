@@ -9,6 +9,12 @@ import {
   classifyForIngest,
 } from "@/lib/ingest/classify";
 import { sniffImageContentType } from "@/lib/ingest/image-type";
+import {
+  MAX_UPLOAD_BYTES,
+  isWithinUploadLimit,
+  needsShrink,
+  targetDimensions,
+} from "@/lib/ingest/prepare-upload";
 import { readGeotagFromImage } from "@/lib/ingest/exif-gps";
 import { resolveGeotag } from "@/lib/ingest/resolve-geotag";
 import {
@@ -205,6 +211,20 @@ describe("POST /api/capturas/ingest", () => {
     expect(response.status).toBe(400);
   });
 
+  it("rejects an image above the upload limit", async () => {
+    process.env.VLM_INFERENCE_URL = "http://ai.test:8000";
+    const oversized = Buffer.alloc(MAX_UPLOAD_BYTES + 1, 1).toString("base64");
+    const response = await ingestCaptura(
+      new NextRequest("http://localhost:3000/api/capturas/ingest", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(ingestBody({ imageBase64: oversized })),
+      }),
+    );
+    expect(response.status).toBe(413);
+    expect(await loadDashboardCapturas()).toHaveLength(0);
+  });
+
   it("rejects unknown rodovia", async () => {
     const response = await ingestCaptura(
       new NextRequest("http://localhost:3000/api/capturas/ingest", {
@@ -350,6 +370,23 @@ describe("POST /api/capturas/:id/classify", () => {
     expect(body.captura.classe).toBe("alta");
     expect(body.captura.overrideMotivo).toBe("Revisão de campo");
     expect(body.captura.classifiedAt).toBeTruthy();
+  });
+});
+
+describe("upload sizing", () => {
+  it("accepts photos up to 10 MB and refuses bigger ones", () => {
+    expect(isWithinUploadLimit({ size: MAX_UPLOAD_BYTES })).toBe(true);
+    expect(isWithinUploadLimit({ size: MAX_UPLOAD_BYTES + 1 })).toBe(false);
+  });
+
+  it("shrinks only what would blow the request body budget", () => {
+    expect(needsShrink({ size: 2 * 1024 * 1024 })).toBe(false);
+    expect(needsShrink({ size: 8 * 1024 * 1024 })).toBe(true);
+  });
+
+  it("caps the longest edge and keeps the aspect ratio", () => {
+    expect(targetDimensions(4000, 3000, 2400)).toEqual({ width: 2400, height: 1800 });
+    expect(targetDimensions(1600, 1200, 2400)).toEqual({ width: 1600, height: 1200 });
   });
 });
 
