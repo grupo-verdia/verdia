@@ -39,7 +39,9 @@ Use these terms in code, tests, and docs.
   files, then sends. Each valid file is saved first, then classified in
   the background. Close the tab: photos stay. Continue on Nova captura.
   No GPS means the photo is skipped, unless the operator types
-  latitude/longitude. Classifies with Google AI Studio
+  latitude/longitude. Files up to 10 MB are accepted; anything heavier
+  than the request-body budget is re-encoded to a smaller JPEG in the
+  browser (EXIF GPS is read from the original first). Classifies with Google AI Studio
   (`GOOGLE_API_KEY`) on Vercel; otherwise local Python Inference HTTP
   (`VLM_INFERENCE_URL`). No Google key and no local Python URL: the send
   is rejected. If classification fails later, the photo is already saved.

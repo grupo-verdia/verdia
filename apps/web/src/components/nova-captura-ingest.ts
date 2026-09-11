@@ -1,5 +1,6 @@
 import { isClassificationPending, type Captura } from "@/lib/domain";
 import { readGeotagFromImage } from "@/lib/ingest/exif-gps";
+import { prepareUpload } from "@/lib/ingest/prepare-upload";
 import { resolveGeotag } from "@/lib/ingest/resolve-geotag";
 
 export type IngestMeta = {
@@ -21,7 +22,7 @@ type IngestResponse = {
   captura?: Captura;
 };
 
-function fileToBase64(file: File): Promise<string> {
+function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -34,7 +35,7 @@ function fileToBase64(file: File): Promise<string> {
       resolve(comma >= 0 ? result.slice(comma + 1) : result);
     };
     reader.onerror = () => reject(new Error("Falha ao ler a imagem."));
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(blob);
   });
 }
 
@@ -93,13 +94,14 @@ export async function persistOne(
     return { ok: false, message: geotag.error };
   }
 
-  const imageBase64 = await fileToBase64(file);
+  const upload = await prepareUpload(file);
+  const imageBase64 = await blobToBase64(upload.bytes);
   const body: Record<string, unknown> = {
     lat: geotag.value.lat,
     lon: geotag.value.lon,
     capturedAt: geotag.value.capturedAt,
     imageBase64,
-    contentType: file.type || "image/jpeg",
+    contentType: upload.contentType,
   };
   if (meta.rodoviaId) {
     body.rodoviaId = meta.rodoviaId;

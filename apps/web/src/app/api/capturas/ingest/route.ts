@@ -5,6 +5,7 @@ import {
   isClassifierConfigured,
 } from "@/lib/ingest/classify";
 import { classifyPersistedCaptura } from "@/lib/ingest/classify-persisted";
+import { MAX_UPLOAD_BYTES } from "@/lib/ingest/prepare-upload";
 import { getCapturaStore } from "@/lib/persistence";
 import { resolveRodoviaParam } from "@/lib/rodovias";
 
@@ -122,6 +123,13 @@ export async function POST(request: NextRequest) {
     imageBytes = Uint8Array.from(Buffer.from(body.imageBase64, "base64"));
   } catch {
     return NextResponse.json({ error: "imageBase64 is invalid" }, { status: 400 });
+  }
+
+  if (imageBytes.byteLength > MAX_UPLOAD_BYTES) {
+    return NextResponse.json(
+      { error: `image exceeds ${MAX_UPLOAD_BYTES} bytes` },
+      { status: 413 },
+    );
   }
 
   if (!isClassifierConfigured()) {

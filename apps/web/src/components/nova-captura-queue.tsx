@@ -3,6 +3,7 @@
 import { useRef, useState, type DragEvent } from "react";
 
 import { filesFromDrop, isAcceptedImage } from "@/lib/ingest/drop-files";
+import { isWithinUploadLimit, MAX_UPLOAD_LABEL } from "@/lib/ingest/prepare-upload";
 
 export type QueueGps = "reading" | "ok" | "missing";
 
@@ -42,12 +43,15 @@ export function NovaCapturaQueue({
 }: NovaCapturaQueueProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
+  const [oversized, setOversized] = useState(0);
 
   function takeFiles(list: FileList | File[] | null) {
     if (!list || busy) {
       return;
     }
-    const files = Array.from(list).filter(isAcceptedImage);
+    const images = Array.from(list).filter(isAcceptedImage);
+    const files = images.filter(isWithinUploadLimit);
+    setOversized(images.length - files.length);
     if (files.length) {
       onAdd(files);
     }
@@ -105,10 +109,10 @@ export function NovaCapturaQueue({
           onChange={(event) => takeFiles(event.target.files)}
         />
         <span className="dropzone-desktop">
-          JPEG, PNG ou WebP. Clique, arraste ou solte uma pasta.
+          JPEG, PNG ou WebP até {MAX_UPLOAD_LABEL}. Clique, arraste ou solte uma pasta.
         </span>
         <span className="dropzone-phone">
-          JPEG, PNG ou WebP. Toque para escolher fotos.
+          JPEG, PNG ou WebP até {MAX_UPLOAD_LABEL}. Toque para escolher fotos.
         </span>
         <span className="btn">
           {items.length > 0 ? "Adicionar imagens" : "Selecionar imagens"}
@@ -126,6 +130,13 @@ export function NovaCapturaQueue({
             Limpar
           </button>
         </div>
+      ) : null}
+      {oversized > 0 ? (
+        <p className="muted" style={{ fontSize: 12, margin: "8px 0 0" }}>
+          {oversized === 1
+            ? `1 foto acima de ${MAX_UPLOAD_LABEL} ficou de fora.`
+            : `${oversized} fotos acima de ${MAX_UPLOAD_LABEL} ficaram de fora.`}
+        </p>
       ) : null}
       {missing > 0 ? (
         <p className="muted" style={{ fontSize: 12, margin: "8px 0 0" }}>
