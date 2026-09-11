@@ -9,11 +9,13 @@ import type { Severidade } from "@/lib/domain";
 export type RodoviaCard = {
   id: string;
   ordem: number;
+  /** Queue position label (e.g. "#3") for Planejamento. Omit on Rodovias. */
+  ordemLabel?: string;
   rodovia: string;
   km: string;
   altura: string;
   severidade: Severidade | null;
-  pillLabel: string;
+  pillLabel?: string;
   confianca: string;
 };
 
@@ -46,6 +48,7 @@ export function RodoviasCards({
         >
           <header>
             <div>
+              {card.ordemLabel ? <b>{card.ordemLabel}</b> : null}
               <div className="record-kicker">Rodovia</div>
               <strong>{card.rodovia}</strong>
             </div>

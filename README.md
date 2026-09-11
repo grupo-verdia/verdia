@@ -35,7 +35,7 @@ Video synced to GPS, drift detection, route optimization, and real user accounts
 
 Product words (captura, trecho, classe, severidade, rodovia) are in [`CONTEXT.md`](./CONTEXT.md).
 
-The operator app is `apps/web`. The classifier is `services/ai`.
+The operator app is `apps/web`. It is the same website on phones. Below ~700px, navigation is a bottom bar, not a separate app. The classifier is `services/ai`.
 
 ## Run locally
 

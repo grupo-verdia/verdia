@@ -104,7 +104,12 @@ export function NovaCapturaQueue({
           aria-label="Fotos"
           onChange={(event) => takeFiles(event.target.files)}
         />
-        <span>JPEG, PNG ou WebP. Clique, arraste ou solte uma pasta.</span>
+        <span className="dropzone-desktop">
+          JPEG, PNG ou WebP. Clique, arraste ou solte uma pasta.
+        </span>
+        <span className="dropzone-phone">
+          JPEG, PNG ou WebP. Toque para escolher fotos.
+        </span>
         <span className="btn">
           {items.length > 0 ? "Adicionar imagens" : "Selecionar imagens"}
         </span>

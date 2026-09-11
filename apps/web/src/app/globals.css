@@ -10,6 +10,8 @@
   --danger: #e86b6b;
   --warn: #e0b14a;
   --ok: #61d58b;
+  --phone-topbar-height: 52px;
+  --bottom-nav-height: 56px;
 }
 
 * {
@@ -41,6 +43,25 @@ textarea {
   display: grid;
   grid-template-columns: 248px 1fr;
   min-height: 100vh;
+}
+
+.phone-topbar,
+.bottom-nav {
+  display: none;
+}
+
+.plan-table {
+  display: block;
+}
+
+.plan-cards,
+.planilha-toggle,
+.dropzone-phone {
+  display: none;
+}
+
+.dropzone-desktop {
+  display: inline;
 }
 
 .sidebar {
@@ -461,6 +482,7 @@ textarea {
   padding: 16px 18px;
   border-bottom: 1px solid var(--line);
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
@@ -470,8 +492,13 @@ textarea {
   height: 520px;
 }
 
+.map-box-plan {
+  height: min(70vh, 36rem);
+}
+
 .legend {
   display: flex;
+  flex-wrap: wrap;
   gap: 14px;
   color: var(--muted);
   font-size: 11px;
@@ -587,6 +614,7 @@ textarea {
   top: 12px;
   left: 12px;
   z-index: 500;
+  max-width: calc(100% - 24px);
   padding: 8px 12px;
   background: #0b1916;
   border: 1px solid var(--line);
@@ -794,37 +822,90 @@ code {
 }
 
 @media (max-width: 700px) {
-  .content {
-    padding: 24px 16px;
-  }
-
   .sidebar {
-    padding: 11px 14px;
-  }
-
-  .sidebar-top {
-    display: block;
-  }
-
-  .brand {
-    margin-bottom: 10px;
-  }
-
-  .sidebar nav {
-    width: 100%;
-    gap: 4px;
-  }
-
-  .nav-link {
-    padding: 8px 9px;
-  }
-
-  .nav-icon {
     display: none;
   }
 
-  .nav-label {
-    font-size: 11px;
+  .phone-topbar {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    align-items: center;
+    gap: 12px;
+    min-height: calc(var(--phone-topbar-height) + env(safe-area-inset-top));
+    padding: calc(env(safe-area-inset-top) + 8px) 16px 8px;
+    border-bottom: 1px solid var(--line);
+    background: #091613;
+  }
+
+  .phone-topbar .brand {
+    margin: 0;
+  }
+
+  .bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    min-height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 1px solid var(--line);
+    background: #091613;
+  }
+
+  .bottom-nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 4px;
+    color: #a8bbb5;
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .bottom-nav-link.active {
+    background: #102b25;
+    color: #f7fff9;
+    box-shadow: inset 0 3px 0 var(--lime);
+  }
+
+  .bottom-nav-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .bottom-nav-link.active .bottom-nav-icon {
+    color: var(--lime);
+  }
+
+  .bottom-nav-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .bottom-nav-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .content {
+    padding: 24px 16px calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 24px);
   }
 
   .page-title {
@@ -841,11 +922,54 @@ code {
 
   .kpis,
   .metric-grid,
-  .cards-grid {
-    grid-template-columns: 1fr 1fr;
+  .cards-grid,
+  .dashboard-grid,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+
+  .input,
+  .select {
+    min-height: 44px;
+  }
+
+  .map-box,
+  .map-box-plan {
+    height: min(50dvh, 22rem);
   }
 
   .map-full {
-    height: 520px;
+    height: calc(
+      100dvh - var(--phone-topbar-height) - var(--bottom-nav-height) -
+        env(safe-area-inset-top) - env(safe-area-inset-bottom) - 8.5rem
+    );
+    min-height: 240px;
+  }
+
+  .plan-table,
+  .dropzone-desktop,
+  .excel-cluster {
+    display: none;
+  }
+
+  .plan-cards {
+    display: block;
+  }
+
+  .planilha-toggle {
+    display: inline-flex;
+  }
+
+  .excel-cluster.is-open {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .dropzone-phone {
+    display: inline;
   }
 }

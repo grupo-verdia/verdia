@@ -1,8 +1,9 @@
 # verdia web (`apps/web`)
 
 Operator app for Motiva roadside vegetation. Portuguese UI, shared
-`DEMO_PASSWORD`. A geotagged photo becomes a captura, gets a classe, and shows
-up on the dashboard, map, and planejamento.
+`DEMO_PASSWORD`. It is the same website on phones. Below ~700px, navigation
+is a bottom bar, not a separate app. A geotagged photo becomes a captura,
+gets a classe, and shows up on the dashboard, map, and planejamento.
 
 Domain terms: [`CONTEXT.md`](../../CONTEXT.md). Repo runbook:
 [`README.md`](../../README.md).
