@@ -16,7 +16,7 @@ Um modelo de visão estima a altura em centímetros. O código encaixa isso nas 
 - 10-30 cm: média
 - acima de 30 cm: alta
 
-Se a faixa não aparece na foto, ou não tem grama, a classe fica vazia depois da classificação. Enquanto a foto espera na fila, a classe também fica vazia. Se o modelo não tiver certeza, ainda estima a altura, com confiança menor. A severidade ainda segue a classe. A fila de corte usa o prazo até 30 cm. Classe vazia depois da classificação não tem prazo. Falha de classificação não entra no Planejamento.
+Se a faixa não aparece na foto, ou não tem grama, a classe fica vazia depois da classificação. Enquanto a foto espera na fila, a classe também fica vazia. Se o modelo não tiver certeza, ainda estima a altura, com confiança menor. A severidade segue a classe. A fila de corte usa o prazo até 30 cm. Classe vazia depois da classificação não tem prazo. Falha de classificação não entra no Planejamento.
 
 Se a classificação falhar, a captura mesmo assim é salva, com o erro nela.
 

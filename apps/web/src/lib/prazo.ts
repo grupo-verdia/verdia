@@ -1,7 +1,11 @@
-import type { Classe } from "@/lib/domain";
+import {
+  classeFromAlturaCm,
+  MOTIVA_MEDIA_MAX_INCLUSIVE_CM,
+  type Classe,
+} from "@/lib/domain";
 
-/** ARTESP / PER roadside cut limit used for the maintenance queue. */
-export const CUT_LIMIT_CM = 30;
+/** Roadside cut limit. Same as the top of Motiva's média band. */
+export const CUT_LIMIT_CM = MOTIVA_MEDIA_MAX_INCLUSIVE_CM;
 
 /** Oct–Mar (Brazilian growing season). */
 export const GROWTH_OCT_MAR_CM_PER_DAY = 0.3;
@@ -9,13 +13,13 @@ export const GROWTH_OCT_MAR_CM_PER_DAY = 0.3;
 /** Apr–Sep. */
 export const GROWTH_APR_SEP_CM_PER_DAY = 0.1;
 
-/** Stand-in when classe is média and the photo has no cm. */
+/** Assumed height when classe is média and the photo has no matching cm. */
 export const ASSUMED_MEDIA_CM = 20;
 
-/** Stand-in when classe is baixa and the photo has no cm. */
+/** Assumed height when classe is baixa and the photo has no matching cm. */
 export const ASSUMED_BAIXA_CM = 5;
 
-/** Visão geral lists trechos whose prazo is in this window. */
+/** Visão geral lists trechos whose prazo is in this window (0-7 days). */
 export const THIS_WEEK_MAX_DIAS = 7;
 
 export type PrazoInput = {
@@ -29,7 +33,14 @@ export type Prazo = {
   label: string;
 };
 
-export function growthRateCmPerDay(now: Date): number {
+export type PrazoOrderKey = {
+  prazoDias: number | null;
+  rodoviaId: string | null;
+  km: number | null;
+  trechoId: string;
+};
+
+function growthRateCmPerDay(now: Date): number {
   const month = now.getUTCMonth() + 1;
   if (month >= 10 || month <= 3) {
     return GROWTH_OCT_MAR_CM_PER_DAY;
@@ -52,15 +63,41 @@ function calendarDaysSince(capturedAt: string, now: Date): number {
   return Math.max(0, days);
 }
 
+function compareNullsLast<T>(
+  a: T | null,
+  b: T | null,
+  cmp: (left: T, right: T) => number,
+): number {
+  if (a === null && b === null) {
+    return 0;
+  }
+  if (a === null) {
+    return 1;
+  }
+  if (b === null) {
+    return -1;
+  }
+  return cmp(a, b);
+}
+
+/**
+ * Height used for the 30 cm projection.
+ * Alta is already at the limit. Stored cm is used only when it still matches
+ * classe. A field correction changes classe and leaves the old cm in place.
+ */
 function photoHeightCm(
   alturaCm: number | null,
   classe: Classe | null,
-): number | "over" | null {
-  if (typeof alturaCm === "number" && Number.isFinite(alturaCm)) {
-    return alturaCm;
-  }
+): number | null {
   if (classe === "alta") {
-    return "over";
+    return CUT_LIMIT_CM;
+  }
+  if (
+    typeof alturaCm === "number" &&
+    Number.isFinite(alturaCm) &&
+    classeFromAlturaCm(alturaCm) === classe
+  ) {
+    return alturaCm;
   }
   if (classe === "média") {
     return ASSUMED_MEDIA_CM;
@@ -71,7 +108,7 @@ function photoHeightCm(
   return null;
 }
 
-export function formatPrazoLabel(dias: number): string {
+function formatPrazoLabel(dias: number): string {
   if (dias <= 0) {
     return "Cortar agora";
   }
@@ -83,15 +120,12 @@ export function formatPrazoLabel(dias: number): string {
 
 /**
  * Days until projected height hits 30 cm, at today's seasonal rate.
- * Null when there is no visible grass (no height and no classe).
+ * Null when classe is empty after classification.
  */
 export function prazoUntilCut(input: PrazoInput, now: Date): Prazo | null {
   const photo = photoHeightCm(input.alturaCm, input.classe);
   if (photo === null) {
     return null;
-  }
-  if (photo === "over") {
-    return { dias: 0, label: formatPrazoLabel(0) };
   }
 
   const rate = growthRateCmPerDay(now);
@@ -103,8 +137,29 @@ export function prazoUntilCut(input: PrazoInput, now: Date): Prazo | null {
   return { dias, label: formatPrazoLabel(dias) };
 }
 
+/** Cortar agora (0) and Esta semana (1–7) on Visão geral. */
 export function isPrazoThisWeek(dias: number): boolean {
   return dias >= 0 && dias <= THIS_WEEK_MAX_DIAS;
+}
+
+/** Prazo, then rodovia, then km, then trecho. Nulls last. */
+export function comparePrazoOrder(a: PrazoOrderKey, b: PrazoOrderKey): number {
+  const prazoA = a.prazoDias ?? Number.POSITIVE_INFINITY;
+  const prazoB = b.prazoDias ?? Number.POSITIVE_INFINITY;
+  if (prazoA !== prazoB) {
+    return prazoA - prazoB;
+  }
+  const rodoviaDiff = compareNullsLast(a.rodoviaId, b.rodoviaId, (left, right) =>
+    left.localeCompare(right),
+  );
+  if (rodoviaDiff !== 0) {
+    return rodoviaDiff;
+  }
+  const kmDiff = compareNullsLast(a.km, b.km, (left, right) => left - right);
+  if (kmDiff !== 0) {
+    return kmDiff;
+  }
+  return a.trechoId.localeCompare(b.trechoId);
 }
 
 export function countPrazoBuckets(diasList: Array<number | null>): {

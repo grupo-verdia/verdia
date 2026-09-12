@@ -35,15 +35,16 @@ Use these terms in code, tests, and docs.
   it is not a captura. One captura creates one trecho. Excel import still
   creates capturas from rows (classe already filled). There is no photo;
   the UI shows Sem imagem.
-- **Severidade** — follows classe (alta first). Not what Planejamento sorts by.
+- **Severidade** — follows classe (alta first). Planejamento sorts by prazo.
 - **Prazo.** Days until projected height hits the 30 cm cut limit. Growth is
   0.3 cm/day from October to March and 0.1 cm/day from April to September.
   Height today is the photo height plus days since the photo times today's
-  rate. Missing cm uses 20 for média and 5 for baixa. Alta with no cm is
-  already over (0 days). No visible grass after classification has no prazo.
-  Labels: Cortar agora, Esta semana, or Em X dias. Computed on read, not
-  stored. Planejamento sorts by prazo, then rodovia, then km. Visão geral
-  lists trechos with 0 to 7 days.
+  rate. Missing cm uses 20 for média and 5 for baixa. Alta is already over
+  (0 days). Stored cm is used only when it still matches classe, because a
+  field correction changes classe and leaves the old cm. No visible grass
+  after classification has no prazo. Labels: Cortar agora, Esta semana, or
+  Em X dias. Computed on read, not stored. Planejamento sorts by prazo, then
+  rodovia, then km. Visão geral lists trechos with 0 to 7 days.
 - **Nova captura.** Web upload of geotagged photos. The operator queues
   files, then sends. Each valid file is saved first, then classified in
   the background. Close the tab: photos stay. Continue on Nova captura.

@@ -11,6 +11,7 @@ import type { Captura } from "@/lib/domain";
 import { isClassificationPending } from "@/lib/domain";
 import { formatConfianca } from "@/lib/planejamento";
 import {
+  comparePrazoOrder,
   isPrazoThisWeek,
   prazoUntilCut,
   type Prazo,
@@ -46,14 +47,12 @@ function dueThisWeek(
       return { captura, prazo };
     })
     .filter((row): row is { captura: Captura; prazo: Prazo } => row != null)
-    .sort((a, b) => {
-      if (a.prazo.dias !== b.prazo.dias) {
-        return a.prazo.dias - b.prazo.dias;
-      }
-      const kmA = a.captura.km ?? Number.POSITIVE_INFINITY;
-      const kmB = b.captura.km ?? Number.POSITIVE_INFINITY;
-      return kmA - kmB;
-    });
+    .sort((a, b) =>
+      comparePrazoOrder(
+        { ...a.captura, prazoDias: a.prazo.dias },
+        { ...b.captura, prazoDias: b.prazo.dias },
+      ),
+    );
 }
 
 export function DashboardLive({

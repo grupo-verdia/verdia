@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  comparePrazoOrder,
   countPrazoBuckets,
   prazoUntilCut,
 } from "@/lib/prazo";
@@ -99,6 +100,16 @@ describe("prazoUntilCut", () => {
         SUMMER,
       ),
     ).toBeNull();
+    expect(
+      prazoUntilCut(
+        {
+          alturaCm: 22,
+          classe: null,
+          capturedAt: "2026-01-15T10:00:00.000Z",
+        },
+        SUMMER,
+      ),
+    ).toBeNull();
   });
 
   it("uses 20 cm for média and 5 cm for baixa when cm is missing", () => {
@@ -113,6 +124,32 @@ describe("prazoUntilCut", () => {
     expect(media).toEqual({ dias: 100, label: "Em 100 dias" });
     expect(baixa).toEqual({ dias: 250, label: "Em 250 dias" });
   });
+
+  it("treats a classe correction to alta as cortar agora even if cm is still média", () => {
+    expect(
+      prazoUntilCut(
+        {
+          alturaCm: 12,
+          classe: "alta",
+          capturedAt: "2026-01-15T10:00:00.000Z",
+        },
+        SUMMER,
+      ),
+    ).toEqual({ dias: 0, label: "Cortar agora" });
+  });
+
+  it("ignores leftover alta cm after a correction to média", () => {
+    expect(
+      prazoUntilCut(
+        {
+          alturaCm: 40,
+          classe: "média",
+          capturedAt: "2026-07-15T10:00:00.000Z",
+        },
+        WINTER,
+      ),
+    ).toEqual({ dias: 100, label: "Em 100 dias" });
+  });
 });
 
 describe("countPrazoBuckets", () => {
@@ -121,5 +158,23 @@ describe("countPrazoBuckets", () => {
       cortarAgora: 2,
       estaSemana: 2,
     });
+  });
+});
+
+describe("comparePrazoOrder", () => {
+  it("ties on trechoId so Visão geral matches Planejamento", () => {
+    const later = {
+      trechoId: "t-b",
+      rodoviaId: null,
+      km: null,
+      prazoDias: 3,
+    };
+    const earlier = {
+      trechoId: "t-a",
+      rodoviaId: null,
+      km: null,
+      prazoDias: 3,
+    };
+    expect(comparePrazoOrder(later, earlier)).toBeGreaterThan(0);
   });
 });

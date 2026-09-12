@@ -16,7 +16,7 @@ A vision model estimates height in centimeters. Code maps that onto Motiva's ban
 - 10-30 cm: média
 - above 30 cm: alta
 
-If the strip is missing from the photo, or there is no grass, classe stays empty after classification. While the photo is still waiting, classe is also empty. When the model is unsure, it still estimates height, with lower confidence. Severidade still follows classe. The mowing queue uses prazo until 30 cm. Empty classe after classification has no prazo. A failed classify does not enter Planejamento.
+If the strip is missing from the photo, or there is no grass, classe stays empty after classification. While the photo is still waiting, classe is also empty. When the model is unsure, it still estimates height, with lower confidence. Severidade follows classe. The mowing queue uses prazo until 30 cm. Empty classe after classification has no prazo. A failed classify does not enter Planejamento.
 
 If classification fails, the captura is still saved, with the error on it.
 

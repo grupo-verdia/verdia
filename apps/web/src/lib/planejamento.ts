@@ -1,7 +1,11 @@
 import { isClassificationPending, severidadeFromClasse } from "@/lib/domain";
 import type { MapTrecho } from "@/lib/mapa";
 import { getCapturaStore } from "@/lib/persistence";
-import { countPrazoBuckets, prazoUntilCut } from "@/lib/prazo";
+import {
+  comparePrazoOrder,
+  countPrazoBuckets,
+  prazoUntilCut,
+} from "@/lib/prazo";
 import { getRodoviaById } from "@/lib/rodovias";
 
 /** Trecho in the maintenance queue (prazo → rodovia → km). */
@@ -22,32 +26,6 @@ export type PlanTrecho = MapTrecho & {
   /** Portuguese label for the prazo column. */
   prazoLabel: string | null;
 };
-
-function compareNullsLastString(a: string | null, b: string | null): number {
-  if (a === null && b === null) {
-    return 0;
-  }
-  if (a === null) {
-    return 1;
-  }
-  if (b === null) {
-    return -1;
-  }
-  return a.localeCompare(b);
-}
-
-function compareKmNullsLast(a: number | null, b: number | null): number {
-  if (a === null && b === null) {
-    return 0;
-  }
-  if (a === null) {
-    return 1;
-  }
-  if (b === null) {
-    return -1;
-  }
-  return a - b;
-}
 
 /**
  * Maintenance queue: one row per captura, ordered by prazo until 30 cm
@@ -84,22 +62,7 @@ export async function loadPlanTrechos(now: Date = new Date()): Promise<PlanTrech
     };
   });
 
-  rows.sort((a, b) => {
-    const prazoA = a.prazoDias ?? Number.POSITIVE_INFINITY;
-    const prazoB = b.prazoDias ?? Number.POSITIVE_INFINITY;
-    if (prazoA !== prazoB) {
-      return prazoA - prazoB;
-    }
-    const rodoviaDiff = compareNullsLastString(a.rodoviaId, b.rodoviaId);
-    if (rodoviaDiff !== 0) {
-      return rodoviaDiff;
-    }
-    const kmDiff = compareKmNullsLast(a.km, b.km);
-    if (kmDiff !== 0) {
-      return kmDiff;
-    }
-    return a.id.localeCompare(b.id);
-  });
+  rows.sort(comparePrazoOrder);
 
   return rows.map((trecho, index) => ({
     ...trecho,
