@@ -15,6 +15,8 @@ export type RodoviaCard = {
   rodovia: string;
   km: string;
   altura: string;
+  /** Queue prazo until 30 cm. Omit on Rodovias. */
+  prazo?: string;
   severidade: Severidade | null;
   pillLabel?: string;
   confianca: string;
@@ -59,6 +61,7 @@ export function RodoviasCards({
           <div className="record-fields">
             <RecordField label="KM" value={card.km} />
             <RecordField label="Altura" value={card.altura} />
+            {card.prazo ? <RecordField label="Prazo" value={card.prazo} /> : null}
             <RecordField label="Confiança" value={card.confianca} />
           </div>
           <div>

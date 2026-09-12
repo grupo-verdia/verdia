@@ -4,7 +4,7 @@ Também em [inglês](./README.md).
 
 A Motiva ainda classifica a grama na margem da rodovia no olhômetro. verdia pega uma foto com GPS, estima a altura e diz o que cortar primeiro.
 
-A [Motiva](https://www.motiva.com.br/) (antes Grupo CCR) opera concessões de rodovia, ferrovia e aeroporto. Este produto cobre só a vegetação na margem. A classe da altura define a urgência do trecho. Essa ordem é o que o planejamento usa.
+A [Motiva](https://www.motiva.com.br/) (antes Grupo CCR) opera concessões de rodovia, ferrovia e aeroporto. Este produto cobre só a vegetação na margem. A classe é o que a foto mostrou. O planejamento ordena pelo prazo até 30 cm.
 
 ## O que faz
 
@@ -16,25 +16,25 @@ Um modelo de visão estima a altura em centímetros. O código encaixa isso nas 
 - 10-30 cm: média
 - acima de 30 cm: alta
 
-Se a faixa não aparece na foto, ou não tem grama, a classe fica vazia depois da classificação. Enquanto a foto espera na fila, a classe também fica vazia. Se o modelo não tiver certeza, ainda estima a altura, com confiança menor. A prioridade de manutenção segue a classe. alta primeiro. Classe vazia depois da classificação conta como baixa. Falha de classificação não entra no Planejamento.
+Se a faixa não aparece na foto, ou não tem grama, a classe fica vazia depois da classificação. Enquanto a foto espera na fila, a classe também fica vazia. Se o modelo não tiver certeza, ainda estima a altura, com confiança menor. A severidade segue a classe. A fila de corte usa o prazo até 30 cm. Classe vazia depois da classificação não tem prazo. Falha de classificação não entra no Planejamento.
 
 Se a classificação falhar, a captura mesmo assim é salva, com o erro nela.
 
-Dali o operador vê as capturas, marca no mapa, agrupa por rodovia, corrige uma classe errada e trabalha a fila: urgência, depois rodovia, depois km.
+Dali o operador vê as capturas, marca no mapa, agrupa por rodovia, corrige uma classe errada e trabalha a fila: prazo até 30 cm, depois rodovia, depois km.
 
 A interface está em português.
 
-- Visão geral mostra as capturas e o que cortar primeiro, inclusive quantas ainda esperam.
+- Visão geral mostra as capturas e o que cortar agora ou nesta semana, inclusive quantas ainda esperam.
 - Nova captura é o envio de fotos com GPS, de até 10 MB cada. Foto pesada é reduzida no navegador antes de subir. O lote é salvo primeiro, depois classificado. Fecha a aba: as fotos ficam. Continue em Nova captura.
 - O mapa mostra um pino por captura, na cor da classe. Clique na bolinha para ver a foto junto dos dados.
 - Rodovias agrupa por rodovia, importa e exporta Excel, e deixa corrigir a classe. A lista mostra a foto de cada captura.
 - Claro e escuro usam o mesmo layout. O botão na barra lateral (e no topo do celular) troca o modo.
-- Planejamento é a fila de corte. Não entra foto ainda na fila nem foto cuja classificação falhou.
+- Planejamento é a fila de corte, menor prazo até 30 cm primeiro. Não entra foto ainda na fila nem foto cuja classificação falhou.
 - Observabilidade mostra confiança, fila, falhas e correções.
 
 Ficou de fora o vídeo sincronizado com GPS, a detecção de deriva, a otimização de rota e a conta de usuário. Uma senha compartilhada libera o acesso.
 
-Os termos do produto (captura, trecho, classe, severidade, rodovia) estão no [`CONTEXT.md`](./CONTEXT.md).
+Os termos do produto (captura, trecho, classe, severidade, prazo, rodovia) estão no [`CONTEXT.md`](./CONTEXT.md).
 
 O app do operador fica em `apps/web`. É o mesmo site no celular. Abaixo de ~700px, a navegação é uma barra embaixo, não um app separado. O classificador fica em `services/ai`.
 

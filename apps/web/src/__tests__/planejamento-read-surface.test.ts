@@ -4,9 +4,12 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { POST as createCaptura } from "@/app/api/capturas/route";
 import { POST as login } from "@/app/api/auth/login/route";
 import { SESSION_COOKIE } from "@/lib/auth";
-import { loadPlanTrechos } from "@/lib/planejamento";
+import { loadPlanTrechos, planPrazoSummary } from "@/lib/planejamento";
 import { createMemoryStore, setCapturaStore } from "@/lib/persistence";
 import { proxy } from "@/proxy";
+
+const NOW = new Date("2026-07-20T18:00:00.000Z");
+const SUMMER = new Date("2026-01-15T12:00:00.000Z");
 
 async function seedCaptura(body: Record<string, unknown>) {
   const response = await createCaptura(
@@ -26,7 +29,7 @@ describe("planejamento product read surface", () => {
     process.env.DEMO_PASSWORD = "verdia-demo";
   });
 
-  it("orders trechos by severidade alta → média → baixa from persisted capturas", async () => {
+  it("orders trechos by prazo until 30 cm from persisted capturas", async () => {
     const baixa = await seedCaptura({
       lat: -22.9,
       lon: -43.2,
@@ -58,14 +61,20 @@ describe("planejamento product read surface", () => {
       contentType: "image/jpeg",
     });
 
-    const plan = await loadPlanTrechos();
+    const plan = await loadPlanTrechos(NOW);
 
     expect(plan.map((t) => t.id)).toEqual([
       alta.trechoId,
       media.trechoId,
       baixa.trechoId,
     ]);
-    expect(plan.map((t) => t.severidade)).toEqual(["alta", "média", "baixa"]);
+    expect(plan.map((t) => t.prazoDias)).toEqual([0, 100, 250]);
+    expect(plan.map((t) => t.prazoLabel)).toEqual([
+      "Cortar agora",
+      "Em 100 dias",
+      "Em 250 dias",
+    ]);
+    expect(planPrazoSummary(plan)).toEqual({ cortarAgora: 1, estaSemana: 0 });
   });
 
   it("drives plan severidade from each captura’s classe (1:1 trecho)", async () => {
@@ -90,7 +99,7 @@ describe("planejamento product read surface", () => {
       contentType: "image/jpeg",
     });
 
-    const plan = await loadPlanTrechos();
+    const plan = await loadPlanTrechos(NOW);
 
     expect(plan).toHaveLength(2);
     expect(plan[0]).toMatchObject({
@@ -127,7 +136,7 @@ describe("planejamento product read surface", () => {
       contentType: "image/jpeg",
     });
 
-    const plan = await loadPlanTrechos();
+    const plan = await loadPlanTrechos(NOW);
     const highlightedIds = plan.map((t) => t.id);
 
     expect(highlightedIds).toEqual([alta.trechoId, baixa.trechoId]);
@@ -150,7 +159,7 @@ describe("planejamento product read surface", () => {
       alturaCm: 35,
     });
 
-    const plan = await loadPlanTrechos();
+    const plan = await loadPlanTrechos(NOW);
 
     expect(plan).toHaveLength(1);
     expect(plan[0]).toMatchObject({
@@ -161,10 +170,12 @@ describe("planejamento product read surface", () => {
       alturaCm: 35,
       severidade: "alta",
       confidence: 0.91,
+      prazoDias: 0,
+      prazoLabel: "Cortar agora",
     });
   });
 
-  it("within the same severidade, groups by rodovia before sorting by km", async () => {
+  it("within the same prazo, groups by rodovia before sorting by km", async () => {
     const sp348Km5 = await seedCaptura({
       lat: -23.1,
       lon: -46.1,
@@ -202,7 +213,7 @@ describe("planejamento product read surface", () => {
       km: 10,
     });
 
-    const plan = await loadPlanTrechos();
+    const plan = await loadPlanTrechos(NOW);
 
     expect(plan.map((t) => t.id)).toEqual([
       sp330Km10.trechoId,
@@ -241,7 +252,7 @@ describe("planejamento product read surface", () => {
       contentType: "image/jpeg",
     });
 
-    const plan = await loadPlanTrechos();
+    const plan = await loadPlanTrechos(NOW);
     expect(plan).toHaveLength(1);
     expect(plan[0]?.severidade).toBe("baixa");
   });
@@ -271,9 +282,76 @@ describe("planejamento product read surface", () => {
       contentType: "image/jpeg",
     });
 
-    const plan = await loadPlanTrechos();
+    const plan = await loadPlanTrechos(NOW);
+
     expect(plan).toHaveLength(1);
     expect(plan[0]?.severidade).toBe("média");
+  });
+
+  it("orders média near 30 cm ahead of baixa", async () => {
+    const baixa = await seedCaptura({
+      lat: -22.9,
+      lon: -43.2,
+      capturedAt: "2026-01-15T10:00:00.000Z",
+      classe: "baixa",
+      alturaCm: 5,
+      confidence: 0.7,
+      modelVersion: "stub-0.1",
+      imageBase64: Buffer.from("baixa-perto").toString("base64"),
+      contentType: "image/jpeg",
+    });
+    const media = await seedCaptura({
+      lat: -23.0,
+      lon: -46.0,
+      capturedAt: "2026-01-15T11:00:00.000Z",
+      classe: "média",
+      alturaCm: 29,
+      confidence: 0.8,
+      modelVersion: "stub-0.1",
+      imageBase64: Buffer.from("media-perto").toString("base64"),
+      contentType: "image/jpeg",
+    });
+
+    const plan = await loadPlanTrechos(SUMMER);
+
+    expect(plan.map((t) => t.id)).toEqual([media.trechoId, baixa.trechoId]);
+    expect(plan[0]).toMatchObject({
+      prazoDias: 4,
+      prazoLabel: "Esta semana",
+    });
+    expect(planPrazoSummary(plan)).toEqual({ cortarAgora: 0, estaSemana: 1 });
+  });
+
+  it("leaves classified photos with no grass out of the prazo order", async () => {
+    const semGrama = await seedCaptura({
+      lat: -23.1,
+      lon: -46.1,
+      capturedAt: "2026-07-20T10:00:00.000Z",
+      classe: null,
+      confidence: 0.5,
+      modelVersion: "stub-0.1",
+      imageBase64: Buffer.from("sem-grama").toString("base64"),
+      contentType: "image/jpeg",
+    });
+    const baixa = await seedCaptura({
+      lat: -22.9,
+      lon: -43.2,
+      capturedAt: "2026-07-20T11:00:00.000Z",
+      classe: "baixa",
+      confidence: 0.7,
+      modelVersion: "stub-0.1",
+      imageBase64: Buffer.from("baixa-grama").toString("base64"),
+      contentType: "image/jpeg",
+    });
+
+    const plan = await loadPlanTrechos(NOW);
+
+    expect(plan.map((t) => t.id)).toEqual([baixa.trechoId, semGrama.trechoId]);
+    expect(plan[1]).toMatchObject({
+      id: semGrama.trechoId,
+      prazoDias: null,
+      prazoLabel: null,
+    });
   });
 
   it("blocks unauthenticated access to /planejamento", async () => {

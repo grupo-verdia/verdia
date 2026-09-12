@@ -9,7 +9,9 @@ import { loadDashboardCapturas } from "@/lib/dashboard";
 import {
   formatAlturaCm,
   formatConfianca,
+  formatPrazo,
   loadPlanTrechos,
+  planPrazoSummary,
 } from "@/lib/planejamento";
 import { listMotivaRodovias } from "@/lib/rodovias";
 
@@ -24,13 +26,14 @@ export default async function PlanejamentoPage() {
   const planOrdemById = Object.fromEntries(
     plan.map((trecho) => [trecho.id, trecho.ordem]),
   );
+  const { cortarAgora, estaSemana } = planPrazoSummary(plan);
 
   return (
     <>
       <div className="page-head">
         <div>
           <h1 className="page-title">Fila de prioridades</h1>
-          <p className="page-subtitle">Trechos na ordem de manutenção.</p>
+          <p className="page-subtitle">Ordem pelo prazo até 30 cm.</p>
         </div>
       </div>
 
@@ -46,8 +49,11 @@ export default async function PlanejamentoPage() {
         <>
           <section className="card" aria-labelledby="fila-heading">
             <h2 id="fila-heading" className="section-title">
-              Fila por severidade
+              Fila por prazo
             </h2>
+            <p className="muted" style={{ fontSize: 12, marginTop: -8, marginBottom: 14 }}>
+              Cortar agora: {cortarAgora}. Esta semana: {estaSemana}.
+            </p>
             <div className="table-wrap plan-table">
               <table className="data-table">
                 <thead>
@@ -57,6 +63,7 @@ export default async function PlanejamentoPage() {
                     <th>Rodovia</th>
                     <th>KM</th>
                     <th>Altura</th>
+                    <th>Prazo</th>
                     <th>Severidade</th>
                     <th>Confiança</th>
                     <th />
@@ -74,6 +81,7 @@ export default async function PlanejamentoPage() {
                       <td>{trecho.rodoviaCodigo ?? "—"}</td>
                       <td>{trecho.km === null ? "—" : trecho.km}</td>
                       <td>{formatAlturaCm(trecho.alturaCm)}</td>
+                      <td>{formatPrazo(trecho.prazoLabel)}</td>
                       <td>
                         <StatusPill value={trecho.severidade} />
                       </td>
@@ -97,6 +105,7 @@ export default async function PlanejamentoPage() {
                   rodovia: trecho.rodoviaCodigo ?? "—",
                   km: trecho.km === null ? "—" : String(trecho.km),
                   altura: formatAlturaCm(trecho.alturaCm),
+                  prazo: formatPrazo(trecho.prazoLabel),
                   severidade: trecho.severidade,
                   confianca: formatConfianca(trecho.confidence),
                 }))}
@@ -122,8 +131,8 @@ export default async function PlanejamentoPage() {
                   Plano no mapa
                 </h2>
                 <p className="muted" style={{ fontSize: 12 }}>
-                  Anel e número marcam a ordem na fila. Clique na bolinha para
-                  ver a foto.
+                  Anel e número marcam a ordem na fila. A cor segue a classe.
+                  Clique na bolinha para ver a foto.
                 </p>
               </div>
               <MapLegend />

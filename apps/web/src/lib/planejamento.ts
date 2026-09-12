@@ -1,11 +1,16 @@
-import { isClassificationPending, severidadeFromClasse, type Severidade } from "@/lib/domain";
+import { isClassificationPending, severidadeFromClasse } from "@/lib/domain";
 import type { MapTrecho } from "@/lib/mapa";
 import { getCapturaStore } from "@/lib/persistence";
+import {
+  comparePrazoOrder,
+  countPrazoBuckets,
+  prazoUntilCut,
+} from "@/lib/prazo";
 import { getRodoviaById } from "@/lib/rodovias";
 
-/** Trecho in the heuristic maintenance queue (severidade → rodovia → km). */
+/** Trecho in the maintenance queue (prazo → rodovia → km). */
 export type PlanTrecho = MapTrecho & {
-  /** 1-based position in the plan (alta first). */
+  /** 1-based position in the plan (shortest prazo first). */
   ordem: number;
   /** Same as `id` — captura’s trecho (1:1 with captura in current product). */
   trechoId: string;
@@ -16,46 +21,18 @@ export type PlanTrecho = MapTrecho & {
   alturaCm: number | null;
   confidence: number | null;
   capturaId: string;
+  /** Days until projected height hits 30 cm. Null when there is no grass. */
+  prazoDias: number | null;
+  /** Portuguese label for the prazo column. */
+  prazoLabel: string | null;
 };
-
-/** Higher rank = higher maintenance priority (alta first). */
-const SEVERIDADE_PLAN_RANK: Record<Severidade, number> = {
-  alta: 2,
-  média: 1,
-  baixa: 0,
-};
-
-function compareNullsLastString(a: string | null, b: string | null): number {
-  if (a === null && b === null) {
-    return 0;
-  }
-  if (a === null) {
-    return 1;
-  }
-  if (b === null) {
-    return -1;
-  }
-  return a.localeCompare(b);
-}
-
-function compareKmNullsLast(a: number | null, b: number | null): number {
-  if (a === null && b === null) {
-    return 0;
-  }
-  if (a === null) {
-    return 1;
-  }
-  if (b === null) {
-    return -1;
-  }
-  return a - b;
-}
 
 /**
- * Maintenance queue: one row per captura, ordered by severidade
- * (alta → média → baixa), then rodovia, then km (nulls last).
+ * Maintenance queue: one row per captura, ordered by prazo until 30 cm
+ * (already over first), then rodovia, then km (nulls last).
+ * Pass `now` in tests so the projection does not depend on the clock.
  */
-export async function loadPlanTrechos(): Promise<PlanTrecho[]> {
+export async function loadPlanTrechos(now: Date = new Date()): Promise<PlanTrecho[]> {
   const capturas = (await getCapturaStore().listCapturas()).filter(
     (captura) => !isClassificationPending(captura) && !captura.inferenceError,
   );
@@ -64,6 +41,7 @@ export async function loadPlanTrechos(): Promise<PlanTrecho[]> {
     const rodovia = captura.rodoviaId
       ? getRodoviaById(captura.rodoviaId)
       : null;
+    const prazo = prazoUntilCut(captura, now);
 
     return {
       id: captura.trechoId,
@@ -79,25 +57,12 @@ export async function loadPlanTrechos(): Promise<PlanTrecho[]> {
       alturaCm: captura.alturaCm,
       confidence: captura.confidence,
       capturaId: captura.id,
+      prazoDias: prazo?.dias ?? null,
+      prazoLabel: prazo?.label ?? null,
     };
   });
 
-  rows.sort((a, b) => {
-    const rankDiff =
-      SEVERIDADE_PLAN_RANK[b.severidade] - SEVERIDADE_PLAN_RANK[a.severidade];
-    if (rankDiff !== 0) {
-      return rankDiff;
-    }
-    const rodoviaDiff = compareNullsLastString(a.rodoviaId, b.rodoviaId);
-    if (rodoviaDiff !== 0) {
-      return rodoviaDiff;
-    }
-    const kmDiff = compareKmNullsLast(a.km, b.km);
-    if (kmDiff !== 0) {
-      return kmDiff;
-    }
-    return a.id.localeCompare(b.id);
-  });
+  rows.sort(comparePrazoOrder);
 
   return rows.map((trecho, index) => ({
     ...trecho,
@@ -105,11 +70,22 @@ export async function loadPlanTrechos(): Promise<PlanTrecho[]> {
   }));
 }
 
+export function planPrazoSummary(plan: PlanTrecho[]): {
+  cortarAgora: number;
+  estaSemana: number;
+} {
+  return countPrazoBuckets(plan.map((trecho) => trecho.prazoDias));
+}
+
 export function formatAlturaCm(alturaCm: number | null): string {
   if (alturaCm === null || Number.isNaN(alturaCm)) {
     return "—";
   }
   return `${alturaCm} cm`;
+}
+
+export function formatPrazo(label: string | null): string {
+  return label ?? "—";
 }
 
 /** Display confidence as percent; values ≤ 1 are treated as 0–1 fractions. */

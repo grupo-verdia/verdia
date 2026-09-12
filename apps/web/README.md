@@ -16,7 +16,7 @@ Domain terms: [`CONTEXT.md`](../../CONTEXT.md). Repo runbook:
 | `/nova-captura` | Nova captura (upload de fotos) |
 | `/mapa` | Mapa (marcadores por classe; clique mostra a foto) |
 | `/rodovias` | Rodovias (lista com foto, Excel + correção da classe) |
-| `/planejamento` | Planejamento (severidade, depois rodovia, depois km) |
+| `/planejamento` | Planejamento (prazo até 30 cm, depois rodovia, depois km) |
 | `/observabilidade` | Observabilidade |
 
 Nova captura prefers EXIF GPS. Type lat/lon if the file has none. Photos are
