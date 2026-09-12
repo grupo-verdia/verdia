@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { BackLink } from "@/components/back-link";
 import { OverrideForm } from "@/components/override-form";
 import { capturaStatus, StatusPill } from "@/components/status-pill";
+import { capturaPhotoPath } from "@/lib/captura-photo";
 import { loadCapturaDetail } from "@/lib/dashboard";
 import { isClassificationPending } from "@/lib/domain";
-import { sniffImageContentType } from "@/lib/ingest/image-type";
 import { getRodoviaById } from "@/lib/rodovias";
 
 export const dynamic = "force-dynamic";
@@ -31,12 +31,10 @@ export default async function CapturaDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const { captura, photoBytes } = detail;
+  const { captura } = detail;
   const rodovia = captura.rodoviaId
     ? getRodoviaById(captura.rodoviaId)
     : null;
-  const b64 = Buffer.from(photoBytes).toString("base64");
-  const src = `data:${sniffImageContentType(photoBytes)};base64,${b64}`;
   const status = capturaStatus(captura);
 
   return (
@@ -56,10 +54,10 @@ export default async function CapturaDetailPage({ params }: PageProps) {
 
       <div className="grid detail-grid">
         <section className="card">
-          {/* eslint-disable-next-line @next/next/no-img-element -- stored photo as data URL */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- authenticated photo API */}
           <img
             className="capture-image"
-            src={src}
+            src={capturaPhotoPath(captura.id)}
             alt="Captura da vegetação"
           />
           <div

@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
+import { CapturaThumb } from "@/components/captura-thumb";
 import { StatusPill } from "@/components/status-pill";
 import type { Severidade } from "@/lib/domain";
 
@@ -46,6 +47,7 @@ export function RodoviasCards({
           key={card.id}
           className={["record-card", card.severidade].filter(Boolean).join(" ")}
         >
+          <CapturaThumb id={card.id} className="captura-thumb-wide" />
           <header>
             <div>
               {card.ordemLabel ? <b>{card.ordemLabel}</b> : null}

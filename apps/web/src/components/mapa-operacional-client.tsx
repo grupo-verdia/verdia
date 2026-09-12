@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-import { capturaStatus } from "@/components/status-pill";
 import type { Captura } from "@/lib/domain";
+import { capturaMapPopupHtml } from "@/lib/mapa-popup";
 import type { Rodovia } from "@/lib/rodovias";
 
 type Props = {
@@ -29,14 +29,14 @@ function markerIcon(color: string, ordem: number | undefined): L.DivIcon {
   const inPlan = typeof ordem === "number";
   const size = inPlan ? 22 : 14;
   const ring = inPlan
-    ? "box-shadow:0 0 0 1px rgba(0,0,0,0.35),0 0 0 5px #111"
-    : "box-shadow:0 2px 9px #0008";
+    ? "box-shadow:0 0 0 1px color-mix(in srgb, var(--marker-ring) 35%, transparent),0 0 0 5px var(--marker-ring)"
+    : "box-shadow:0 2px 9px color-mix(in srgb, var(--marker-ring) 50%, transparent)";
   const badge = inPlan
-    ? `<span style="position:absolute;top:-0.55rem;right:-0.55rem;min-width:1.1rem;height:1.1rem;padding:0 0.15rem;border-radius:999px;background:#111;color:#fff;font:700 0.65rem/1.1rem sans-serif;text-align:center">${ordem}</span>`
+    ? `<span style="position:absolute;top:-0.55rem;right:-0.55rem;min-width:1.1rem;height:1.1rem;padding:0 0.15rem;border-radius:999px;background:var(--marker-ring);color:var(--marker-border);font:700 0.65rem/1.1rem sans-serif;text-align:center">${ordem}</span>`
     : "";
   return L.divIcon({
     className: "",
-    html: `<span style="position:relative;display:block;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #fff;${ring}">${badge}</span>`,
+    html: `<span style="position:relative;display:block;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid var(--marker-border);${ring}">${badge}</span>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -117,20 +117,14 @@ export function MapaOperacionalClient({
         continue;
       }
 
-      const color = COLORS[captura.classe ?? ""] ?? "#8da49d";
+      const color = COLORS[captura.classe ?? ""] ?? "var(--muted)";
       const ordem = planOrdemById[captura.trechoId];
       const icon = markerIcon(color, ordem);
       const road = rodovias.find((item) => item.id === captura.rodoviaId);
-      const planLine =
-        typeof ordem === "number" ? `Plano: ordem <b>${ordem}</b><br>` : "";
       const marker = L.marker([captura.lat, captura.lon], { icon });
       marker.bindPopup(
-        `<b>${road?.codigo ?? "Rodovia"}</b><br>` +
-          planLine +
-          `KM ${captura.km?.toFixed(1) ?? "—"}<br>` +
-          `Altura: ${captura.alturaCm ?? "—"} cm<br>` +
-          `Classe: ${capturaStatus(captura).label}<br>` +
-          `<small>${new Date(captura.capturedAt).toLocaleString("pt-BR")}</small>`,
+        capturaMapPopupHtml(captura, road?.codigo ?? null, ordem),
+        { maxWidth: 280, className: "map-popup-wrap" },
       );
       marker.addTo(markers);
       bounds.push([captura.lat, captura.lon]);

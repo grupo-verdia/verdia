@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { Brand } from "@/components/brand";
 import { isNavActive, sidebarNavItems } from "@/components/nav-items";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -32,6 +33,7 @@ export function Sidebar() {
           })}
         </nav>
       </div>
+      <ThemeToggle />
     </aside>
   );
 }

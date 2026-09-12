@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CapturaThumb } from "@/components/captura-thumb";
 import { MapLegend } from "@/components/map-legend";
 import { MapaOperacional } from "@/components/mapa-operacional";
 import { RodoviasCards } from "@/components/rodovias-cards";
@@ -52,6 +53,7 @@ export default async function PlanejamentoPage() {
                 <thead>
                   <tr>
                     <th>Ordem</th>
+                    <th>Foto</th>
                     <th>Rodovia</th>
                     <th>KM</th>
                     <th>Altura</th>
@@ -65,6 +67,9 @@ export default async function PlanejamentoPage() {
                     <tr key={trecho.capturaId}>
                       <td>
                         <b>#{trecho.ordem}</b>
+                      </td>
+                      <td>
+                        <CapturaThumb id={trecho.capturaId} />
                       </td>
                       <td>{trecho.rodoviaCodigo ?? "—"}</td>
                       <td>{trecho.km === null ? "—" : trecho.km}</td>
@@ -117,7 +122,8 @@ export default async function PlanejamentoPage() {
                   Plano no mapa
                 </h2>
                 <p className="muted" style={{ fontSize: 12 }}>
-                  Anel e número marcam a ordem na fila.
+                  Anel e número marcam a ordem na fila. Clique na bolinha para
+                  ver a foto.
                 </p>
               </div>
               <MapLegend />

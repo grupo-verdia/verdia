@@ -11,22 +11,7 @@ const MapaOperacionalClient = nextDynamic(
   () => import("./mapa-operacional-client").then((mod) => mod.MapaOperacionalClient),
   {
     ssr: false,
-    loading: () => (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          minHeight: 320,
-          display: "grid",
-          placeItems: "center",
-          background: "#0d1b18",
-          color: "#8da49d",
-          borderRadius: 12,
-        }}
-      >
-        Carregando mapa...
-      </div>
-    ),
+    loading: () => <div className="map-loading">Carregando mapa...</div>,
   },
 );
 

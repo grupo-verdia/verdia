@@ -10,7 +10,7 @@ Glossary: `CONTEXT.md`. How to run: `README.md` (Portuguese: `README.pt-BR.md`).
 
 Flow: Nova captura saves then classifies. Excel import already has classe. Then dashboard, map, planejamento.
 
-The operator app is the same website on phones. Below ~700px, navigation is a bottom bar, not a separate app.
+The operator app is the same website on phones. Below ~700px, navigation is a bottom bar, not a separate app. Light and dark share the same layout; the toggle is in the sidebar and on the phone top bar.
 
 Screens (UI in Portuguese):
 
@@ -18,9 +18,9 @@ Screens (UI in Portuguese):
 | --- | --- | --- |
 | `/` | Visão geral | Capturas, queue, and maintenance priority |
 | `/nova-captura` | Nova captura | Bulk geotagged photo upload. Classification starts after save |
-| `/mapa` | Mapa | Markers by classe (no PostGIS) |
-| `/rodovias` | Rodovias | Capturas by rodovia, Excel import/export, classe correction |
-| `/planejamento` | Planejamento | Queue by severidade, then rodovia, then km |
+| `/mapa` | Mapa | Markers by classe; popup shows photo + stats (no PostGIS) |
+| `/rodovias` | Rodovias | Capturas by rodovia with photos, Excel import/export, classe correction |
+| `/planejamento` | Planejamento | Queue by severidade, then rodovia, then km; list and map show photos |
 | `/observabilidade` | Observabilidade | Confiança, fila, falhas, correções |
 
 Not built: video frames + GPS sync, drift detection, route optimization, Supabase Auth.
