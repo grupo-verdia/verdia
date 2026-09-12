@@ -698,6 +698,94 @@ html[data-theme="light"] .nav-link.active .nav-icon {
   color: var(--muted);
 }
 
+.section-hint {
+  font-size: 11px;
+  display: block;
+  margin: -10px 0 12px;
+}
+ 
+.section-divider {
+  border: none;
+  border-top: 2px solid var(--line);
+  margin: 0 0 12px;
+}
+
+.alert-clickable {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.alert-clickable:hover {
+  border-color: var(--accent);
+}
+
+.alert-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* Severity stripe for alert cards (used on both "Cortar nesta semana" and "Últimas capturas"). */
+.alert-severity-alta {
+  border-left: 4px solid var(--danger);
+}
+
+.alert-severity-média {
+  border-left: 4px solid var(--warn);
+}
+
+.alert-severity-baixa {
+  border-left: 4px solid var(--ok);
+}
+
+.alert-detail-link {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.alert-detail-link:hover {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0 0 14px;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.section-title-row .section-title {
+  margin: 0;
+}
+
+.chevron {
+  color: var(--muted);
+  font-size: 22px;
+  transition: transform 0.15s ease;
+}
+
+.chevron-open {
+  transform: rotate(180deg);
+}
+
 .metric-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
