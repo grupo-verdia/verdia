@@ -4,7 +4,7 @@ Also in [Portuguese](./README.pt-BR.md).
 
 Motiva still judges roadside grass by eye ("olhômetro"). verdia takes a geotagged photo, estimates how tall the grass is, and says what to mow first.
 
-[Motiva](https://www.motiva.com.br/) (formerly Grupo CCR) runs highway, rail, and airport concessions. This product is only the vegetation on the highway margin. Height class sets how urgent a stretch is. That order is what planning uses.
+[Motiva](https://www.motiva.com.br/) (formerly Grupo CCR) runs highway, rail, and airport concessions. This product is only the vegetation on the highway margin. Height class is what the photo showed. Planning orders by how many days until 30 cm.
 
 ## What it does
 
@@ -16,25 +16,25 @@ A vision model estimates height in centimeters. Code maps that onto Motiva's ban
 - 10-30 cm: média
 - above 30 cm: alta
 
-If the strip is missing from the photo, or there is no grass, classe stays empty after classification. While the photo is still waiting, classe is also empty. When the model is unsure, it still estimates height, with lower confidence. Maintenance priority follows classe. alta goes first. Empty classe after classification counts as baixa. A failed classify does not enter Planejamento.
+If the strip is missing from the photo, or there is no grass, classe stays empty after classification. While the photo is still waiting, classe is also empty. When the model is unsure, it still estimates height, with lower confidence. Severidade still follows classe. The mowing queue uses prazo until 30 cm. Empty classe after classification has no prazo. A failed classify does not enter Planejamento.
 
 If classification fails, the captura is still saved, with the error on it.
 
-From there the operator can look at capturas, pin them on a map, group them by rodovia, fix a wrong class, and work a queue ordered by urgency, then highway, then km.
+From there the operator can look at capturas, pin them on a map, group them by rodovia, fix a wrong class, and work a queue ordered by prazo until 30 cm, then highway, then km.
 
 The UI is Portuguese.
 
-- Visão geral shows capturas and what to mow first, including how many are still waiting.
+- Visão geral shows capturas and trechos to cut now or this week, including how many are still waiting.
 - Nova captura is the browser upload. Photos up to 10 MB are accepted, heavy ones are shrunk in the browser before they are sent. Photos are saved first, then classified. Close the tab: photos stay. Continue on Nova captura.
 - The map shows a pin for each captura, colored by classe. Click the pin to see the photo next to the stats.
 - Rodovias groups by highway, imports and exports Excel, and lets you correct a class. The list shows each photo.
 - Light and dark use the same layout. A toggle in the sidebar (and on the phone top bar) switches them.
-- Planejamento is the mowing queue. It skips photos still waiting or whose classify failed.
+- Planejamento is the mowing queue, shortest prazo until 30 cm first. It skips photos still waiting or whose classify failed.
 - Observabilidade tracks confidence, the queue, failures, and corrections.
 
 Video synced to GPS, drift detection, route optimization, and real user accounts are out. One shared password gets you in.
 
-Product words (captura, trecho, classe, severidade, rodovia) are in [`CONTEXT.md`](./CONTEXT.md).
+Product words (captura, trecho, classe, severidade, prazo, rodovia) are in [`CONTEXT.md`](./CONTEXT.md).
 
 The operator app is `apps/web`. It is the same website on phones. Below ~700px, navigation is a bottom bar, not a separate app. The classifier is `services/ai`.
 

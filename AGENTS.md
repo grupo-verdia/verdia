@@ -1,6 +1,6 @@
 # verdia
 
-Motiva roadside vegetation product. A geotagged photo becomes a **captura**, the VLM estimates grass height, code maps that to **classe** (`baixa` < `média` < `alta`), and classe drives **trecho** **severidade** so operators can plan mowing. Today Motiva does this by eye ("olhômetro").
+Motiva roadside vegetation product. A geotagged photo becomes a **captura**, the VLM estimates grass height, code maps that to **classe** (`baixa` < `média` < `alta`), and classe still names what the photo showed. Planejamento orders trechos by **prazo** until the 30 cm cut limit. Today Motiva does this by eye ("olhômetro").
 
 We do not have Motiva's real data. Photos are generic geotagged laterals. Do not assume a 360 camera.
 
@@ -16,11 +16,11 @@ Screens (UI in Portuguese):
 
 | Route | Label | Role |
 | --- | --- | --- |
-| `/` | Visão geral | Capturas, queue, and maintenance priority |
+| `/` | Visão geral | Capturas, queue, and trechos to cut within 7 days |
 | `/nova-captura` | Nova captura | Bulk geotagged photo upload. Classification starts after save |
 | `/mapa` | Mapa | Markers by classe; popup shows photo + stats (no PostGIS) |
 | `/rodovias` | Rodovias | Capturas by rodovia with photos, Excel import/export, classe correction |
-| `/planejamento` | Planejamento | Queue by severidade, then rodovia, then km; list and map show photos |
+| `/planejamento` | Planejamento | Queue by prazo until 30 cm, then rodovia, then km; list and map show photos |
 | `/observabilidade` | Observabilidade | Confiança, fila, falhas, correções |
 
 Not built: video frames + GPS sync, drift detection, route optimization, Supabase Auth.
@@ -32,7 +32,8 @@ Use these terms in code, tests, and docs. Details live in `CONTEXT.md`.
 - **Captura.** One geotagged, timestamped roadside photo. No valid GPS means it is not a captura. Prefer EXIF; the operator can type lat/lon. Excel import still creates capturas; those rows have no photo (Sem imagem).
 - **Trecho.** Roadside stretch at that GPS point. One captura defines one trecho (1:1). Default length is 500 m (Motiva's manual-analysis constant).
 - **Classe.** Ordered height scale, not three unrelated labels. Motiva bands: `h < 10 cm` → `baixa`; `10-30 cm` → `média`; `h > 30 cm` → `alta`. After classification, `classe` is `null` only when the roadside strip is not visible or has no grass. Before `classifiedAt`, null means still waiting. Under uncertainty the model still estimates height (lower confidence).
-- **Severidade.** Maintenance priority of a trecho, follows classe (`alta` first). Null classe → `baixa`. Failed inference does not enter Planejamento.
+- **Severidade.** Follows classe (`alta` first). Null classe → `baixa`. Failed inference does not enter Planejamento.
+- **Prazo.** Days until grass is projected to hit 30 cm. Growth is 0.3 cm/day from October to March and 0.1 cm/day from April to September. Missing cm uses 20 for média and 5 for baixa. Alta with no cm is already over. No visible grass after classification has no prazo. Planejamento sorts by this, then rodovia, then km.
 - **Nova captura.** Browser only (no CLI). Operator queues a batch, then sends. Each valid file is saved first, then classified in the background. Closing the tab after upload keeps the photos. Continue on Nova captura if any are still waiting. Photos without GPS are skipped unless lat/lon are filled. Files up to 10 MB are accepted; heavy ones are re-encoded smaller in the browser before upload. Failed inference still keeps the captura with `inferenceError` set.
 - **Rodovia.** Motiva catalog entry (code-seeded, e.g. SP-330). Optional on a captura, used by planilhas and planejamento.
 
