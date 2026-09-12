@@ -8,7 +8,7 @@ A [Motiva](https://www.motiva.com.br/) (antes Grupo CCR) opera concessões de ro
 
 ## O que faz
 
-Você envia fotos pelo navegador, ou importa uma planilha. Cada foto precisa de GPS, no arquivo ou digitado. Sem GPS, não é captura. Cada captura vale 500 m de margem, o mesmo comprimento que a Motiva usa quando alguém faz isso à mão.
+Você envia fotos pelo navegador, ou importa uma planilha. A planilha traz números, não fotos. Nessas linhas a interface mostra Sem imagem. Cada foto precisa de GPS, no arquivo ou digitado. Sem GPS, não é captura. Cada captura vale 500 m de margem, o mesmo comprimento que a Motiva usa quando alguém faz isso à mão.
 
 Um modelo de visão estima a altura em centímetros. O código encaixa isso nas faixas da Motiva:
 

@@ -21,8 +21,8 @@ Domain terms: [`CONTEXT.md`](../../CONTEXT.md). Repo runbook:
 
 Nova captura prefers EXIF GPS. Type lat/lon if the file has none. Photos are
 saved first, then classified. Close the tab: photos stay. Continue on Nova
-captura. Excel import/export is on Rodovias. Classe correction is on the
-captura page.
+captura. Excel import/export is on Rodovias. Imported rows have no photo (Sem imagem).
+Classe correction is on the captura page.
 
 ## Local
 

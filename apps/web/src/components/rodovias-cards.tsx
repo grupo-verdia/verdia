@@ -46,23 +46,31 @@ export function RodoviasCards({
           key={card.id}
           className={["record-card", card.severidade].filter(Boolean).join(" ")}
         >
-          <header>
-            <div>
-              {card.ordemLabel ? <b>{card.ordemLabel}</b> : null}
-              <div className="record-kicker">Rodovia</div>
-              <strong>{card.rodovia}</strong>
+          {/* eslint-disable-next-line @next/next/no-img-element -- captura photo or Sem imagem */}
+          <img
+            className="record-thumb"
+            src={`/api/capturas/${card.id}/photo`}
+            alt=""
+          />
+          <div className="record-body">
+            <header>
+              <div>
+                {card.ordemLabel ? <b>{card.ordemLabel}</b> : null}
+                <div className="record-kicker">Rodovia</div>
+                <strong>{card.rodovia}</strong>
+              </div>
+              <StatusPill value={card.severidade} label={card.pillLabel} />
+            </header>
+            <div className="record-fields">
+              <RecordField label="KM" value={card.km} />
+              <RecordField label="Altura" value={card.altura} />
+              <RecordField label="Confiança" value={card.confianca} />
             </div>
-            <StatusPill value={card.severidade} label={card.pillLabel} />
-          </header>
-          <div className="record-fields">
-            <RecordField label="KM" value={card.km} />
-            <RecordField label="Altura" value={card.altura} />
-            <RecordField label="Confiança" value={card.confianca} />
-          </div>
-          <div>
-            <Link className="btn" href={`/capturas/${card.id}`}>
-              Abrir
-            </Link>
+            <div>
+              <Link className="btn" href={`/capturas/${card.id}`}>
+                Abrir
+              </Link>
+            </div>
           </div>
         </article>
       ))}
