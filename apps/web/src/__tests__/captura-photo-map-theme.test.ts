@@ -8,8 +8,8 @@ import { capturaMapPopupHtml } from "@/lib/mapa-popup";
 import type { Captura } from "@/lib/domain";
 import { createMemoryStore, setCapturaStore } from "@/lib/persistence";
 import {
-  LEGACY_RED_PLACEHOLDER_PNG_BYTES,
   NO_IMAGE_HREF,
+  PLACEHOLDER_PNG_BYTES,
 } from "@/lib/photo/placeholder";
 import { isTheme, otherTheme } from "@/lib/theme";
 
@@ -99,9 +99,7 @@ describe("GET /api/capturas/:id/photo", () => {
           classe: "alta",
           confidence: 0.88,
           modelVersion: "teste-verdia",
-          imageBase64: Buffer.from(LEGACY_RED_PLACEHOLDER_PNG_BYTES).toString(
-            "base64",
-          ),
+          imageBase64: Buffer.from(PLACEHOLDER_PNG_BYTES).toString("base64"),
           contentType: "image/png",
         }),
       }),

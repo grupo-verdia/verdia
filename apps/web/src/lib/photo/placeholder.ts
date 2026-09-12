@@ -6,14 +6,6 @@ export const PLACEHOLDER_PNG_BYTES = Uint8Array.from(
   ),
 );
 
-/** Old Excel stand-in: 1×1 red. Still sitting on some imported capturas. */
-export const LEGACY_RED_PLACEHOLDER_PNG_BYTES = Uint8Array.from(
-  Buffer.from(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-    "base64",
-  ),
-);
-
 export const NO_IMAGE_HREF = "/sem-imagem.png";
 
 /** True when the stored file is the Excel stand-in, not a roadside photo. */

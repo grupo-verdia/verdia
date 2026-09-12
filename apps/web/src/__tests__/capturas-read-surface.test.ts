@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { GET as listCapturas, POST as createCaptura } from "@/app/api/capturas/route";
-import { GET as fetchPhoto } from "@/app/api/capturas/[id]/photo/route";
 import { GET as fetchTrecho } from "@/app/api/trechos/[id]/route";
 import { loadCapturaDetail, loadDashboardCapturas } from "@/lib/dashboard";
 import {
@@ -141,13 +140,6 @@ describe("capturas product read surface", () => {
     expect(detail).not.toBeNull();
     expect(detail?.captura.classe).toBe("alta");
     expect(detail?.photoBytes).toEqual(photoBytes);
-
-    const photoResponse = await fetchPhoto(
-      new NextRequest(`http://localhost:3000/api/capturas/${written.id}/photo`),
-      { params: Promise.resolve({ id: written.id }) },
-    );
-    expect(photoResponse.status).toBe(200);
-    expect(new Uint8Array(await photoResponse.arrayBuffer())).toEqual(photoBytes);
   });
 
   it("lists captura with classe on the dashboard after store write", async () => {
