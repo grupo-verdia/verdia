@@ -19,7 +19,7 @@ export default async function MapaPage() {
         <div>
           <h1 className="page-title">Mapa</h1>
           <p className="page-subtitle">
-            Localização das capturas por classe.
+            Clique na bolinha para ver a foto e os dados da captura.
           </p>
         </div>
       </div>

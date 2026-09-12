@@ -25,9 +25,10 @@ Dali o operador vê as capturas, marca no mapa, agrupa por rodovia, corrige uma 
 A interface está em português.
 
 - Visão geral mostra as capturas e o que cortar primeiro, inclusive quantas ainda esperam.
-- Nova captura é o envio de fotos com GPS. O lote é salvo primeiro, depois classificado. Fecha a aba: as fotos ficam. Continue em Nova captura.
-- O mapa mostra um pino por captura, na cor da classe.
-- Rodovias agrupa por rodovia, importa e exporta Excel, e deixa corrigir a classe.
+- Nova captura é o envio de fotos com GPS, de até 10 MB cada. Foto pesada é reduzida no navegador antes de subir. O lote é salvo primeiro, depois classificado. Fecha a aba: as fotos ficam. Continue em Nova captura.
+- O mapa mostra um pino por captura, na cor da classe. Clique na bolinha para ver a foto junto dos dados.
+- Rodovias agrupa por rodovia, importa e exporta Excel, e deixa corrigir a classe. A lista mostra a foto de cada captura.
+- Claro e escuro usam o mesmo layout. O botão na barra lateral (e no topo do celular) troca o modo.
 - Planejamento é a fila de corte. Não entra foto ainda na fila nem foto cuja classificação falhou.
 - Observabilidade mostra confiança, fila, falhas e correções.
 

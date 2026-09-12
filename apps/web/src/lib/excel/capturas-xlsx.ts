@@ -5,7 +5,6 @@ import type { CreateCapturaInput } from "@/lib/persistence/types";
 import { PLACEHOLDER_PNG_BYTES } from "@/lib/photo/placeholder";
 import { getRodoviaByCodigo } from "@/lib/rodovias";
 
-export { PLACEHOLDER_PNG_BYTES };
 export { isExcelBuffer, isExcelFilename } from "@/lib/excel/excel-filename";
 export {
   buildCapturasTemplate,

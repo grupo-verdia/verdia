@@ -41,7 +41,9 @@ Use these terms in code, tests, and docs.
   files, then sends. Each valid file is saved first, then classified in
   the background. Close the tab: photos stay. Continue on Nova captura.
   No GPS means the photo is skipped, unless the operator types
-  latitude/longitude. Classifies with Google AI Studio
+  latitude/longitude. Files up to 10 MB are accepted; anything heavier
+  than the request-body budget is re-encoded to a smaller JPEG in the
+  browser (EXIF GPS is read from the original first). Classifies with Google AI Studio
   (`GOOGLE_API_KEY`) on Vercel; otherwise local Python Inference HTTP
   (`VLM_INFERENCE_URL`). No Google key and no local Python URL: the send
   is rejected. If classification fails later, the photo is already saved.
@@ -52,7 +54,7 @@ Use these terms in code, tests, and docs.
 2. Inference HTTP in `services/ai` (`POST /v1/classify`), optional local.
 3. Nova captura (web upload → persist → classify in the background).
 4. Dashboard.
-5. Map of trechos.
+5. Map of trechos (marker popup shows the photo next to the stats).
 6. Observability: counters from persisted capturas (volume, confiança, falhas,
    overrides).
 7. Planning: trechos ordered by severidade, highlighted on the map.
@@ -67,7 +69,8 @@ VLM estimates roadside grass height. Code maps Motiva cm bands to
 ## Architecture & stack (monorepo)
 
 - `apps/web` — Next.js (TypeScript): dashboard, map, planning, observability, API
-  routes. Access gated by a single shared password.
+  routes. Access gated by a single shared password. Light and dark share the
+  same layout tokens. Lists and map popups show the captura photo.
 - `services/ai` — Python VLM (module + CLI + notebook). Optional Inference HTTP
   (`python -m verdia_ai serve`).
 - Nova captura classifies via Google AI Studio, or local Python HTTP, after

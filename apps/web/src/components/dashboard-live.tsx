@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { CapturaThumb } from "@/components/captura-thumb";
 import { MapLegend } from "@/components/map-legend";
 import { MapaOperacional } from "@/components/mapa-operacional";
 import { useOperationalData } from "@/components/operational-live";
@@ -81,7 +82,7 @@ export function DashboardLive({
             <div>
               <h2 className="section-title">Mapa</h2>
               <span className="muted" style={{ fontSize: 11 }}>
-                Cada ponto representa uma captura
+                Clique na bolinha para ver a foto
               </span>
             </div>
             <MapLegend />
@@ -104,7 +105,7 @@ export function DashboardLive({
                     href={`/capturas/${captura.id}`}
                     key={captura.id}
                   >
-                    <span className="alert-dot" />
+                    <CapturaThumb id={captura.id} />
                     <div className="alert-main">
                       <div className="alert-title">
                         {road?.codigo ?? captura.rodoviaId ?? "Sem rodovia"} ·

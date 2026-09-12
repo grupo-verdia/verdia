@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
+import { CapturaThumb } from "@/components/captura-thumb";
 import { StatusPill } from "@/components/status-pill";
 import type { Severidade } from "@/lib/domain";
 
@@ -46,31 +47,24 @@ export function RodoviasCards({
           key={card.id}
           className={["record-card", card.severidade].filter(Boolean).join(" ")}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- captura photo or Sem imagem */}
-          <img
-            className="record-thumb"
-            src={`/api/capturas/${card.id}/photo`}
-            alt=""
-          />
-          <div className="record-body">
-            <header>
-              <div>
-                {card.ordemLabel ? <b>{card.ordemLabel}</b> : null}
-                <div className="record-kicker">Rodovia</div>
-                <strong>{card.rodovia}</strong>
-              </div>
-              <StatusPill value={card.severidade} label={card.pillLabel} />
-            </header>
-            <div className="record-fields">
-              <RecordField label="KM" value={card.km} />
-              <RecordField label="Altura" value={card.altura} />
-              <RecordField label="Confiança" value={card.confianca} />
-            </div>
+          <CapturaThumb id={card.id} className="captura-thumb-wide" />
+          <header>
             <div>
-              <Link className="btn" href={`/capturas/${card.id}`}>
-                Abrir
-              </Link>
+              {card.ordemLabel ? <b>{card.ordemLabel}</b> : null}
+              <div className="record-kicker">Rodovia</div>
+              <strong>{card.rodovia}</strong>
             </div>
+            <StatusPill value={card.severidade} label={card.pillLabel} />
+          </header>
+          <div className="record-fields">
+            <RecordField label="KM" value={card.km} />
+            <RecordField label="Altura" value={card.altura} />
+            <RecordField label="Confiança" value={card.confianca} />
+          </div>
+          <div>
+            <Link className="btn" href={`/capturas/${card.id}`}>
+              Abrir
+            </Link>
           </div>
         </article>
       ))}

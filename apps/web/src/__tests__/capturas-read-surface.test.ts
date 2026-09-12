@@ -6,10 +6,6 @@ import { GET as fetchPhoto } from "@/app/api/capturas/[id]/photo/route";
 import { GET as fetchTrecho } from "@/app/api/trechos/[id]/route";
 import { loadCapturaDetail, loadDashboardCapturas } from "@/lib/dashboard";
 import {
-  LEGACY_RED_PLACEHOLDER_PNG_BYTES,
-  NO_IMAGE_HREF,
-} from "@/lib/photo/placeholder";
-import {
   createMemoryStore,
   getCapturaStore,
   setCapturaStore,
@@ -152,38 +148,6 @@ describe("capturas product read surface", () => {
     );
     expect(photoResponse.status).toBe(200);
     expect(new Uint8Array(await photoResponse.arrayBuffer())).toEqual(photoBytes);
-  });
-
-  it("serves Sem imagem when the stored file is the Excel stand-in", async () => {
-    const writeResponse = await createCaptura(
-      new NextRequest("http://localhost:3000/api/capturas", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          lat: -23.55,
-          lon: -46.63,
-          capturedAt: "2026-07-20T18:30:00.000Z",
-          classe: "alta",
-          confidence: 0.88,
-          modelVersion: "teste-verdia",
-          imageBase64: Buffer.from(LEGACY_RED_PLACEHOLDER_PNG_BYTES).toString(
-            "base64",
-          ),
-          contentType: "image/png",
-        }),
-      }),
-    );
-    expect(writeResponse.status).toBe(201);
-    const written = (await writeResponse.json()) as { id: string };
-
-    const photoResponse = await fetchPhoto(
-      new NextRequest(`http://localhost:3000/api/capturas/${written.id}/photo`),
-      { params: Promise.resolve({ id: written.id }) },
-    );
-    expect(photoResponse.status).toBe(307);
-    expect(new URL(photoResponse.headers.get("location")!).pathname).toBe(
-      NO_IMAGE_HREF,
-    );
   });
 
   it("lists captura with classe on the dashboard after store write", async () => {

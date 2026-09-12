@@ -136,15 +136,7 @@ function Bar({
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        borderBottom: "1px solid #173029",
-        padding: "12px 0",
-        fontSize: 12,
-      }}
-    >
+    <div className="quality-row">
       <span className="muted">{label}</span>
       <b>{value}</b>
     </div>

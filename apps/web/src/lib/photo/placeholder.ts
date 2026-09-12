@@ -1,4 +1,4 @@
-/** Tiny 1×1 transparent PNG stored when Excel rows have no photo. */
+/** Tiny 1×1 PNG stored when Excel rows have no photo. */
 export const PLACEHOLDER_PNG_BYTES = Uint8Array.from(
   Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNgAAIAAAUAAen63NgAAAAASUVORK5CYII=",
@@ -16,19 +16,8 @@ export const LEGACY_RED_PLACEHOLDER_PNG_BYTES = Uint8Array.from(
 
 export const NO_IMAGE_HREF = "/sem-imagem.png";
 
-function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
-  if (a.length !== b.length) {
-    return false;
-  }
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function isOneByOnePng(bytes: Uint8Array): boolean {
+/** True when the stored file is the Excel stand-in, not a roadside photo. */
+export function isPlaceholderPhoto(bytes: Uint8Array): boolean {
   if (bytes.length < 24) {
     return false;
   }
@@ -42,13 +31,4 @@ function isOneByOnePng(bytes: Uint8Array): boolean {
   }
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   return view.getUint32(16) === 1 && view.getUint32(20) === 1;
-}
-
-/** True when the stored file is the Excel stand-in, not a roadside photo. */
-export function isPlaceholderPhoto(bytes: Uint8Array): boolean {
-  return (
-    sameBytes(bytes, PLACEHOLDER_PNG_BYTES) ||
-    sameBytes(bytes, LEGACY_RED_PLACEHOLDER_PNG_BYTES) ||
-    isOneByOnePng(bytes)
-  );
 }

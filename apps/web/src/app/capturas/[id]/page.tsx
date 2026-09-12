@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { BackLink } from "@/components/back-link";
 import { OverrideForm } from "@/components/override-form";
 import { capturaStatus, StatusPill } from "@/components/status-pill";
+import { capturaPhotoPath } from "@/lib/captura-photo";
 import { loadCapturaDetail } from "@/lib/dashboard";
 import { isClassificationPending } from "@/lib/domain";
 import { getRodoviaById } from "@/lib/rodovias";
@@ -53,10 +54,10 @@ export default async function CapturaDetailPage({ params }: PageProps) {
 
       <div className="grid detail-grid">
         <section className="card">
-          {/* eslint-disable-next-line @next/next/no-img-element -- stored photo or Sem imagem */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- authenticated photo API */}
           <img
             className="capture-image"
-            src={`/api/capturas/${captura.id}/photo`}
+            src={capturaPhotoPath(captura.id)}
             alt="Captura da vegetação"
           />
           <div
