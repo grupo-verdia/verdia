@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { CapturaThumb } from "@/components/captura-thumb";
 import { MapLegend } from "@/components/map-legend";
@@ -67,6 +68,12 @@ export function DashboardLive({
     initialRodovias,
   );
 
+  const [selectedCapturaId, setSelectedCapturaId] = useState<string | null>(
+    null,
+  );
+  const [recentesOpen, setRecentesOpen] = useState(true);
+  const [cortarOpen, setCortarOpen] = useState(true);
+
   const pending = capturas.filter(isClassificationPending).length;
   const altas = capturas.filter(
     (c) => !isClassificationPending(c) && c.classe === "alta",
@@ -110,81 +117,161 @@ export function DashboardLive({
           <div className="map-card-head">
             <div>
               <h2 className="section-title">Mapa</h2>
-              <span className="muted" style={{ fontSize: 11 }}>
-                Clique na bolinha para ver a foto
-              </span>
             </div>
             <MapLegend />
           </div>
           <div className="map-box">
-            <MapaOperacional capturas={capturas} rodovias={rodovias} />
+            <MapaOperacional
+              capturas={capturas}
+              rodovias={rodovias}
+              selectedCapturaId={selectedCapturaId}
+            />
           </div>
         </section>
 
         <div className="grid">
           <section className="card">
-            <h2 className="section-title">Cortar nesta semana</h2>
-            <div className="alert-list">
-              {weekDue.length ? (
-                weekDue.map(({ captura, prazo }) => {
-                  const road = rodovias.find((r) => r.id === captura.rodoviaId);
-                  const status = capturaStatus(captura);
-                  return (
-                    <Link
-                      className="alert"
-                      href={`/capturas/${captura.id}`}
-                      key={captura.id}
-                    >
-                      <CapturaThumb id={captura.id} />
-                      <div className="alert-main">
-                        <div className="alert-title">
-                          {road?.codigo ?? captura.rodoviaId ?? "Sem rodovia"} ·
-                          KM {captura.km?.toFixed(1) ?? "—"}
+            <button
+              type="button"
+              className="section-title-row"
+              onClick={() => setCortarOpen((open) => !open)}
+              aria-expanded={cortarOpen}
+            >
+              <h2 className="section-title">Cortar nesta semana</h2>
+            </button>
+            <span className="muted" style={{ fontSize: 11, marginTop: -10, display: "block", marginBottom: 12 }}>
+              Selecione o trecho para ver no mapa
+            </span>
+            <hr className="section-divider" style={{ fontSize: 9, marginTop: -5, display: "block", marginBottom: 10 }} />
+            {cortarOpen && (
+              <div className="alert-list">
+                {weekDue.length ? (
+                  weekDue.map(({ captura, prazo }) => {
+                    const road = rodovias.find((r) => r.id === captura.rodoviaId);
+                    const status = capturaStatus(captura);
+                    const selected = captura.id === selectedCapturaId;
+                    return (
+                      <div
+                        className={[
+                          "alert",
+                          "alert-clickable",
+                          status.value ? `alert-severity-${status.value}` : null,
+                          selected ? "alert-selected" : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        key={captura.id}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={selected}
+                        onClick={() => setSelectedCapturaId(captura.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setSelectedCapturaId(captura.id);
+                          }
+                        }}
+                      >
+                        <CapturaThumb id={captura.id} />
+                        <div className="alert-main">
+                          <div className="alert-title">
+                            {road?.codigo ?? captura.rodoviaId ?? "Sem rodovia"} ·
+                            KM {captura.km?.toFixed(1) ?? "—"}
+                          </div>
+                          <div className="alert-meta">{prazo.label}</div>
                         </div>
-                        <div className="alert-meta">{prazo.label}</div>
+                        <StatusPill value={status.value} label={status.label} />
+                        <Link
+                          className="alert-detail-link"
+                          href={`/capturas/${captura.id}`}
+                          aria-label="Ver detalhes da captura"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          →
+                        </Link>
                       </div>
-                      <StatusPill value={status.value} label={status.label} />
-                    </Link>
-                  );
-                })
-              ) : (
-                <div className="empty">Nenhum trecho para cortar nesta semana.</div>
-              )}
-            </div>
+                    );
+                  })
+                ) : (
+                  <div className="empty">Nenhum trecho para cortar nesta semana.</div>
+                )}
+              </div>
+            )}
           </section>
 
           <section className="card">
-            <h2 className="section-title">Últimas capturas</h2>
-            <div className="alert-list">
-              {recentes.length ? (
-                recentes.map((captura) => {
-                  const road = rodovias.find((r) => r.id === captura.rodoviaId);
-                  const status = capturaStatus(captura);
-                  return (
-                    <Link
-                      className="alert"
-                      href={`/capturas/${captura.id}`}
-                      key={captura.id}
-                    >
-                      <CapturaThumb id={captura.id} />
-                      <div className="alert-main">
-                        <div className="alert-title">
-                          {road?.codigo ?? captura.rodoviaId ?? "Sem rodovia"} ·
-                          KM {captura.km?.toFixed(1) ?? "—"}
+            <button
+              type="button"
+              className="section-title-row"
+              onClick={() => setRecentesOpen((open) => !open)}
+              aria-expanded={recentesOpen}
+            >
+              <h2 className="section-title">Últimas capturas</h2>
+              <span
+                className={`chevron${recentesOpen ? " chevron-open" : ""}`}
+                aria-hidden="true"
+              >
+                ▾
+              </span>
+            </button>
+            <hr className="section-divider" style={{ fontSize: 9, marginTop: -5, display: "block", marginBottom: 10 }} />
+            {recentesOpen && (
+              <div className="alert-list">
+                {recentes.length ? (
+                  recentes.map((captura) => {
+                    const road = rodovias.find((r) => r.id === captura.rodoviaId);
+                    const status = capturaStatus(captura);
+                    const selected = captura.id === selectedCapturaId;
+                    return (
+                      <div
+                        className={[
+                          "alert",
+                          "alert-clickable",
+                          status.value ? `alert-severity-${status.value}` : null,
+                          selected ? "alert-selected" : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        key={captura.id}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={selected}
+                        onClick={() => setSelectedCapturaId(captura.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setSelectedCapturaId(captura.id);
+                          }
+                        }}
+                      >
+                        <CapturaThumb id={captura.id} />
+                        <div className="alert-main">
+                          <div className="alert-title">
+                            {road?.codigo ?? captura.rodoviaId ?? "Sem rodovia"} ·
+                            KM {captura.km?.toFixed(1) ?? "—"}
+                          </div>
+                          <div className="alert-meta">
+                            {captura.alturaCm ?? "—"} cm
+                            {captura.sentido ? ` · ${captura.sentido}` : ""}
+                          </div>
                         </div>
-                        <div className="alert-meta">
-                          {captura.alturaCm ?? "—"} cm
-                          {captura.sentido ? ` · ${captura.sentido}` : ""}
-                        </div>
+                        <StatusPill value={status.value} label={status.label} />
+                        <Link
+                          className="alert-detail-link"
+                          href={`/capturas/${captura.id}`}
+                          aria-label="Ver detalhes da captura"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          →
+                        </Link>
                       </div>
-                      <StatusPill value={status.value} label={status.label} />
-                    </Link>
-                  );
-                })
-              ) : (
-                <div className="empty">Nenhuma captura ainda.</div>
-              )}
-            </div>
+                    );
+                  })
+                ) : (
+                  <div className="empty">Nenhuma captura ainda.</div>
+                )}
+              </div>
+            )}
           </section>
         </div>
       </div>
