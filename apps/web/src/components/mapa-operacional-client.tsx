@@ -14,6 +14,8 @@ type Props = {
   height?: string;
   /** 1-based plan ordem keyed by trecho id (captura.trechoId). */
   planOrdemById?: Readonly<Record<string, number>>;
+  /** Captura id to fly to and highlight on the map (e.g. selected from a list). */
+  selectedCapturaId?: string | null;
 };
 
 /** Stable default so live re-renders do not rebuild markers or refit the camera. */
@@ -25,12 +27,18 @@ const COLORS: Record<string, string> = {
   baixa: "#61d58b",
 };
 
-function markerIcon(color: string, ordem: number | undefined): L.DivIcon {
+function markerIcon(
+  color: string,
+  ordem: number | undefined,
+  selected: boolean,
+): L.DivIcon {
   const inPlan = typeof ordem === "number";
-  const size = inPlan ? 22 : 14;
-  const ring = inPlan
-    ? "box-shadow:0 0 0 1px color-mix(in srgb, var(--marker-ring) 35%, transparent),0 0 0 5px var(--marker-ring)"
-    : "box-shadow:0 2px 9px color-mix(in srgb, var(--marker-ring) 50%, transparent)";
+  const size = selected ? 26 : inPlan ? 22 : 14;
+  const ring = selected
+    ? "box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),0 0 0 6px var(--accent)"
+    : inPlan
+      ? "box-shadow:0 0 0 1px color-mix(in srgb, var(--marker-ring) 35%, transparent),0 0 0 5px var(--marker-ring)"
+      : "box-shadow:0 2px 9px color-mix(in srgb, var(--marker-ring) 50%, transparent)";
   const badge = inPlan
     ? `<span style="position:absolute;top:-0.55rem;right:-0.55rem;min-width:1.1rem;height:1.1rem;padding:0 0.15rem;border-radius:999px;background:var(--marker-ring);color:var(--marker-border);font:700 0.65rem/1.1rem sans-serif;text-align:center">${ordem}</span>`
     : "";
@@ -47,11 +55,14 @@ export function MapaOperacionalClient({
   rodovias,
   height = "100%",
   planOrdemById = EMPTY_PLAN_ORDEM,
+  selectedCapturaId = null,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
+  const markerByIdRef = useRef<Map<string, L.Marker>>(new Map());
   const fittedRef = useRef(false);
+  const flownToRef = useRef<string | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
@@ -110,6 +121,7 @@ export function MapaOperacionalClient({
     }
 
     markers.clearLayers();
+    markerByIdRef.current.clear();
     const bounds: L.LatLngTuple[] = [];
 
     for (const captura of capturas) {
@@ -119,14 +131,19 @@ export function MapaOperacionalClient({
 
       const color = COLORS[captura.classe ?? ""] ?? "var(--muted)";
       const ordem = planOrdemById[captura.trechoId];
-      const icon = markerIcon(color, ordem);
+      const selected = captura.id === selectedCapturaId;
+      const icon = markerIcon(color, ordem, selected);
       const road = rodovias.find((item) => item.id === captura.rodoviaId);
-      const marker = L.marker([captura.lat, captura.lon], { icon });
+      const marker = L.marker([captura.lat, captura.lon], {
+        icon,
+        zIndexOffset: selected ? 1000 : 0,
+      });
       marker.bindPopup(
         capturaMapPopupHtml(captura, road?.codigo ?? null, ordem),
         { maxWidth: 280, className: "map-popup-wrap" },
       );
       marker.addTo(markers);
+      markerByIdRef.current.set(captura.id, marker);
       bounds.push([captura.lat, captura.lon]);
     }
 
@@ -146,7 +163,32 @@ export function MapaOperacionalClient({
     requestAnimationFrame(() => {
       mapRef.current?.invalidateSize({ pan: false });
     });
-  }, [mapReady, capturas, rodovias, planOrdemById]);
+  }, [mapReady, capturas, rodovias, planOrdemById, selectedCapturaId]);
+
+  // Fly to and open the popup for a selected captura (e.g. clicked from a list),
+  // once per selection so live data refreshes don't keep re-triggering the animation.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) {
+      return;
+    }
+    if (!selectedCapturaId) {
+      flownToRef.current = null;
+      return;
+    }
+    if (flownToRef.current === selectedCapturaId) {
+      return;
+    }
+    const marker = markerByIdRef.current.get(selectedCapturaId);
+    if (!marker) {
+      return;
+    }
+    flownToRef.current = selectedCapturaId;
+    map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 14), {
+      duration: 0.6,
+    });
+    marker.openPopup();
+  }, [selectedCapturaId, mapReady, capturas]);
 
   const inPlan = Object.keys(planOrdemById).length > 0;
 
