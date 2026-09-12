@@ -202,6 +202,7 @@ export function MapaOperacionalClient({
           ? "Mapa de capturas com plano destacado"
           : "Mapa de capturas"
       }
+      
     />
   );
 }
