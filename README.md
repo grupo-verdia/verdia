@@ -8,7 +8,7 @@ Motiva still judges roadside grass by eye ("olhômetro"). verdia takes a geotagg
 
 ## What it does
 
-You send photos from the browser, or you import an Excel sheet. Each photo needs GPS, from the file or typed in. No GPS, it is not a captura. Each captura stands for 500 m of roadside, the same length Motiva uses when someone does this by hand.
+You send photos from the browser, or you import an Excel sheet. The sheet has numbers, not photos. The UI shows Sem imagem on those rows. Each photo needs GPS, from the file or typed in. No GPS, it is not a captura. Each captura stands for 500 m of roadside, the same length Motiva uses when someone does this by hand.
 
 A vision model estimates height in centimeters. Code maps that onto Motiva's bands:
 

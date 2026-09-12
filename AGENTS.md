@@ -8,7 +8,7 @@ Glossary: `CONTEXT.md`. How to run: `README.md` (Portuguese: `README.pt-BR.md`).
 
 ## Product
 
-Flow: Nova captura saves then classifies. Excel import already has classe. Then dashboard, map, planejamento.
+Flow: Nova captura saves then classifies. Excel import already has classe and no photo (the UI shows Sem imagem). Then dashboard, map, planejamento.
 
 The operator app is the same website on phones. Below ~700px, navigation is a bottom bar, not a separate app. Light and dark share the same layout; the toggle is in the sidebar and on the phone top bar.
 
@@ -29,7 +29,7 @@ Not built: video frames + GPS sync, drift detection, route optimization, Supabas
 
 Use these terms in code, tests, and docs. Details live in `CONTEXT.md`.
 
-- **Captura.** One geotagged, timestamped roadside photo. No valid GPS means it is not a captura. Prefer EXIF; the operator can type lat/lon.
+- **Captura.** One geotagged, timestamped roadside photo. No valid GPS means it is not a captura. Prefer EXIF; the operator can type lat/lon. Excel import still creates capturas; those rows have no photo (Sem imagem).
 - **Trecho.** Roadside stretch at that GPS point. One captura defines one trecho (1:1). Default length is 500 m (Motiva's manual-analysis constant).
 - **Classe.** Ordered height scale, not three unrelated labels. Motiva bands: `h < 10 cm` → `baixa`; `10-30 cm` → `média`; `h > 30 cm` → `alta`. After classification, `classe` is `null` only when the roadside strip is not visible or has no grass. Before `classifiedAt`, null means still waiting. Under uncertainty the model still estimates height (lower confidence).
 - **Severidade.** Maintenance priority of a trecho, follows classe (`alta` first). Null classe → `baixa`. Failed inference does not enter Planejamento.

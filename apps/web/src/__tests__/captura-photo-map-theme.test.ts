@@ -7,6 +7,10 @@ import { capturaPhotoPath } from "@/lib/captura-photo";
 import { capturaMapPopupHtml } from "@/lib/mapa-popup";
 import type { Captura } from "@/lib/domain";
 import { createMemoryStore, setCapturaStore } from "@/lib/persistence";
+import {
+  NO_IMAGE_HREF,
+  PLACEHOLDER_PNG_BYTES,
+} from "@/lib/photo/placeholder";
 import { isTheme, otherTheme } from "@/lib/theme";
 
 const JPEG_BYTES = Uint8Array.from([0xff, 0xd8, 0xff, 0x00]);
@@ -81,6 +85,36 @@ describe("GET /api/capturas/:id/photo", () => {
       { params: Promise.resolve({ id: "missing" }) },
     );
     expect(response.status).toBe(404);
+  });
+
+  it("redirects Excel stand-ins to Sem imagem", async () => {
+    const write = await createCaptura(
+      new NextRequest("http://localhost:3000/api/capturas", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          lat: -23.55,
+          lon: -46.63,
+          capturedAt: "2026-07-20T18:30:00.000Z",
+          classe: "alta",
+          confidence: 0.88,
+          modelVersion: "teste-verdia",
+          imageBase64: Buffer.from(PLACEHOLDER_PNG_BYTES).toString("base64"),
+          contentType: "image/png",
+        }),
+      }),
+    );
+    expect(write.status).toBe(201);
+    const written = (await write.json()) as { id: string };
+
+    const response = await getCapturaPhoto(
+      new NextRequest(`http://localhost:3000/api/capturas/${written.id}/photo`),
+      { params: Promise.resolve({ id: written.id }) },
+    );
+    expect(response.status).toBe(307);
+    expect(new URL(response.headers.get("location")!).pathname).toBe(
+      NO_IMAGE_HREF,
+    );
   });
 });
 

@@ -32,7 +32,9 @@ Use these terms in code, tests, and docs.
   (lower confidence).
   This is an ordered scale, not three unrelated labels.
 - **Captura** — a single geotagged, timestamped roadside photo. Without valid GPS,
-  it is not a captura. One captura creates one trecho.
+  it is not a captura. One captura creates one trecho. Excel import still
+  creates capturas from rows (classe already filled). There is no photo;
+  the UI shows Sem imagem.
 - **Severidade** — maintenance priority of a trecho, driven primarily by classe
   (alta first).
 - **Nova captura.** Web upload of geotagged photos. The operator queues
