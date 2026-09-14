@@ -56,8 +56,7 @@ describe("prazoUntilCut", () => {
       },
       SUMMER,
     );
-    expect(media?.dias).toBe(4);
-    expect(media?.label).toBe("Esta semana");
+    expect(media).toEqual({ dias: 3, label: "Esta semana" });
     expect(baixa?.dias).toBeGreaterThan(media!.dias);
   });
 
@@ -72,12 +71,11 @@ describe("prazoUntilCut", () => {
       { ...input, capturedAt: "2026-07-15T10:00:00.000Z" },
       WINTER,
     );
-    expect(summer?.dias).toBe(34);
-    expect(winter?.dias).toBe(100);
-    expect(summer!.dias).toBeLessThan(winter!.dias);
+    expect(summer).toEqual({ dias: 25, label: "Em 25 dias" });
+    expect(winter).toEqual({ dias: 50, label: "Em 50 dias" });
   });
 
-  it("projects height from days since the photo at today's rate", () => {
+  it("walks past days at each day's rate, not today's rate for the whole span", () => {
     const prazo = prazoUntilCut(
       {
         alturaCm: 20,
@@ -86,7 +84,7 @@ describe("prazoUntilCut", () => {
       },
       WINTER,
     );
-    expect(prazo).toEqual({ dias: 80, label: "Em 80 dias" });
+    expect(prazo).toEqual({ dias: 30, label: "Em 30 dias" });
   });
 
   it("returns no prazo when the strip has no visible grass", () => {
@@ -121,8 +119,8 @@ describe("prazoUntilCut", () => {
       { alturaCm: null, classe: "baixa", capturedAt: "2026-07-15T10:00:00.000Z" },
       WINTER,
     );
-    expect(media).toEqual({ dias: 100, label: "Em 100 dias" });
-    expect(baixa).toEqual({ dias: 250, label: "Em 250 dias" });
+    expect(media).toEqual({ dias: 50, label: "Em 50 dias" });
+    expect(baixa).toEqual({ dias: 102, label: "Mais de 90 dias" });
   });
 
   it("treats a classe correction to alta as cortar agora even if cm is still média", () => {
@@ -148,7 +146,33 @@ describe("prazoUntilCut", () => {
         },
         WINTER,
       ),
-    ).toEqual({ dias: 100, label: "Em 100 dias" });
+    ).toEqual({ dias: 50, label: "Em 50 dias" });
+  });
+
+  it("uses 0.2 through September then 0.4 from October, not a frozen dry-season rate", () => {
+    const now = new Date("2026-09-14T12:00:00.000Z");
+    const prazo = prazoUntilCut(
+      {
+        alturaCm: 4,
+        classe: "baixa",
+        capturedAt: "2026-09-14T10:00:00.000Z",
+      },
+      now,
+    );
+    expect(prazo).toEqual({ dias: 74, label: "Em 74 dias" });
+    expect(prazo!.dias).toBeLessThan(200);
+  });
+
+  it("grows March at 0.4 then April onward at 0.2", () => {
+    const prazo = prazoUntilCut(
+      {
+        alturaCm: 5,
+        classe: "baixa",
+        capturedAt: "2026-03-01T10:00:00.000Z",
+      },
+      new Date("2026-04-01T12:00:00.000Z"),
+    );
+    expect(prazo).toEqual({ dias: 63, label: "Em 63 dias" });
   });
 });
 

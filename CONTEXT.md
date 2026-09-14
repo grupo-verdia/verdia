@@ -37,14 +37,16 @@ Use these terms in code, tests, and docs.
   the UI shows Sem imagem.
 - **Severidade** — follows classe (alta first). Planejamento sorts by prazo.
 - **Prazo.** Days until projected height hits the 30 cm cut limit. Growth is
-  0.3 cm/day from October to March and 0.1 cm/day from April to September.
-  Height today is the photo height plus days since the photo times today's
-  rate. Missing cm uses 20 for média and 5 for baixa. Alta is already over
-  (0 days). Stored cm is used only when it still matches classe, because a
-  field correction changes classe and leaves the old cm. No visible grass
-  after classification has no prazo. Labels: Cortar agora, Esta semana, or
-  Em X dias. Computed on read, not stored. Planejamento sorts by prazo, then
-  rodovia, then km. Visão geral lists trechos with 0 to 7 days.
+  an operational estimate until Motiva confirms: 0.4 cm/day from October to
+  March (wet/growing season) and 0.2 cm/day from April to September. Height
+  walks the calendar at each day's seasonal rate, from the photo up to today,
+  then forward until 30 cm. Missing cm uses 20 for média and 5 for baixa.
+  Alta is already over (0 days). Stored cm is used only when it still matches
+  classe, because a field correction changes classe and leaves the old cm.
+  No visible grass after classification has no prazo. Labels: Cortar agora
+  (0), Esta semana (1-7), Em X dias (8-90), or Mais de 90 dias. Computed on
+  read, not stored. Planejamento sorts by the real day count, then rodovia,
+  then km. Visão geral lists trechos with 0 to 7 days.
 - **Nova captura.** Web upload of geotagged photos. The operator queues
   files, then sends. Each valid file is saved first, then classified in
   the background. Close the tab: photos stay. Continue on Nova captura.
