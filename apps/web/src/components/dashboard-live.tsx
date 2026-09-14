@@ -55,6 +55,88 @@ function dueThisWeek(
     );
 }
 
+function roadLabel(captura: Captura, rodovias: Rodovia[]) {
+  const road = rodovias.find((r) => r.id === captura.rodoviaId);
+  return `${road?.codigo ?? captura.rodoviaId ?? "Sem rodovia"} · KM ${captura.km?.toFixed(1) ?? "—"}`;
+}
+
+function WeekDueList({
+  rows,
+  rodovias,
+}: {
+  rows: Array<{ captura: Captura; prazo: Prazo }>;
+  rodovias: Rodovia[];
+}) {
+  return (
+    <section className="card">
+      <h2 className="section-title">Cortar nesta semana</h2>
+      <div className="alert-list">
+        {rows.length ? (
+          rows.map(({ captura, prazo }) => {
+            const status = capturaStatus(captura);
+            return (
+              <Link
+                className="alert"
+                href={`/capturas/${captura.id}`}
+                key={captura.id}
+              >
+                <CapturaThumb id={captura.id} />
+                <div className="alert-main">
+                  <div className="alert-title">{roadLabel(captura, rodovias)}</div>
+                  <div className="alert-meta">{prazo.label}</div>
+                </div>
+                <StatusPill value={status.value} label={status.label} />
+              </Link>
+            );
+          })
+        ) : (
+          <div className="empty">Nenhum trecho para cortar nesta semana.</div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function RecentCapturasList({
+  capturas,
+  rodovias,
+}: {
+  capturas: Captura[];
+  rodovias: Rodovia[];
+}) {
+  return (
+    <section className="card">
+      <h2 className="section-title">Últimas capturas</h2>
+      <div className="alert-list">
+        {capturas.length ? (
+          capturas.map((captura) => {
+            const status = capturaStatus(captura);
+            return (
+              <Link
+                className="alert"
+                href={`/capturas/${captura.id}`}
+                key={captura.id}
+              >
+                <CapturaThumb id={captura.id} />
+                <div className="alert-main">
+                  <div className="alert-title">{roadLabel(captura, rodovias)}</div>
+                  <div className="alert-meta">
+                    {captura.alturaCm ?? "—"} cm
+                    {captura.sentido ? ` · ${captura.sentido}` : ""}
+                  </div>
+                </div>
+                <StatusPill value={status.value} label={status.label} />
+              </Link>
+            );
+          })
+        ) : (
+          <div className="empty">Nenhuma captura ainda.</div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export function DashboardLive({
   initialCapturas,
   initialRodovias,
@@ -122,70 +204,8 @@ export function DashboardLive({
         </section>
 
         <div className="grid">
-          <section className="card">
-            <h2 className="section-title">Cortar nesta semana</h2>
-            <div className="alert-list">
-              {weekDue.length ? (
-                weekDue.map(({ captura, prazo }) => {
-                  const road = rodovias.find((r) => r.id === captura.rodoviaId);
-                  const status = capturaStatus(captura);
-                  return (
-                    <Link
-                      className="alert"
-                      href={`/capturas/${captura.id}`}
-                      key={captura.id}
-                    >
-                      <CapturaThumb id={captura.id} />
-                      <div className="alert-main">
-                        <div className="alert-title">
-                          {road?.codigo ?? captura.rodoviaId ?? "Sem rodovia"} ·
-                          KM {captura.km?.toFixed(1) ?? "—"}
-                        </div>
-                        <div className="alert-meta">{prazo.label}</div>
-                      </div>
-                      <StatusPill value={status.value} label={status.label} />
-                    </Link>
-                  );
-                })
-              ) : (
-                <div className="empty">Nenhum trecho para cortar nesta semana.</div>
-              )}
-            </div>
-          </section>
-
-          <section className="card">
-            <h2 className="section-title">Últimas capturas</h2>
-            <div className="alert-list">
-              {recentes.length ? (
-                recentes.map((captura) => {
-                  const road = rodovias.find((r) => r.id === captura.rodoviaId);
-                  const status = capturaStatus(captura);
-                  return (
-                    <Link
-                      className="alert"
-                      href={`/capturas/${captura.id}`}
-                      key={captura.id}
-                    >
-                      <CapturaThumb id={captura.id} />
-                      <div className="alert-main">
-                        <div className="alert-title">
-                          {road?.codigo ?? captura.rodoviaId ?? "Sem rodovia"} ·
-                          KM {captura.km?.toFixed(1) ?? "—"}
-                        </div>
-                        <div className="alert-meta">
-                          {captura.alturaCm ?? "—"} cm
-                          {captura.sentido ? ` · ${captura.sentido}` : ""}
-                        </div>
-                      </div>
-                      <StatusPill value={status.value} label={status.label} />
-                    </Link>
-                  );
-                })
-              ) : (
-                <div className="empty">Nenhuma captura ainda.</div>
-              )}
-            </div>
-          </section>
+          <WeekDueList rows={weekDue} rodovias={rodovias} />
+          <RecentCapturasList capturas={recentes} rodovias={rodovias} />
         </div>
       </div>
     </>
