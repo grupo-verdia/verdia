@@ -524,6 +524,19 @@ html[data-theme="light"] .nav-link.active .nav-icon {
   gap: 12px;
 }
 
+.coord-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.coord-fields-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
 .dropzone {
   display: grid;
   gap: 6px;
@@ -862,13 +875,34 @@ html[data-theme="light"] .nav-link.active .nav-icon {
   display: grid;
   place-items: center;
   padding: 24px;
+}
+
+.password-field {
   position: relative;
 }
 
-.login-theme {
+.password-field .input {
+  padding-right: 42px;
+}
+
+.password-toggle {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  color: var(--text);
 }
 
 .login-card {
