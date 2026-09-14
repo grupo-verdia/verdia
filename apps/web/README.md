@@ -15,7 +15,7 @@ Domain terms: [`CONTEXT.md`](../../CONTEXT.md). Repo runbook:
 | `/` | Visão geral |
 | `/nova-captura` | Nova captura (upload de fotos) |
 | `/mapa` | Mapa (marcadores por classe; clique mostra a foto) |
-| `/rodovias` | Rodovias (lista com foto, Excel + correção da classe) |
+| `/rodovias` | Rodovias (lista com foto, Excel, correção da classe, Limpar) |
 | `/planejamento` | Planejamento (prazo até 30 cm, depois rodovia, depois km) |
 | `/observabilidade` | Observabilidade |
 

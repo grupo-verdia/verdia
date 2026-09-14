@@ -242,24 +242,16 @@ async function applyClassification(
   return rowToCaptura(data as CapturaRow);
 }
 
-async function clearCapturas(
+type CapturaClearRow = {
+  id: string;
+  trecho_id: string;
+  storage_key: string;
+};
+
+async function removeCapturaRows(
   client: SupabaseClient,
-  rodoviaId: string,
+  rows: CapturaClearRow[],
 ): Promise<number> {
-  let query = client.from("capturas").select("id, trecho_id, storage_key");
-  if (rodoviaId !== "todas") {
-    query = query.eq("rodovia_id", rodoviaId);
-  }
-  const { data, error } = await query;
-  if (error) {
-    throw new Error(`failed to list capturas for clear: ${error.message}`);
-  }
-  const rows =
-    (data as Array<{
-      id: string;
-      trecho_id: string;
-      storage_key: string;
-    }> | null) ?? [];
   if (rows.length === 0) {
     return 0;
   }
@@ -285,6 +277,41 @@ async function clearCapturas(
     await client.storage.from(BUCKET).remove(storageKeys);
   }
   return rows.length;
+}
+
+async function clearCapturas(
+  client: SupabaseClient,
+  rodoviaId: string,
+): Promise<number> {
+  let query = client.from("capturas").select("id, trecho_id, storage_key");
+  if (rodoviaId !== "todas") {
+    query = query.eq("rodovia_id", rodoviaId);
+  }
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(`failed to list capturas for clear: ${error.message}`);
+  }
+  const rows = (data as CapturaClearRow[] | null) ?? [];
+  return removeCapturaRows(client, rows);
+}
+
+async function deleteCaptura(
+  client: SupabaseClient,
+  id: string,
+): Promise<boolean> {
+  const { data, error } = await client
+    .from("capturas")
+    .select("id, trecho_id, storage_key")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) {
+    throw new Error(`failed to load captura for delete: ${error.message}`);
+  }
+  if (!data) {
+    return false;
+  }
+  await removeCapturaRows(client, [data as CapturaClearRow]);
+  return true;
 }
 
 export function createSupabaseStore(options: {
@@ -337,5 +364,6 @@ export function createSupabaseStore(options: {
     overrideCaptura: (id, input) => overrideCaptura(client, id, input),
     applyClassification: (id, input) => applyClassification(client, id, input),
     clearCapturas: (rodoviaId) => clearCapturas(client, rodoviaId),
+    deleteCaptura: (id) => deleteCaptura(client, id),
   };
 }

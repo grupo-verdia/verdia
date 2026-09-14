@@ -47,3 +47,21 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: message }, { status });
   }
 }
+
+export async function DELETE(_request: NextRequest, context: RouteContext) {
+  const { id } = await context.params;
+  try {
+    const removed = await getCapturaStore().deleteCaptura(id);
+    if (!removed) {
+      return NextResponse.json({ error: "captura not found" }, { status: 404 });
+    }
+    return NextResponse.json({
+      ok: true,
+      removed: 1,
+      message: "Captura removida.",
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Falha ao limpar.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

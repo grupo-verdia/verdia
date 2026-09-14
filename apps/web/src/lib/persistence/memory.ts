@@ -146,13 +146,26 @@ export function createMemoryStore(): CapturaStore {
         rodoviaId === "todas" ? true : captura.rodoviaId === rodoviaId,
       );
       for (const captura of toRemove) {
-        capturas.delete(captura.id);
-        objects.delete(captura.storageKey);
-        trechos.delete(captura.trechoId);
+        removeCaptura(captura);
       }
       return toRemove.length;
     },
+
+    async deleteCaptura(id: string): Promise<boolean> {
+      const captura = capturas.get(id);
+      if (!captura) {
+        return false;
+      }
+      removeCaptura(captura);
+      return true;
+    },
   };
+
+  function removeCaptura(captura: Captura): void {
+    capturas.delete(captura.id);
+    objects.delete(captura.storageKey);
+    trechos.delete(captura.trechoId);
+  }
 
   return store;
 }

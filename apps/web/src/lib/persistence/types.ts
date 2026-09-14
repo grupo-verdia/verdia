@@ -48,4 +48,6 @@ export type CapturaStore = {
   applyClassification(id: string, input: ApplyClassificationInput): Promise<Captura>;
   /** Clear capturas for one rodovia id, or all when `"todas"`. */
   clearCapturas(rodoviaId: string): Promise<number>;
+  /** Delete one captura, its trecho, and its photo. False if it was already gone. */
+  deleteCaptura(id: string): Promise<boolean>;
 };

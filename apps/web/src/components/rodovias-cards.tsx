@@ -1,8 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
+import { CapturaLimparButton } from "@/components/captura-limpar";
 import { CapturaThumb } from "@/components/captura-thumb";
 import { StatusPill } from "@/components/status-pill";
 import type { Severidade } from "@/lib/domain";
@@ -38,13 +40,16 @@ export function RodoviasCards({
   cards: RodoviaCard[];
   emptyHint: ReactNode;
 }) {
-  if (cards.length === 0) {
+  const [removed, setRemoved] = useState<ReadonlySet<string>>(new Set());
+  const visible = cards.filter((card) => !removed.has(card.id));
+
+  if (visible.length === 0) {
     return <div className="empty">{emptyHint}</div>;
   }
 
   return (
     <div className="cards-grid">
-      {cards.map((card) => (
+      {visible.map((card) => (
         <article
           key={card.id}
           className={["record-card", card.severidade].filter(Boolean).join(" ")}
@@ -64,13 +69,31 @@ export function RodoviasCards({
             {card.prazo ? <RecordField label="Prazo" value={card.prazo} /> : null}
             <RecordField label="Confiança" value={card.confianca} />
           </div>
-          <div>
-            <Link className="btn" href={`/capturas/${card.id}`}>
-              Abrir
-            </Link>
-          </div>
+          <CardActions
+            id={card.id}
+            onDeleted={() =>
+              setRemoved((prev) => new Set(prev).add(card.id))
+            }
+          />
         </article>
       ))}
+    </div>
+  );
+}
+
+function CardActions({
+  id,
+  onDeleted,
+}: {
+  id: string;
+  onDeleted: () => void;
+}) {
+  return (
+    <div className="record-card-actions">
+      <Link className="btn" href={`/capturas/${id}`}>
+        Abrir
+      </Link>
+      <CapturaLimparButton id={id} onDeleted={onDeleted} />
     </div>
   );
 }

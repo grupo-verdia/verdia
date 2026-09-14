@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 
 import { BackLink } from "@/components/back-link";
+import { CapturaLimparButton } from "@/components/captura-limpar";
 import { OverrideForm } from "@/components/override-form";
 import { capturaStatus, StatusPill } from "@/components/status-pill";
 import { capturaPhotoPath } from "@/lib/captura-photo";
@@ -117,6 +118,9 @@ export default async function CapturaDetailPage({ params }: PageProps) {
                 : ""}
             </div>
           ) : null}
+          <div className="record-card-actions" style={{ marginTop: 16 }}>
+            <CapturaLimparButton id={captura.id} afterDeleteHref="/rodovias" />
+          </div>
         </section>
 
         {isClassificationPending(captura) ? null : (

@@ -958,6 +958,34 @@ html[data-theme="light"] .nav-link.active .nav-icon {
   gap: 0.65rem 0.75rem;
 }
 
+.record-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.record-card-actions .captura-limpar {
+  margin-left: auto;
+}
+
+.record-card-actions:has(.confirm-strip) {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.record-card-actions:has(.confirm-strip) .captura-limpar {
+  margin-left: 0;
+}
+
+.record-card-actions:has(.confirm-strip) > .btn {
+  display: none;
+}
+
+.record-card-actions .confirm-strip {
+  margin-top: 0;
+}
+
 .login-shell {
   min-height: 100vh;
   display: grid;

@@ -34,7 +34,9 @@ Use these terms in code, tests, and docs.
 - **Captura** — a single geotagged, timestamped roadside photo. Without valid GPS,
   it is not a captura. One captura creates one trecho. Excel import still
   creates capturas from rows (classe already filled). There is no photo;
-  the UI shows Sem imagem.
+  the UI shows Sem imagem. Limpar on a card or on the captura page deletes
+  that one (photo, captura, trecho). The Rodovias toolbar Limpar still
+  clears the list in view.
 - **Severidade** — follows classe (alta first). Planejamento sorts by prazo.
 - **Prazo.** Days until projected height hits the 30 cm cut limit. Growth is
   an operational estimate until Motiva confirms: 0.4 cm/day from October to
