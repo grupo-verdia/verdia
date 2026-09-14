@@ -78,22 +78,25 @@ export function CapturaMetaFields({
           ))}
         </select>
       </Field>
-      <Field label="Latitude" hint="Usada nas fotos sem GPS." error={errors.lat}>
-        <input
-          className={`input${errors.lat ? " input-invalid" : ""}`}
-          value={lat}
-          onChange={(event) => onLat(event.target.value)}
-          inputMode="decimal"
-        />
-      </Field>
-      <Field label="Longitude" error={errors.lon}>
-        <input
-          className={`input${errors.lon ? " input-invalid" : ""}`}
-          value={lon}
-          onChange={(event) => onLon(event.target.value)}
-          inputMode="decimal"
-        />
-      </Field>
+      <div className="coord-fields">
+        <Field label="Latitude" error={errors.lat}>
+          <input
+            className={`input${errors.lat ? " input-invalid" : ""}`}
+            value={lat}
+            onChange={(event) => onLat(event.target.value)}
+            inputMode="decimal"
+          />
+        </Field>
+        <Field label="Longitude" error={errors.lon}>
+          <input
+            className={`input${errors.lon ? " input-invalid" : ""}`}
+            value={lon}
+            onChange={(event) => onLon(event.target.value)}
+            inputMode="decimal"
+          />
+        </Field>
+        <p className="field-hint coord-fields-hint">Usada nas fotos sem GPS.</p>
+      </div>
     </div>
   );
 }

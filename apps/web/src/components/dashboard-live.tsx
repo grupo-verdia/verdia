@@ -56,6 +56,193 @@ function dueThisWeek(
     );
 }
 
+function roadLabel(captura: Captura, rodovias: Rodovia[]) {
+  const road = rodovias.find((r) => r.id === captura.rodoviaId);
+  return `${road?.codigo ?? captura.rodoviaId ?? "Sem rodovia"} · KM ${captura.km?.toFixed(1) ?? "—"}`;
+}
+
+function CapturaAlertRow({
+  captura,
+  rodovias,
+  selected,
+  onSelect,
+  meta,
+}: {
+  captura: Captura;
+  rodovias: Rodovia[];
+  selected: boolean;
+  onSelect: (id: string) => void;
+  meta: string;
+}) {
+  const status = capturaStatus(captura);
+  return (
+    <div
+      className={[
+        "alert",
+        "alert-clickable",
+        status.value ? `alert-severity-${status.value}` : null,
+        selected ? "alert-selected" : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      onClick={() => onSelect(captura.id)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(captura.id);
+        }
+      }}
+    >
+      <CapturaThumb id={captura.id} />
+      <div className="alert-main">
+        <div className="alert-title">{roadLabel(captura, rodovias)}</div>
+        <div className="alert-meta">{meta}</div>
+      </div>
+      <StatusPill value={status.value} label={status.label} />
+      <Link
+        className="alert-detail-link"
+        href={`/capturas/${captura.id}`}
+        aria-label="Ver detalhes da captura"
+        onClick={(event) => event.stopPropagation()}
+      >
+        →
+      </Link>
+    </div>
+  );
+}
+
+function WeekDueList({
+  rows,
+  rodovias,
+  open,
+  selectedCapturaId,
+  onToggle,
+  onSelect,
+}: {
+  rows: Array<{ captura: Captura; prazo: Prazo }>;
+  rodovias: Rodovia[];
+  open: boolean;
+  selectedCapturaId: string | null;
+  onToggle: () => void;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <section className="card">
+      <button
+        type="button"
+        className="section-title-row"
+        onClick={onToggle}
+        aria-expanded={open}
+      >
+        <h2 className="section-title">Cortar nesta semana</h2>
+      </button>
+      <span
+        className="muted"
+        style={{
+          fontSize: 11,
+          marginTop: -10,
+          display: "block",
+          marginBottom: 12,
+        }}
+      >
+        Selecione o trecho para ver no mapa
+      </span>
+      <hr
+        className="section-divider"
+        style={{
+          fontSize: 9,
+          marginTop: -5,
+          display: "block",
+          marginBottom: 10,
+        }}
+      />
+      {open && (
+        <div className="alert-list">
+          {rows.length ? (
+            rows.map(({ captura, prazo }) => (
+              <CapturaAlertRow
+                key={captura.id}
+                captura={captura}
+                rodovias={rodovias}
+                selected={captura.id === selectedCapturaId}
+                onSelect={onSelect}
+                meta={prazo.label}
+              />
+            ))
+          ) : (
+            <div className="empty">Nenhum trecho para cortar nesta semana.</div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function RecentCapturasList({
+  capturas,
+  rodovias,
+  open,
+  selectedCapturaId,
+  onToggle,
+  onSelect,
+}: {
+  capturas: Captura[];
+  rodovias: Rodovia[];
+  open: boolean;
+  selectedCapturaId: string | null;
+  onToggle: () => void;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <section className="card">
+      <button
+        type="button"
+        className="section-title-row"
+        onClick={onToggle}
+        aria-expanded={open}
+      >
+        <h2 className="section-title">Últimas capturas</h2>
+        <span
+          className={`chevron${open ? " chevron-open" : ""}`}
+          aria-hidden="true"
+        >
+          ▾
+        </span>
+      </button>
+      <hr
+        className="section-divider"
+        style={{
+          fontSize: 9,
+          marginTop: -5,
+          display: "block",
+          marginBottom: 10,
+        }}
+      />
+      {open && (
+        <div className="alert-list">
+          {capturas.length ? (
+            capturas.map((captura) => (
+              <CapturaAlertRow
+                key={captura.id}
+                captura={captura}
+                rodovias={rodovias}
+                selected={captura.id === selectedCapturaId}
+                onSelect={onSelect}
+                meta={`${captura.alturaCm ?? "—"} cm${captura.sentido ? ` · ${captura.sentido}` : ""}`}
+              />
+            ))
+          ) : (
+            <div className="empty">Nenhuma captura ainda.</div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function DashboardLive({
   initialCapturas,
   initialRodovias,
@@ -130,149 +317,22 @@ export function DashboardLive({
         </section>
 
         <div className="grid">
-          <section className="card">
-            <button
-              type="button"
-              className="section-title-row"
-              onClick={() => setCortarOpen((open) => !open)}
-              aria-expanded={cortarOpen}
-            >
-              <h2 className="section-title">Cortar nesta semana</h2>
-            </button>
-            <span className="muted" style={{ fontSize: 11, marginTop: -10, display: "block", marginBottom: 12 }}>
-              Selecione o trecho para ver no mapa
-            </span>
-            <hr className="section-divider" style={{ fontSize: 9, marginTop: -5, display: "block", marginBottom: 10 }} />
-            {cortarOpen && (
-              <div className="alert-list">
-                {weekDue.length ? (
-                  weekDue.map(({ captura, prazo }) => {
-                    const road = rodovias.find((r) => r.id === captura.rodoviaId);
-                    const status = capturaStatus(captura);
-                    const selected = captura.id === selectedCapturaId;
-                    return (
-                      <div
-                        className={[
-                          "alert",
-                          "alert-clickable",
-                          status.value ? `alert-severity-${status.value}` : null,
-                          selected ? "alert-selected" : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        key={captura.id}
-                        role="button"
-                        tabIndex={0}
-                        aria-pressed={selected}
-                        onClick={() => setSelectedCapturaId(captura.id)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            setSelectedCapturaId(captura.id);
-                          }
-                        }}
-                      >
-                        <CapturaThumb id={captura.id} />
-                        <div className="alert-main">
-                          <div className="alert-title">
-                            {road?.codigo ?? captura.rodoviaId ?? "Sem rodovia"} ·
-                            KM {captura.km?.toFixed(1) ?? "—"}
-                          </div>
-                          <div className="alert-meta">{prazo.label}</div>
-                        </div>
-                        <StatusPill value={status.value} label={status.label} />
-                        <Link
-                          className="alert-detail-link"
-                          href={`/capturas/${captura.id}`}
-                          aria-label="Ver detalhes da captura"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          →
-                        </Link>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="empty">Nenhum trecho para cortar nesta semana.</div>
-                )}
-              </div>
-            )}
-          </section>
-
-          <section className="card">
-            <button
-              type="button"
-              className="section-title-row"
-              onClick={() => setRecentesOpen((open) => !open)}
-              aria-expanded={recentesOpen}
-            >
-              <h2 className="section-title">Últimas capturas</h2>
-              <span
-                className={`chevron${recentesOpen ? " chevron-open" : ""}`}
-                aria-hidden="true"
-              >
-                ▾
-              </span>
-            </button>
-            <hr className="section-divider" style={{ fontSize: 9, marginTop: -5, display: "block", marginBottom: 10 }} />
-            {recentesOpen && (
-              <div className="alert-list">
-                {recentes.length ? (
-                  recentes.map((captura) => {
-                    const road = rodovias.find((r) => r.id === captura.rodoviaId);
-                    const status = capturaStatus(captura);
-                    const selected = captura.id === selectedCapturaId;
-                    return (
-                      <div
-                        className={[
-                          "alert",
-                          "alert-clickable",
-                          status.value ? `alert-severity-${status.value}` : null,
-                          selected ? "alert-selected" : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        key={captura.id}
-                        role="button"
-                        tabIndex={0}
-                        aria-pressed={selected}
-                        onClick={() => setSelectedCapturaId(captura.id)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            setSelectedCapturaId(captura.id);
-                          }
-                        }}
-                      >
-                        <CapturaThumb id={captura.id} />
-                        <div className="alert-main">
-                          <div className="alert-title">
-                            {road?.codigo ?? captura.rodoviaId ?? "Sem rodovia"} ·
-                            KM {captura.km?.toFixed(1) ?? "—"}
-                          </div>
-                          <div className="alert-meta">
-                            {captura.alturaCm ?? "—"} cm
-                            {captura.sentido ? ` · ${captura.sentido}` : ""}
-                          </div>
-                        </div>
-                        <StatusPill value={status.value} label={status.label} />
-                        <Link
-                          className="alert-detail-link"
-                          href={`/capturas/${captura.id}`}
-                          aria-label="Ver detalhes da captura"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          →
-                        </Link>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="empty">Nenhuma captura ainda.</div>
-                )}
-              </div>
-            )}
-          </section>
+          <WeekDueList
+            rows={weekDue}
+            rodovias={rodovias}
+            open={cortarOpen}
+            selectedCapturaId={selectedCapturaId}
+            onToggle={() => setCortarOpen((open) => !open)}
+            onSelect={setSelectedCapturaId}
+          />
+          <RecentCapturasList
+            capturas={recentes}
+            rodovias={rodovias}
+            open={recentesOpen}
+            selectedCapturaId={selectedCapturaId}
+            onToggle={() => setRecentesOpen((open) => !open)}
+            onSelect={setSelectedCapturaId}
+          />
         </div>
       </div>
     </>
