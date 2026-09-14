@@ -68,11 +68,11 @@ describe("planejamento product read surface", () => {
       media.trechoId,
       baixa.trechoId,
     ]);
-    expect(plan.map((t) => t.prazoDias)).toEqual([0, 100, 250]);
+    expect(plan.map((t) => t.prazoDias)).toEqual([0, 50, 99]);
     expect(plan.map((t) => t.prazoLabel)).toEqual([
       "Cortar agora",
-      "Em 100 dias",
-      "Em 250 dias",
+      "Em 50 dias",
+      "Mais de 90 dias",
     ]);
     expect(planPrazoSummary(plan)).toEqual({ cortarAgora: 1, estaSemana: 0 });
   });
@@ -316,7 +316,7 @@ describe("planejamento product read surface", () => {
 
     expect(plan.map((t) => t.id)).toEqual([media.trechoId, baixa.trechoId]);
     expect(plan[0]).toMatchObject({
-      prazoDias: 4,
+      prazoDias: 3,
       prazoLabel: "Esta semana",
     });
     expect(planPrazoSummary(plan)).toEqual({ cortarAgora: 0, estaSemana: 1 });
