@@ -1,13 +1,11 @@
 import { DataAutoRefresh } from "@/components/data-auto-refresh";
 import { NovaCapturaForm } from "@/components/nova-captura-form";
-import { loadDashboardCapturas } from "@/lib/dashboard";
 import { listMotivaRodovias } from "@/lib/rodovias";
 
 export const dynamic = "force-dynamic";
 
 export default async function NovaCapturaPage() {
   const rodovias = listMotivaRodovias();
-  const capturas = await loadDashboardCapturas();
 
   return (
     <>
@@ -21,7 +19,7 @@ export default async function NovaCapturaPage() {
           </p>
         </div>
       </div>
-      <NovaCapturaForm rodovias={rodovias} initialCapturas={capturas} />
+      <NovaCapturaForm rodovias={rodovias} />
     </>
   );
 }

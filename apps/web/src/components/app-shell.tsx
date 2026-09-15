@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
+import { AutoClassifyLive } from "@/components/auto-classify-live";
 import { BottomNav } from "@/components/bottom-nav";
 import { PhoneTopbar } from "@/components/phone-topbar";
 import { Sidebar } from "@/components/sidebar";
@@ -20,6 +21,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="app-shell">
+      <AutoClassifyLive />
       <PhoneTopbar />
       <Sidebar />
       <div className="content">{children}</div>

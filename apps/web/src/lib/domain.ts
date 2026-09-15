@@ -69,7 +69,7 @@ export function isClasse(value: unknown): value is Classe {
   return typeof value === "string" && (CLASSES as readonly string[]).includes(value);
 }
 
-/** Waiting for classification. Continuar still shows on Nova captura. */
+/** Waiting for classification. */
 export function isClassificationPending(
   captura: Pick<Captura, "classifiedAt">,
 ): boolean {
