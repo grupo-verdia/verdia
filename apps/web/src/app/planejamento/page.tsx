@@ -4,6 +4,7 @@ import { CapturaThumb } from "@/components/captura-thumb";
 import { MapLegend } from "@/components/map-legend";
 import { MapaOperacional } from "@/components/mapa-operacional";
 import { RodoviasCards } from "@/components/rodovias-cards";
+import { RscAutoRefresh } from "@/components/rsc-auto-refresh";
 import { StatusPill } from "@/components/status-pill";
 import { loadDashboardCapturas } from "@/lib/dashboard";
 import {
@@ -30,6 +31,7 @@ export default async function PlanejamentoPage() {
 
   return (
     <>
+      <RscAutoRefresh />
       <div className="page-head">
         <div>
           <h1 className="page-title">Fila de prioridades</h1>

@@ -51,7 +51,8 @@ Use these terms in code, tests, and docs.
   then km. Visão geral lists trechos with 0 to 7 days.
 - **Nova captura.** Web upload of geotagged photos. The operator queues
   files, then sends. Each valid file is saved first, then classified in
-  the background. Close the tab: photos stay. Continue on Nova captura.
+  the background. Close the tab: photos stay. Reopen the app: leftover
+  photos classify without an extra click.
   No GPS means the photo is skipped, unless the operator types
   latitude/longitude. Files up to 10 MB are accepted; anything heavier
   than the request-body budget is re-encoded to a smaller JPEG in the

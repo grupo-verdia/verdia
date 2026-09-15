@@ -132,6 +132,7 @@ export async function persistOne(
 export async function classifyOne(id: string): Promise<Captura> {
   const response = await fetch(`/api/capturas/${id}/classify`, {
     method: "POST",
+    keepalive: true,
   });
   const data = (await response.json()) as { error?: string; captura?: Captura };
   if (!response.ok || !data.captura) {
@@ -171,7 +172,7 @@ export async function listCapturas(): Promise<Captura[]> {
 const POLL_MS = 4000;
 const POLL_TRIES = 15;
 
-/** Poll until ingest `after()` stamps classifiedAt. Do not POST classify. */
+/** Poll until classifiedAt is set so Resultado can update. */
 export async function watchClassify(
   ids: string[],
   alive: () => boolean,
@@ -195,7 +196,7 @@ export async function watchClassify(
         return;
       }
     } catch {
-      // Keep the last report. Continuar remains if the server never finishes.
+      // Keep the last report. Auto-classify retries leftover photos.
     }
     if (attempt < POLL_TRIES - 1) {
       await new Promise((resolve) => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { enqueueClassify } from "@/components/auto-classify";
 import { CapturaMetaFields } from "@/components/nova-captura-fields";
 import {
   kmFieldError,
@@ -12,7 +13,6 @@ import {
   type FieldErrors,
   type IngestMeta,
 } from "@/components/nova-captura-ingest";
-import { NovaCapturaPending } from "@/components/nova-captura-pending";
 import {
   NovaCapturaQueue,
   QUEUE_PREVIEW_LIMIT,
@@ -24,7 +24,7 @@ import {
 } from "@/components/nova-captura-results";
 import { fileQueueKey } from "@/lib/ingest/drop-files";
 import { readGeotagFromImage } from "@/lib/ingest/exif-gps";
-import { isClassificationPending, type Captura } from "@/lib/domain";
+import { isClassificationPending } from "@/lib/domain";
 import type { Rodovia } from "@/lib/rodovias";
 
 function validateQueue(items: QueuedImage[], km: string, lat: string, lon: string) {
@@ -178,6 +178,7 @@ async function sendQueuedBatch(options: {
     options.setProgress(null);
     return;
   }
+  enqueueClassify(ids);
   options.setProgress("Classificando…");
   window.dispatchEvent(new Event("verdia:data-refresh"));
   await watchClassify(ids, () => options.refs.aliveRef.current, (capturas) => {
@@ -190,10 +191,8 @@ async function sendQueuedBatch(options: {
 
 export function NovaCapturaForm({
   rodovias,
-  initialCapturas,
 }: {
   rodovias: Rodovia[];
-  initialCapturas: Captura[];
 }) {
   const previewUrlsRef = useRef<string[]>([]);
   const queueRef = useRef<QueuedImage[]>([]);
@@ -208,7 +207,6 @@ export function NovaCapturaForm({
   const [progress, setProgress] = useState<string | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [report, setReport] = useState<BatchReport | null>(null);
-  const [watchingIds, setWatchingIds] = useState<string[]>([]);
   const refs: QueueRefs = { queueRef, previewUrlsRef, aliveRef, setQueue };
 
   useEffect(() => {
@@ -241,7 +239,6 @@ export function NovaCapturaForm({
     const includeMissing = lat.trim() !== "" && lon.trim() !== "";
     setBusy(true);
     setReport(null);
-    const sentIds: string[] = [];
     try {
       await sendQueuedBatch({
         items,
@@ -250,21 +247,14 @@ export function NovaCapturaForm({
         refs,
         setProgress,
         setReport,
-        onPersisted(ids) {
-          sentIds.push(...ids);
+        onPersisted() {
           setBusy(false);
-          if (ids.length) {
-            setWatchingIds((prev) => [...prev, ...ids]);
-          }
         },
       });
     } catch {
       setProgress(null);
     } finally {
       setBusy(false);
-      if (sentIds.length) {
-        setWatchingIds((prev) => prev.filter((id) => !sentIds.includes(id)));
-      }
     }
   }
 
@@ -285,11 +275,6 @@ export function NovaCapturaForm({
 
   return (
     <>
-      <NovaCapturaPending
-        initialCapturas={initialCapturas}
-        initialRodovias={rodovias}
-        hideIds={watchingIds}
-      />
       <form className="card" style={{ marginBottom: 16 }} onSubmit={onSubmit}>
         <CapturaMetaFields
           rodovias={rodovias}

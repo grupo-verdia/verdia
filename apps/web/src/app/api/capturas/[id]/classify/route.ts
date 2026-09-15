@@ -9,7 +9,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-/** Used by Nova captura after save, and by Continuar. */
+/** Used after Nova captura save, and to resume leftover pending photos. */
 export async function POST(_request: Request, context: RouteContext) {
   const { id } = await context.params;
   try {

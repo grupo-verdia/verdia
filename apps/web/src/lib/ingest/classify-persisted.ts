@@ -9,8 +9,22 @@ import {
 } from "@/lib/ingest/image-type";
 import { getCapturaStore } from "@/lib/persistence";
 
+const inFlight = new Map<string, Promise<Captura>>();
+
 /** Skip if already classified with no error. Retry if the last run failed. */
 export async function classifyPersistedCaptura(id: string): Promise<Captura> {
+  const existing = inFlight.get(id);
+  if (existing) {
+    return existing;
+  }
+  const work = runClassification(id).finally(() => {
+    inFlight.delete(id);
+  });
+  inFlight.set(id, work);
+  return work;
+}
+
+async function runClassification(id: string): Promise<Captura> {
   const store = getCapturaStore();
   const captura = await store.getCaptura(id);
   if (!captura) {

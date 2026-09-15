@@ -1,15 +1,14 @@
-import { after, NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import {
   CLASSIFIER_UNAVAILABLE,
   isClassifierConfigured,
 } from "@/lib/ingest/classify";
-import { classifyPersistedCaptura } from "@/lib/ingest/classify-persisted";
 import { MAX_UPLOAD_BYTES } from "@/lib/ingest/prepare-upload";
 import { getCapturaStore } from "@/lib/persistence";
 import { resolveRodoviaParam } from "@/lib/rodovias";
 
-/** Classification may continue after the response. Still capped at 60s. */
+/** Large photo persist. Classification starts in the browser after save. */
 export const maxDuration = 60;
 
 type IngestBody = {
@@ -45,17 +44,7 @@ function parseOptionalNumber(
   return { ok: false, error: `${field} must be a number or null` };
 }
 
-function scheduleClassify(id: string): void {
-  try {
-    after(() => {
-      void classifyPersistedCaptura(id).catch(() => undefined);
-    });
-  } catch {
-    // Vitest has no Next after() context. Failed background runs stay pending.
-  }
-}
-
-/** Persist geotagged photo, then classify in the background. */
+/** Persist geotagged photo. The browser starts classification after save. */
 export async function POST(request: NextRequest) {
   let raw: unknown;
   try {
@@ -153,7 +142,6 @@ export async function POST(request: NextRequest) {
       alturaCm: null,
       classifiedAt: null,
     });
-    scheduleClassify(captura.id);
     return NextResponse.json({ captura }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "ingest failed";
