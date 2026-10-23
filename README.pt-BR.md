@@ -31,6 +31,7 @@ A interface está em português.
 - Claro e escuro usam o mesmo layout. O botão na barra lateral (e no topo do celular) troca o modo.
 - Planejamento é a fila de corte, menor prazo até 30 cm primeiro. Não entra foto ainda na fila nem foto cuja classificação falhou.
 - Observabilidade mostra confiança, fila, falhas e correções.
+- Equipe ("Feito com ♥ por", com link na barra lateral e no topo do celular) lista as pessoas do grupo com o LinkedIn de cada uma.
 
 Ficou de fora o vídeo sincronizado com GPS, a detecção de deriva, a otimização de rota e a conta de usuário. Uma senha compartilhada libera o acesso.
 

@@ -31,6 +31,7 @@ The UI is Portuguese.
 - Light and dark use the same layout. A toggle in the sidebar (and on the phone top bar) switches them.
 - Planejamento is the mowing queue, shortest prazo until 30 cm first. It skips photos still waiting or whose classify failed.
 - Observabilidade tracks confidence, the queue, failures, and corrections.
+- Equipe ("Feito com ♥ por", linked from the sidebar and the phone top bar) credits the group members with their LinkedIn.
 
 Video synced to GPS, drift detection, route optimization, and real user accounts are out. One shared password gets you in.
 

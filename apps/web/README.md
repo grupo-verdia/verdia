@@ -18,6 +18,7 @@ Domain terms: [`CONTEXT.md`](../../CONTEXT.md). Repo runbook:
 | `/rodovias` | Rodovias (lista com foto, Excel, correção da classe, Limpar) |
 | `/planejamento` | Planejamento (prazo até 30 cm, depois rodovia, depois km) |
 | `/observabilidade` | Observabilidade |
+| `/equipe` | Equipe (Feito com ♥ por; link na barra lateral e no topo do celular) |
 
 Nova captura prefers EXIF GPS. Type lat/lon if the file has none. Photos are
 saved first, then classified. Close the tab: photos stay. Reopen the app:

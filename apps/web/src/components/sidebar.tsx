@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Brand } from "@/components/brand";
+import { CreditsLink } from "@/components/credits-link";
 import { isNavActive, sidebarNavItems } from "@/components/nav-items";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -33,7 +34,10 @@ export function Sidebar() {
           })}
         </nav>
       </div>
-      <ThemeToggle />
+      <div className="sidebar-bottom">
+        <ThemeToggle />
+        <CreditsLink />
+      </div>
     </aside>
   );
 }
