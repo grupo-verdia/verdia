@@ -182,8 +182,80 @@ textarea {
   min-width: 0;
 }
 
-.sidebar .theme-toggle {
+.sidebar-bottom {
   margin-top: auto;
+  display: grid;
+  gap: 12px;
+}
+
+.credits-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: var(--footer-note);
+  font-size: 12px;
+  white-space: pre;
+}
+
+.credits-link:hover,
+.credits-link.active {
+  color: var(--nav-hover-text);
+}
+
+.heart {
+  color: var(--danger);
+}
+
+.equipe-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.equipe-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  transition: border-color 0.15s ease;
+}
+
+.equipe-card:hover {
+  border-color: var(--btn-hover-border);
+}
+
+.equipe-avatar {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--lime);
+  color: var(--brand-on-lime);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+}
+
+.equipe-info {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.equipe-name {
+  font-weight: 650;
+  font-size: 15px;
+}
+
+.equipe-link {
+  color: var(--accent);
+  font-size: 12px;
 }
 
 .brand {
@@ -1182,9 +1254,21 @@ code {
     flex: 1;
   }
 
-  .sidebar .theme-toggle {
+  .sidebar-bottom {
     margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     flex-shrink: 0;
+  }
+
+  .credits-label {
+    display: none;
+  }
+
+  .credits-link {
+    font-size: 18px;
+    padding: 8px 10px;
   }
 
   .theme-toggle-label {
@@ -1251,7 +1335,7 @@ code {
     margin: 0;
   }
 
-  .phone-topbar .theme-toggle {
+  .phone-topbar .credits-link {
     margin-left: auto;
   }
 

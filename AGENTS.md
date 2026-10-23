@@ -22,6 +22,7 @@ Screens (UI in Portuguese):
 | `/rodovias` | Rodovias | Capturas by rodovia with photos, Excel import/export, classe correction, Limpar one or the list |
 | `/planejamento` | Planejamento | Queue by prazo until 30 cm, then rodovia, then km; list and map show photos |
 | `/observabilidade` | Observabilidade | Confiança, fila, falhas, correções |
+| `/equipe` | Equipe | "Feito com ♥ por": group members with LinkedIn. Linked from the sidebar footer and phone top bar, not the bottom bar |
 
 Not built: video frames + GPS sync, drift detection, route optimization, Supabase Auth.
 
